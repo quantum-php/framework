@@ -1,3 +1,15 @@
+## [3.0.3] - 2026-06-28
+
+### Changed
+- **BREAKING:** Raised the minimum supported PHP version from `7.4` to `8.0` (#532)
+- Updated CI coverage to test PHP `8.0`, `8.1`, and `8.2` (#532)
+- Raised the static analysis baseline to PHPStan level `8` with PHP `8.0` target settings (#532)
+- Kept Rector aligned to the PHP 8 baseline and applied bounded PHP 8-safe modernization updates (#532)
+- Simplified the standard framework file banner across core sources, templates, and affected tests (#532)
+
+### Notes
+- OpenAPI metadata remains on Doctrine-style annotations for now because the currently used `swagger-php` attribute scanning path requires PHP `8.1+`; `doctrine/annotations` is intentionally retained on the PHP `8.0` baseline (#532)
+
 ## [3.0.0] - 2026-05-28
 
 Upgrade guide: https://github.com/softberg/quantum-php-docs/blob/master/v3.0/upgrade-guide.md

@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 /**
  * Quantum PHP Framework
- *
- * An open source software development framework for PHP
- *
- * @package Quantum
- * @author Arman Ag. <arman@quantumphp.io>
- * @copyright Copyright (c) 2018 Softberg LLC (https://softberg.org)
- * @link https://quantumphp.io/
- * @since 3.0.0
+ * An open-source software development framework for PHP
+ * @link https://quantumphp.io
  */
 
 namespace Quantum\Migration;
@@ -119,16 +113,11 @@ class MigrationManager
             throw MigrationException::driverNotSupported($databaseDriver);
         }
 
-        switch ($direction) {
-            case self::UPGRADE:
-                $migrated = $this->upgrade();
-                break;
-            case self::DOWNGRADE:
-                $migrated = $this->downgrade($step);
-                break;
-            default:
-                throw MigrationException::wrongDirection();
-        }
+        $migrated = match ($direction) {
+            self::UPGRADE => $this->upgrade(),
+            self::DOWNGRADE => $this->downgrade($step),
+            default => throw MigrationException::wrongDirection(),
+        };
 
         return $migrated;
     }

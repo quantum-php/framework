@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 /**
  * Quantum PHP Framework
- *
- * An open source software development framework for PHP
- *
- * @package Quantum
- * @author Arman Ag. <arman@quantumphp.io>
- * @copyright Copyright (c) 2018 Softberg LLC (https://softberg.org)
- * @link https://quantumphp.io/
- * @since 3.0.0
+ * An open-source software development framework for PHP
+ * @link https://quantumphp.io
  */
 
 namespace Quantum\Console\Commands;
@@ -121,7 +115,7 @@ class ServeCommand extends CliCommand
                     'port' => $port,
                     'url' => $url,
                 ];
-            } catch (Throwable $e) {
+            } catch (Throwable) {
                 $this->cleanupProcess($process);
             }
         }
@@ -214,7 +208,7 @@ class ServeCommand extends CliCommand
 
         while (true) {
             $status = proc_get_status($process);
-            if ($status === false || !$status['running']) {
+            if (!$status['running']) {
                 throw new RuntimeException('PHP server process died unexpectedly.');
             }
 
@@ -238,7 +232,7 @@ class ServeCommand extends CliCommand
      */
     protected function waitForProcess($process): void
     {
-        while (($status = proc_get_status($process)) !== false && $status['running']) {
+        while (($status = proc_get_status($process))['running']) {
             usleep(200_000);
         }
 
@@ -281,16 +275,12 @@ class ServeCommand extends CliCommand
      */
     protected function browserCommand(string $url): ?array
     {
-        switch (PHP_OS_FAMILY) {
-            case self::PLATFORM_WINDOWS:
-                return ['explorer.exe', $url];
-            case self::PLATFORM_LINUX:
-                return ['xdg-open', $url];
-            case self::PLATFORM_MAC:
-                return ['open', $url];
-            default:
-                return null;
-        }
+        return match (PHP_OS_FAMILY) {
+            self::PLATFORM_WINDOWS => ['explorer.exe', $url],
+            self::PLATFORM_LINUX => ['xdg-open', $url],
+            self::PLATFORM_MAC => ['open', $url],
+            default => null,
+        };
     }
 
     /**

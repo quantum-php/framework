@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 /**
  * Quantum PHP Framework
- *
- * An open source software development framework for PHP
- *
- * @package Quantum
- * @author Arman Ag. <arman@quantumphp.io>
- * @copyright Copyright (c) 2018 Softberg LLC (https://softberg.org)
- * @link https://quantumphp.io/
- * @since 3.0.0
+ * An open-source software development framework for PHP
+ * @link https://quantumphp.io
  */
 
 namespace Quantum\Di;
@@ -27,7 +21,7 @@ use ReflectionException;
  * owned by AppContext. Preserves the existing static API
  * for full backward compatibility.
  *
- * @package Quantum/Di
+ * @package Quantum\Di
  * @method static void registerDependencies(array<string, mixed> $dependencies)
  * @method static void register(string $concrete, ?string $abstract = null)
  * @method static bool isRegistered(string $abstract)

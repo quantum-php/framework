@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         operating-system: [ ubuntu-latest ]
-        php-versions: [ '7.4', '8.0', '8.1' ]
+        php-versions: [ '8.0', '8.1', '8.2' ]
         redis-version: [ 6 ]
 
     runs-on: ${{ matrix.operating-system }}
@@ -67,4 +67,3 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-

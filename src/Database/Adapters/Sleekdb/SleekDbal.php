@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 /**
  * Quantum PHP Framework
- *
- * An open source software development framework for PHP
- *
- * @package Quantum
- * @author Arman Ag. <arman@quantumphp.io>
- * @copyright Copyright (c) 2018 Softberg LLC (https://softberg.org)
- * @link https://quantumphp.io/
- * @since 3.0.0
+ * An open-source software development framework for PHP
+ * @link https://quantumphp.io
  */
 
 namespace Quantum\Database\Adapters\Sleekdb;
@@ -192,7 +186,7 @@ class SleekDbal implements DbalInterface
     /**
      * @return mixed
      */
-    public function __get(string $key)
+    public function __get(string $key): mixed
     {
         return $this->data[$key] ?? null;
     }
@@ -295,7 +289,7 @@ class SleekDbal implements DbalInterface
         try {
             $this->getOrmModel()->deleteStore();
             return true;
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return false;
         }
     }

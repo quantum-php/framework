@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 /**
  * Quantum PHP Framework
- *
- * An open source software development framework for PHP
- *
- * @package Quantum
- * @author Arman Ag. <arman@quantumphp.io>
- * @copyright Copyright (c) 2018 Softberg LLC (https://softberg.org)
- * @link https://quantumphp.io/
- * @since 3.0.0
+ * An open-source software development framework for PHP
+ * @link https://quantumphp.io
  */
 
 namespace Quantum\HttpClient;
@@ -58,7 +52,7 @@ class HttpClient
     /**
      * @var MultiCurl|Curl
      */
-    private $client;
+    private Curl|MultiCurl|null $client = null;
 
     private string $method = 'GET';
 
@@ -308,7 +302,7 @@ class HttpClient
         }
 
         if (!method_exists($this->client, $method)) {
-            throw HttpClientException::methodNotSupported($method, get_class($this->client));
+            throw HttpClientException::methodNotSupported($method, $this->client::class);
         }
 
         $this->interceptCall($method, $arguments);

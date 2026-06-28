@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 /**
  * Quantum PHP Framework
- *
- * An open source software development framework for PHP
- *
- * @package Quantum
- * @author Arman Ag. <arman@quantumphp.io>
- * @copyright Copyright (c) 2018 Softberg LLC (https://softberg.org)
- * @link https://quantumphp.io/
- * @since 3.0.0
+ * An open-source software development framework for PHP
+ * @link https://quantumphp.io
  */
 
 namespace Quantum\Storage\Adapters\GoogleDrive;
@@ -46,7 +40,7 @@ class GoogleDriveFileSystemAdapter implements FilesystemAdapterInterface
 
             $this->googleDriveApp->rpcRequest(GoogleDriveApp::FILE_METADATA_URL, $data);
             return true;
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -62,11 +56,11 @@ class GoogleDriveFileSystemAdapter implements FilesystemAdapterInterface
     /**
      * @inheritDoc
      */
-    public function get(string $filename)
+    public function get(string $filename): string|false
     {
         try {
             return (string) $this->googleDriveApp->getFileInfo($filename, true);
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -104,7 +98,7 @@ class GoogleDriveFileSystemAdapter implements FilesystemAdapterInterface
                 'application/octet-stream'
             );
 
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -131,7 +125,7 @@ class GoogleDriveFileSystemAdapter implements FilesystemAdapterInterface
 
             $this->googleDriveApp->rpcRequest(GoogleDriveApp::FILE_METADATA_URL . '/' . $oldName, $data, 'PATCH');
             return true;
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -148,7 +142,7 @@ class GoogleDriveFileSystemAdapter implements FilesystemAdapterInterface
 
             $this->googleDriveApp->rpcRequest(GoogleDriveApp::FILE_METADATA_URL . '/' . $source . '/copy', $data);
             return true;
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -169,7 +163,7 @@ class GoogleDriveFileSystemAdapter implements FilesystemAdapterInterface
         try {
             $meta = (array) $this->googleDriveApp->getFileInfo($filename);
             return $meta['size'];
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -177,12 +171,12 @@ class GoogleDriveFileSystemAdapter implements FilesystemAdapterInterface
     /**
      * @inheritDoc
      */
-    public function lastModified(string $filename)
+    public function lastModified(string $filename): int|false
     {
         try {
             $meta = (array) $this->googleDriveApp->getFileInfo($filename);
             return empty($meta['modifiedTime']) ? false : strtotime($meta['modifiedTime']);
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
 
@@ -196,7 +190,7 @@ class GoogleDriveFileSystemAdapter implements FilesystemAdapterInterface
         try {
             $this->googleDriveApp->rpcRequest(GoogleDriveApp::FILE_METADATA_URL . '/' . $filename, [], 'DELETE');
             return true;
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
 
@@ -211,7 +205,7 @@ class GoogleDriveFileSystemAdapter implements FilesystemAdapterInterface
             $meta = (array) $this->googleDriveApp->getFileInfo($filename);
 
             return $meta['kind'] === GoogleDriveApp::DRIVE_FILE_KIND && $meta['mimeType'] != GoogleDriveApp::FOLDER_MIMETYPE;
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -225,7 +219,7 @@ class GoogleDriveFileSystemAdapter implements FilesystemAdapterInterface
             $meta = (array) $this->googleDriveApp->getFileInfo($dirname);
 
             return $meta['kind'] === GoogleDriveApp::DRIVE_FILE_KIND && $meta['mimeType'] === GoogleDriveApp::FOLDER_MIMETYPE;
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -242,7 +236,7 @@ class GoogleDriveFileSystemAdapter implements FilesystemAdapterInterface
             ];
             $response = (array) $this->googleDriveApp->rpcRequest(GoogleDriveApp::FILE_METADATA_URL . '?' . http_build_query($params), [], 'GET');
             return $response['files'];
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
     }

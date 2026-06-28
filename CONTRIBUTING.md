@@ -73,7 +73,13 @@ composer phpstan
 composer cs:check
 ```
 
-6. Commit and push your branch:
+6. Run Rector dry-run
+
+```bash
+composer rector:check
+```
+
+7. Commit and push your branch:
 
 ```bash
 git commit -m "[#123] Add SoftDeletes trait for models"
@@ -105,13 +111,13 @@ Notes:
 ## Testing
 
 Quantum uses **PHPUnit** for tests. If you add new features, make sure they include unit tests — especially for database or HTTP-related components. For in-memory testing, use SQLite in-memory databases (for example, in tests using IdiormDbal).
-All contributions must also pass **PHPStan** (static analysis) and **PHP-CS-Fixer** (code style) checks.
+All contributions must also pass **PHPStan** (static analysis), **PHP-CS-Fixer** (code style), and **Rector** dry-run checks.
 
 ---
 
 ## Code Guidelines
 
-- PHP 7.4+ compatibility is required.  
+- PHP 8.0+ compatibility is required.  
 - Keep class responsibilities clear — avoid bloated classes.  
 - Follow the existing directory structure
 - Always document public methods.  

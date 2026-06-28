@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 /**
  * Quantum PHP Framework
- *
- * An open source software development framework for PHP
- *
- * @package Quantum
- * @author Arman Ag. <arman@quantumphp.io>
- * @copyright Copyright (c) 2018 Softberg LLC (https://softberg.org)
- * @link https://quantumphp.io/
- * @since 3.0.0
+ * An open-source software development framework for PHP
+ * @link https://quantumphp.io
  */
 
 namespace Quantum\Cron;
@@ -187,7 +181,7 @@ class CronManager
         } catch (Throwable $e) {
             $this->stats['failed']++;
             $this->log('error', "Task \"{$task->getName()}\" failed: " . $e->getMessage(), [
-                'exception' => get_class($e),
+                'exception' => $e::class,
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
@@ -233,7 +227,7 @@ class CronManager
         try {
             $logger = LoggerFactory::get(LoggerType::SINGLE);
             $logger->log($level, '[CRON] ' . $message, $context);
-        } catch (Throwable $exception) {
+        } catch (Throwable) {
             error_log(sprintf('[CRON] [%s] %s', strtoupper($level), $message));
         }
     }

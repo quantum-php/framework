@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 /**
  * Quantum PHP Framework
- *
- * An open source software development framework for PHP
- *
- * @package Quantum
- * @author Arman Ag. <arman@quantumphp.io>
- * @copyright Copyright (c) 2018 Softberg LLC (https://softberg.org)
- * @link https://quantumphp.io/
- * @since 3.0.0
+ * An open-source software development framework for PHP
+ * @link https://quantumphp.io
  */
 
 namespace Quantum\Auth\Adapters;
@@ -66,7 +60,7 @@ class SessionAuthAdapter implements AuthenticatableInterface
      * @throws SessionException
      * @throws Exception
      */
-    public function signin(string $username, string $password, bool $remember = false)
+    public function signin(string $username, string $password, bool $remember = false): string|bool
     {
         $user = $this->getUser($username, $password);
 
@@ -174,7 +168,7 @@ class SessionAuthAdapter implements AuthenticatableInterface
      * @return User|false
      * @throws BaseException
      */
-    private function checkRememberToken()
+    private function checkRememberToken(): false|\Quantum\Auth\User
     {
         $user = $this->authService->get(
             $this->keyFields[AuthKeys::REMEMBER_TOKEN],

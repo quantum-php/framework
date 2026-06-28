@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 /**
  * Quantum PHP Framework
- *
- * An open source software development framework for PHP
- *
- * @package Quantum
- * @author Arman Ag. <arman@quantumphp.io>
- * @copyright Copyright (c) 2018 Softberg LLC (https://softberg.org)
- * @link https://quantumphp.io/
- * @since 3.0.0
+ * An open-source software development framework for PHP
+ * @link https://quantumphp.io
  */
 
 namespace Quantum\Router;
@@ -96,13 +90,17 @@ final class RouteDispatcher
 
     /**
      * Invoke a callable with parameters resolved via DI autowiring.
-     * @param callable|array{0: object, 1: string} $callable
+     * @param Closure|array{0: object, 1: string} $callable
      * @param array<string, mixed> $params
      * @return mixed
+     * @throws DiException
      */
-    private function invoke($callable, array $params)
+    private function invoke(Closure|array $callable, array $params)
     {
-        /** @var callable $callable */
+        if (!is_callable($callable)) {
+            throw DiException::invalidCallable();
+        }
+
         $closure = Closure::fromCallable($callable);
 
         return $closure(...Di::autowire($closure, $params));

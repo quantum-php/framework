@@ -2,14 +2,8 @@
 
 /**
  * Quantum PHP Framework
- *
- * An open source software development framework for PHP
- *
- * @package Quantum
- * @author Arman Ag. <arman@quantumphp.io>
- * @copyright Copyright (c) 2018 Softberg LLC (https://softberg.org)
- * @link https://quantumphp.io/
- * @since 3.0.0
+ * An open-source software development framework for PHP
+ * @link https://quantumphp.io
  */
 
 namespace {{MODULE_NAMESPACE}}\Controllers\OpenApi;
@@ -93,5 +87,6 @@ abstract class OpenApiAccountController extends OpenApiController
      */
     abstract public function updatePassword(Request $request);
 }
+
 
 

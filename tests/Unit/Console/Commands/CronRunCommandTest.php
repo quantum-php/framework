@@ -9,7 +9,6 @@ use Quantum\Cron\CronLock;
 
 /**
  * Class CronRunCommandTest
- * @package Quantum\Tests\Unit\Console\Commands
  */
 class CronRunCommandTest extends AppTestCase
 {

@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 /**
  * Quantum PHP Framework
- *
- * An open source software development framework for PHP
- *
- * @package Quantum
- * @author Arman Ag. <arman@quantumphp.io>
- * @copyright Copyright (c) 2018 Softberg LLC (https://softberg.org)
- * @link https://quantumphp.io/
- * @since 3.0.0
+ * An open-source software development framework for PHP
+ * @link https://quantumphp.io
  */
 
 namespace Quantum\Archive\Adapters;
@@ -62,7 +56,7 @@ class PharAdapter implements ArchiveInterface
         try {
             $this->archive = null;
             return Phar::unlinkArchive($this->archiveName);
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -111,7 +105,7 @@ class PharAdapter implements ArchiveInterface
                 ? $this->archive->addFile($filePath, $entryName)
                 : $this->archive->addFile($filePath);
             return true;
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -127,7 +121,7 @@ class PharAdapter implements ArchiveInterface
         try {
             $this->archive->addFromString($entryName, $content);
             return true;
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -144,7 +138,7 @@ class PharAdapter implements ArchiveInterface
             foreach ($fileNames as $fileName => $filePath) {
                 $this->archive->addFile($filePath, $fileName);
             }
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
 
@@ -173,7 +167,7 @@ class PharAdapter implements ArchiveInterface
         try {
             $this->archive->extractTo($pathToExtract, $files);
             return true;
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -189,7 +183,7 @@ class PharAdapter implements ArchiveInterface
         try {
             $this->archive->delete($filename);
             return true;
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -208,7 +202,7 @@ class PharAdapter implements ArchiveInterface
             }
 
             return true;
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -237,7 +231,7 @@ class PharAdapter implements ArchiveInterface
         if ($this->archive === null) {
             try {
                 $this->archive = new Phar($this->archiveName);
-            } catch (Exception $e) {
+            } catch (Exception) {
                 throw ArchiveException::cantOpen($this->archiveName);
             }
         }

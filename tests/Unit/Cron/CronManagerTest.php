@@ -8,7 +8,6 @@ use Quantum\Cron\CronManager;
 
 /**
  * Class CronManagerTest
- * @package Quantum\Tests\Unit\Cron
  */
 class CronManagerTest extends AppTestCase
 {

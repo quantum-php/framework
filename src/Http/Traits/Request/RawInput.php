@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 /**
  * Quantum PHP Framework
- *
- * An open source software development framework for PHP
- *
- * @package Quantum
- * @author Arman Ag. <arman@quantumphp.io>
- * @copyright Copyright (c) 2018 Softberg LLC (https://softberg.org)
- * @link https://quantumphp.io/
- * @since 3.0.0
+ * An open-source software development framework for PHP
+ * @link https://quantumphp.io
  */
 
 namespace Quantum\Http\Traits\Request;
@@ -155,11 +149,11 @@ trait RawInput
      */
     private function detectBlockType(string $block): string
     {
-        if (strpos($block, 'filename') !== false) {
+        if (str_contains($block, 'filename')) {
             return 'file';
         }
 
-        if (strpos($block, ContentType::OCTET_STREAM) !== false) {
+        if (str_contains($block, ContentType::OCTET_STREAM)) {
             return 'stream';
         }
 
@@ -294,9 +288,9 @@ trait RawInput
      * Parses array-like parameter names
      * @return array<string>|string
      */
-    private function arrayParam(string $parameter)
+    private function arrayParam(string $parameter): array|string
     {
-        if (strpos($parameter, '[') !== false && preg_match('/^([^[]*)\[([^]]*)\](.*)$/', $parameter, $match)) {
+        if (str_contains($parameter, '[') && preg_match('/^([^[]*)\[([^]]*)\](.*)$/', $parameter, $match)) {
             return [$match[1], $match[2]];
         }
 

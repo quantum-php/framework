@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 /**
  * Quantum PHP Framework
- *
- * An open source software development framework for PHP
- *
- * @package Quantum
- * @author Arman Ag. <arman@quantumphp.io>
- * @copyright Copyright (c) 2018 Softberg LLC (https://softberg.org)
- * @link https://quantumphp.io/
- * @since 3.0.0
+ * An open-source software development framework for PHP
+ * @link https://quantumphp.io
  */
 
 namespace Quantum\Mailer\Traits;
@@ -280,11 +274,10 @@ trait MailerTrait
     private function createFromTemplate(): string
     {
         ob_start();
-        /** @phpstan-ignore argument.type */
-        ob_implicit_flush(PHP_VERSION_ID >= 80000 ? false : 0);
+        ob_implicit_flush(false);
 
         if (is_array($this->message)) {
-            extract($this->message, EXTR_OVERWRITE);
+            extract($this->message);
         }
 
         require $this->templatePath . '.php';

@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 /**
  * Quantum PHP Framework
- *
- * An open source software development framework for PHP
- *
- * @package Quantum
- * @author Arman Ag. <arman@quantumphp.io>
- * @copyright Copyright (c) 2018 Softberg LLC (https://softberg.org)
- * @link https://quantumphp.io/
- * @since 3.0.0
+ * An open-source software development framework for PHP
+ * @link https://quantumphp.io
  */
 
 namespace Quantum\Database\Adapters\Idiorm\Statements;
@@ -83,22 +77,14 @@ trait Join
     {
         $relation = $this->getValidatedRelation($relatedModel);
 
-        switch ($relation['type']) {
-            case Relation::HAS_ONE:
-            case Relation::HAS_MANY:
-                $this->applyHasRelation($relatedModel, $relation);
-                break;
-
-            case Relation::BELONGS_TO:
-                $this->applyBelongsTo($relatedModel, $relation);
-                break;
-
-            default:
-                throw ModelException::unsupportedRelationType($relation['type']);
-        }
+        match ($relation['type']) {
+            Relation::HAS_ONE, Relation::HAS_MANY => $this->applyHasRelation($relatedModel, $relation),
+            Relation::BELONGS_TO => $this->applyBelongsTo($relatedModel, $relation),
+            default => throw ModelException::unsupportedRelationType($relation['type']),
+        };
 
         if ($switch) {
-            $this->modelName = get_class($relatedModel);
+            $this->modelName = $relatedModel::class;
             $this->table = $relatedModel->table;
             $this->idColumn = $relatedModel->idColumn;
             $this->foreignKeys = $relatedModel->relations();
@@ -146,7 +132,7 @@ trait Join
     private function getValidatedRelation(DbModel $modelToJoin): array
     {
         $relations = $this->getForeignKeys();
-        $relatedModelName = get_class($modelToJoin);
+        $relatedModelName = $modelToJoin::class;
 
         if (!isset($relations[$relatedModelName])) {
             throw ModelException::wrongRelation($this->getModelName(), $relatedModelName);

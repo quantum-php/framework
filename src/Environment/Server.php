@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 /**
  * Quantum PHP Framework
- *
- * An open source software development framework for PHP
- *
- * @package Quantum
- * @author Arman Ag. <arman@quantumphp.io>
- * @copyright Copyright (c) 2018 Softberg LLC (https://softberg.org)
- * @link https://quantumphp.io/
- * @since 3.0.0
+ * An open-source software development framework for PHP
+ * @link https://quantumphp.io
  */
 
 namespace Quantum\Environment;
@@ -114,7 +108,7 @@ class Server
     {
         $contentType = $this->get('CONTENT_TYPE');
 
-        if ($exact && $contentType && strpos($contentType, ';') !== false) {
+        if ($exact && $contentType && str_contains($contentType, ';')) {
             return trim(explode(';', $contentType, 2)[0]);
         }
 
@@ -150,7 +144,7 @@ class Server
         }
 
         return array_reduce(array_keys($data), function (array $headers, $key) use ($data): array {
-            if (strpos($key, 'HTTP_') === 0) {
+            if (str_starts_with($key, 'HTTP_')) {
                 $formattedKey = strtolower(str_replace('_', '-', substr($key, 5)));
                 $headers[$formattedKey] = $data[$key];
             }

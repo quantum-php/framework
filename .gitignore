@@ -17,6 +17,8 @@ Thumbs.db
 # =========================
 /tests/_root/shared/store/*
 /tests/_root/cron-tests/
+/tests/_root/cache/data/*
+!/tests/_root/cache/data/.gitkeep
 /coverage/
 *.log
 
