@@ -6,9 +6,11 @@
 - Raised the static analysis baseline to PHPStan level `8` with PHP `8.0` target settings (#532)
 - Kept Rector aligned to the PHP 8 baseline and applied bounded PHP 8-safe modernization updates (#532)
 - Simplified the standard framework file banner across core sources, templates, and affected tests (#532)
+- Made Twig an optional renderer dependency so the framework can retain PHP 8.0 support without requiring vulnerable Twig releases (#532)
 
 ### Notes
 - OpenAPI metadata remains on Doctrine-style annotations for now because the currently used `swagger-php` attribute scanning path requires PHP `8.1+`; `doctrine/annotations` is intentionally retained on the PHP `8.0` baseline (#532)
+- Twig rendering requires a separately installed, security-supported Twig release; Twig `^3.27` requires PHP 8.1 or later, while the default HTML renderer remains available on PHP 8.0 (#532)
 
 ## [3.0.0] - 2026-05-28
 

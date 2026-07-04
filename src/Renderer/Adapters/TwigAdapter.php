@@ -44,6 +44,10 @@ class TwigAdapter implements TemplateRendererInterface
      */
     public function __construct(?array $configs = [])
     {
+        if (!class_exists(Environment::class)) {
+            throw RendererException::twigNotInstalled();
+        }
+
         $this->configs = $configs;
 
         $this->fs = FileSystemFactory::get();
