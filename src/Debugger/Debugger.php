@@ -166,16 +166,33 @@ class Debugger
      */
     protected function createTab(string $type): void
     {
-        if (!$this->debugBar->hasCollector($type)) {
-            $this->debugBar->addCollector(new MessagesCollector($type));
-        }
+        $collector = $this->resolveMessagesCollector($type);
 
         $messages = $this->store->get($type);
 
         foreach ($messages as $message) {
             $fn = key($message);
-            $this->debugBar[$type]->$fn($message[$fn]);
+            $collector->log($fn, $message[$fn]);
         }
+    }
+
+    /**
+     * Ensures the requested debug tab collector can accept mixed message payloads.
+     * @throws DebugBarException
+     */
+    protected function resolveMessagesCollector(string $type): MessagesCollector
+    {
+        if (!$this->debugBar->hasCollector($type)) {
+            $this->debugBar->addCollector(new MessagesCollector($type));
+        }
+
+        $collector = $this->debugBar->getCollector($type);
+
+        if (!$collector instanceof MessagesCollector) {
+            throw new DebugBarException("Collector '{$type}' must be a MessagesCollector instance");
+        }
+
+        return $collector;
     }
 
     /**
