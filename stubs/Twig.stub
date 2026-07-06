@@ -1,0 +1,58 @@
+<?php
+
+namespace Twig;
+
+use Twig\Loader\FilesystemLoader;
+
+class Environment
+{
+    /**
+     * @param array<string, mixed> $options
+     */
+    public function __construct(FilesystemLoader $loader, array $options = [])
+    {
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    public function render(string $name, array $context = []): string
+    {
+    }
+
+    public function addFunction(TwigFunction $function): void
+    {
+    }
+}
+
+class TwigFunction
+{
+    public function __construct(string $name, callable $callable)
+    {
+    }
+}
+
+namespace Twig\Loader;
+
+class FilesystemLoader
+{
+    public function __construct(string $path)
+    {
+    }
+}
+
+namespace Twig\Error;
+
+use Exception;
+
+class LoaderError extends Exception
+{
+}
+
+class RuntimeError extends Exception
+{
+}
+
+class SyntaxError extends Exception
+{
+}

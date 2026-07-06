@@ -48,6 +48,10 @@ class RendererFactoryTest extends AppTestCase
 
     public function testRendererFactoryTwigAdapter(): void
     {
+        if (!class_exists('Twig\Environment')) {
+            $this->markTestSkipped('The optional twig/twig package is not installed.');
+        }
+
         $renderer = RendererFactory::get(RendererType::TWIG);
 
         $this->assertInstanceOf(TemplateRendererInterface::class, $renderer->getAdapter());

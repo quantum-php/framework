@@ -39,18 +39,17 @@
         "symfony/console": "^5.4",
         "vlucas/phpdotenv": "^5.0",
         "dflydev/dot-access-data": "^3.0",
-        "php-debugbar/php-debugbar": "^1.8",
-        "phpmailer/phpmailer": "^6.0",
-        "twig/twig": ">=3.0 <3.26",
-        "php-curl-class/php-curl-class": "^11.0",
-        "psr/log": "^1.1",
+        "php-debugbar/php-debugbar": "^2.2",
+        "phpmailer/phpmailer": "^7.1",
+        "php-curl-class/php-curl-class": "^13.0",
+        "psr/log": "^2.0",
         "rakibtg/sleekdb": "^2.13",
-        "swagger-api/swagger-ui": "^4.14",
-        "zircote/swagger-php": "~4.4",
+        "swagger-api/swagger-ui": "^5.32",
+        "zircote/swagger-php": "^5.8",
         "psr/simple-cache": "^1.0",
         "vaibhavpandeyvpz/phemail": "^1.1",
         "doctrine/annotations": "^2.0",
-        "voku/html-min": "^4.5",
+        "voku/html-min": "^5.0",
         "league/commonmark": "^2.0",
         "ezyang/htmlpurifier": "^4.18",
         "povils/figlet": "^0.1.0",
@@ -69,7 +68,8 @@
         "ext-dom": "Required for XML/HTML processing",
         "ext-zip": "Required for ZIP file handling",
         "ext-memcached": "Required for Memcached support",
-        "ext-redis": "Required for Redis support"
+        "ext-redis": "Required for Redis support",
+        "twig/twig": "Required for the optional Twig renderer; secure Twig ^3.27 releases require PHP 8.1 or later"
     },
     "autoload": {
         "psr-4": {
@@ -90,10 +90,5 @@
         "test": "vendor/bin/phpunit --stderr --coverage-clover coverage.xml"
     },
     "minimum-stability": "stable",
-    "prefer-stable": true,
-    "config": {
-        "audit": {
-            "block-insecure": false
-        }
-    }
+    "prefer-stable": true
 }

@@ -2,6 +2,9 @@ parameters:
     phpVersion: 80000
     level: 8
 
+    scanFiles:
+        - stubs/Twig.stub
+
     paths:
         - src
 

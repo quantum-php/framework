@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace Quantum\Logger\Contracts;
 
+use Stringable;
+
 /**
  * Interface ReportableInterface
  * @package Quantum\Logger
@@ -20,6 +22,6 @@ interface ReportableInterface
      * Reports a message
      * @param array<string, mixed>|null $context
      */
-    public function report(string $level, string $message, ?array $context = []): void;
+    public function report(string $level, string|Stringable $message, ?array $context = []): void;
 
 }

@@ -12,6 +12,7 @@ namespace Quantum\Logger\Adapters;
 
 use Quantum\Logger\Contracts\ReportableInterface;
 use Quantum\Debugger\Debugger;
+use Stringable;
 
 /**
  * Class MessageAdapter
@@ -19,7 +20,7 @@ use Quantum\Debugger\Debugger;
  */
 class MessageAdapter implements ReportableInterface
 {
-    public function report(string $level, string $message, ?array $context = []): void
+    public function report(string $level, string|Stringable $message, ?array $context = []): void
     {
         $tab = $context['tab'] ?? Debugger::MESSAGES;
 
