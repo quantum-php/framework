@@ -108,7 +108,7 @@ class DebuggerTest extends AppTestCase
 
         $this->debugger->initStore();
 
-        $rendererMock = Mockery::mock('alias:' . JavascriptRenderer::class);
+        $rendererMock = Mockery::mock(JavascriptRenderer::class);
         $rendererMock->shouldReceive('setBaseUrl')->andReturnSelf();
         $rendererMock->shouldReceive('addAssets')->andReturnSelf();
         $rendererMock->shouldReceive('renderHead')->andReturn('<head></head>');
@@ -122,6 +122,33 @@ class DebuggerTest extends AppTestCase
 
         $this->assertStringContainsString('<head></head>', $output);
         $this->assertStringContainsString('<div>Debug Bar</div>', $output);
+    }
+
+    public function testDebugbarRenderReplaysArrayPayloadsThroughLog(): void
+    {
+        $this->debugger->initStore();
+        $this->debugger->addToStoreCell(Debugger::ROUTES, LogLevel::INFO, ['Route' => '/welcome']);
+
+        $collectorMock = Mockery::mock(MessagesCollector::class);
+        $collectorMock->shouldReceive('log')
+            ->once()
+            ->with(LogLevel::INFO, ['Route' => '/welcome']);
+
+        $this->debugBarMock->shouldReceive('hasCollector')
+            ->with(Debugger::ROUTES)
+            ->andReturn(true);
+        $this->debugBarMock->shouldReceive('offsetGet')
+            ->with(Debugger::ROUTES)
+            ->andReturn($collectorMock);
+
+        $method = new \ReflectionMethod($this->debugger, 'createTab');
+        $method->setAccessible(true);
+        $method->invoke($this->debugger, Debugger::ROUTES);
+
+        $this->assertEquals(
+            ['info' => ['Route' => '/welcome']],
+            $this->debuggerStore->get(Debugger::ROUTES)[0]
+        );
     }
 
     public function testDebugbarRenderReturnsEmptyWhenDisabled(): void

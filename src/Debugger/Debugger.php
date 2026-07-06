@@ -174,7 +174,7 @@ class Debugger
 
         foreach ($messages as $message) {
             $fn = key($message);
-            $this->debugBar[$type]->$fn($message[$fn]);
+            $this->debugBar[$type]->log($fn, $message[$fn]);
         }
     }
 
