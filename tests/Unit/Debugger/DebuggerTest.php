@@ -117,6 +117,9 @@ class DebuggerTest extends AppTestCase
         $this->debugBarMock->shouldReceive('getJavascriptRenderer')->andReturn($rendererMock);
 
         $this->debugBarMock->shouldReceive('hasCollector')->with(Mockery::any())->andReturn(true);
+        $this->debugBarMock->shouldReceive('getCollector')
+            ->with(Mockery::any())
+            ->andReturn(Mockery::mock(MessagesCollector::class));
 
         $output = $this->debugger->render();
 
@@ -137,7 +140,7 @@ class DebuggerTest extends AppTestCase
         $this->debugBarMock->shouldReceive('hasCollector')
             ->with(Debugger::ROUTES)
             ->andReturn(true);
-        $this->debugBarMock->shouldReceive('offsetGet')
+        $this->debugBarMock->shouldReceive('getCollector')
             ->with(Debugger::ROUTES)
             ->andReturn($collectorMock);
 
