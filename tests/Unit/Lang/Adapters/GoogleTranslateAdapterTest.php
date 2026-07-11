@@ -100,6 +100,16 @@ class GoogleTranslateAdapterTest extends AppTestCase
         $adapter->get('Hello');
     }
 
+    public function testGoogleTranslateAdapterThrowsIfPayloadCannotBeEncoded(): void
+    {
+        $adapter = new GoogleTranslateAdapter('es', $this->getParams(), $this->mockHttpClient());
+
+        $this->expectException(LangException::class);
+        $this->expectExceptionMessage('The translation payload could not be encoded for `Google Translate`.');
+
+        $adapter->get("\xB1");
+    }
+
     public function testGoogleTranslateAdapterReturnsEmptyStringWithoutProviderCall(): void
     {
         $httpClientMock = Mockery::mock(HttpClient::class);

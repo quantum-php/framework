@@ -43,6 +43,15 @@ class LangExceptionTest extends AppTestCase
         $this->assertSame(E_WARNING, $exception->getCode());
     }
 
+    public function testPayloadEncodingFailed(): void
+    {
+        $exception = LangException::payloadEncodingFailed('Google Translate');
+
+        $this->assertInstanceOf(LangException::class, $exception);
+        $this->assertSame('The translation payload could not be encoded for `Google Translate`.', $exception->getMessage());
+        $this->assertSame(E_WARNING, $exception->getCode());
+    }
+
     public function testProviderRequestFailedWithoutDetails(): void
     {
         $exception = LangException::providerRequestFailed('Google Translate');

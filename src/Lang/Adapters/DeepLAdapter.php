@@ -104,7 +104,7 @@ class DeepLAdapter implements LangAdapterInterface
         $payloadJson = json_encode($payload);
 
         if ($payloadJson === false) {
-            throw LangException::invalidProviderResponse('DeepL');
+            throw LangException::payloadEncodingFailed('DeepL');
         }
 
         return $payloadJson;

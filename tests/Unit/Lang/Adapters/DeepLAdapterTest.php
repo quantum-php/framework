@@ -86,6 +86,16 @@ class DeepLAdapterTest extends AppTestCase
         $adapter->get('Hello');
     }
 
+    public function testDeepLAdapterThrowsIfPayloadCannotBeEncoded(): void
+    {
+        $adapter = new DeepLAdapter('es', $this->getParams(), $this->mockHttpClient());
+
+        $this->expectException(LangException::class);
+        $this->expectExceptionMessage('The translation payload could not be encoded for `DeepL`.');
+
+        $adapter->get("\xB1");
+    }
+
     public function testDeepLAdapterReturnsEmptyStringWithoutProviderCall(): void
     {
         $httpClientMock = Mockery::mock(HttpClient::class);

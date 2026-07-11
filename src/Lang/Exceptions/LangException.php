@@ -51,6 +51,14 @@ class LangException extends BaseException
         );
     }
 
+    public static function payloadEncodingFailed(string $provider): self
+    {
+        return new self(
+            _message(ExceptionMessages::PAYLOAD_ENCODING_FAILED, [$provider]),
+            E_WARNING
+        );
+    }
+
     public static function providerRequestFailed(string $provider, ?string $details = null): self
     {
         $suffix = $details ? ': ' . $details : '';

@@ -15,7 +15,7 @@ trait HttpClientTestCase
 
     protected $currentErrors;
 
-    protected $data;
+    protected array $data = [];
 
     protected $options;
 
