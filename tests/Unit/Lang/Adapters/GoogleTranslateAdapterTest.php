@@ -43,6 +43,17 @@ class GoogleTranslateAdapterTest extends AppTestCase
         $adapter = new GoogleTranslateAdapter('es', $this->getParams(), $this->mockHttpClient());
 
         $this->assertEquals('Hola', $adapter->get('Hello'));
+        $this->assertStringContainsString('?key=test-api-key', $this->url);
+        $this->assertStringNotContainsString('q=', $this->url);
+        $this->assertJsonStringEqualsJsonString(
+            json_encode([
+                'q' => 'Hello',
+                'target' => 'es',
+                'format' => 'text',
+                'source' => 'en',
+            ]),
+            (string) $this->data[$this->url]
+        );
     }
 
     public function testGoogleTranslateAdapterReturnsCachedTranslationWithoutProviderCall(): void

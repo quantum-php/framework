@@ -13,7 +13,10 @@ namespace Quantum\Lang\Adapters;
 use Quantum\Lang\Contracts\LangAdapterInterface;
 use Quantum\Lang\Traits\RemoteAdapterTrait;
 use Quantum\Lang\Exceptions\LangException;
+use Quantum\App\Exceptions\BaseException;
 use Quantum\HttpClient\HttpClient;
+use ReflectionException;
+use ErrorException;
 
 class DeepLAdapter implements LangAdapterInterface
 {
@@ -41,6 +44,7 @@ class DeepLAdapter implements LangAdapterInterface
 
     /**
      * @param array<int|string, mixed>|string|null $params
+     * @throws BaseException|ReflectionException|ErrorException
      */
     public function get(string $key, $params = null): string
     {
@@ -101,9 +105,5 @@ class DeepLAdapter implements LangAdapterInterface
         $this->setCachedTranslation('deepl', $text, $translation);
 
         return $translation;
-    }
-
-    public function flush(): void
-    {
     }
 }

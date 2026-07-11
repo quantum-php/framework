@@ -64,14 +64,6 @@ class Lang
     }
 
     /**
-     * Flush loaded translations
-     */
-    public function flush(): void
-    {
-        $this->adapter->flush();
-    }
-
-    /**
      * @param array<mixed> $arguments
      * @return mixed
      * @throws BaseException

@@ -18,6 +18,4 @@ interface LangAdapterInterface
      * @param string|array<int|string, mixed>|null $params
      */
     public function get(string $key, array|string $params = null): string;
-
-    public function flush(): void;
 }

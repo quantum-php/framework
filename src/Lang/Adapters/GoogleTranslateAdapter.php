@@ -13,7 +13,10 @@ namespace Quantum\Lang\Adapters;
 use Quantum\Lang\Contracts\LangAdapterInterface;
 use Quantum\Lang\Traits\RemoteAdapterTrait;
 use Quantum\Lang\Exceptions\LangException;
+use Quantum\App\Exceptions\BaseException;
 use Quantum\HttpClient\HttpClient;
+use ReflectionException;
+use ErrorException;
 
 class GoogleTranslateAdapter implements LangAdapterInterface
 {
@@ -41,6 +44,7 @@ class GoogleTranslateAdapter implements LangAdapterInterface
 
     /**
      * @param array<int|string, mixed>|string|null $params
+     * @throws LangException|BaseException|ReflectionException|ErrorException
      */
     public function get(string $key, $params = null): string
     {
@@ -62,21 +66,28 @@ class GoogleTranslateAdapter implements LangAdapterInterface
             throw LangException::missingConfig('lang.google_translate.api_key');
         }
 
-        $query = [
+        $payload = [
             'q' => $text,
             'target' => $this->lang,
             'format' => 'text',
-            'key' => $apiKey,
         ];
 
         if (!empty($this->params['source_locale'])) {
-            $query['source'] = (string) $this->params['source_locale'];
+            $payload['source'] = (string) $this->params['source_locale'];
+        }
+
+        $payloadJson = json_encode($payload);
+
+        if ($payloadJson === false) {
+            throw LangException::invalidProviderResponse('Google Translate');
         }
 
         $response = $this->sendRequest(
-            (string) ($this->params['api_url'] ?? self::API_URL) . '?' . http_build_query($query, '', '&'),
-            null,
-            [],
+            (string) ($this->params['api_url'] ?? self::API_URL) . '?key=' . urlencode($apiKey),
+            $payloadJson,
+            [
+                'Content-Type' => 'application/json',
+            ],
             'POST'
         );
 
@@ -97,9 +108,5 @@ class GoogleTranslateAdapter implements LangAdapterInterface
         $this->setCachedTranslation('google_translate', $text, $translation);
 
         return $translation;
-    }
-
-    public function flush(): void
-    {
     }
 }
