@@ -4,6 +4,7 @@ namespace Quantum\Tests\Unit\Lang\Factories;
 
 use Quantum\Lang\Exceptions\LangException;
 use Quantum\Lang\Factories\LangFactory;
+use Quantum\Lang\Adapters\FileAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Lang\Lang;
 use Quantum\Di\Di;
@@ -35,6 +36,13 @@ class LangFactoryTest extends AppTestCase
         $second = LangFactory::get();
 
         $this->assertSame($first, $second);
+    }
+
+    public function testLangFactoryResolvesFileAdapter(): void
+    {
+        $lang = LangFactory::get();
+
+        $this->assertInstanceOf(FileAdapter::class, $lang->getAdapter());
     }
 
     public function testLangFactoryDetectedFromRouteParameter(): void
@@ -78,6 +86,7 @@ class LangFactoryTest extends AppTestCase
         config()->set('lang', [
             'enabled' => true,
             'default' => 'en',
+            'adapter' => 'file',
             'supported' => ['en', 'es'],
             'url_segment' => 1,
         ]);
@@ -110,6 +119,7 @@ class LangFactoryTest extends AppTestCase
         config()->set('lang', [
             'enabled' => true,
             'default' => null,
+            'adapter' => 'file',
             'supported' => ['en', 'es'],
             'url_segment' => 1,
         ]);
@@ -123,6 +133,22 @@ class LangFactoryTest extends AppTestCase
         LangFactory::get();
     }
 
+    public function testLangFactoryThrowsErrorIfAdapterIsNotSupported(): void
+    {
+        config()->set('lang', [
+            'enabled' => true,
+            'default' => 'en',
+            'adapter' => 'unknown',
+            'supported' => ['en', 'es'],
+            'url_segment' => 1,
+        ]);
+
+        $this->expectException(LangException::class);
+        $this->expectExceptionMessage('The adapter `unknown` is not supported.');
+
+        LangFactory::get();
+    }
+
     private function resetLangFactory(): void
     {
         if (!Di::isRegistered(LangFactory::class)) {
@@ -130,6 +156,6 @@ class LangFactoryTest extends AppTestCase
         }
 
         $factory = Di::get(LangFactory::class);
-        $this->setPrivateProperty($factory, 'instance', null);
+        $this->setPrivateProperty($factory, 'instances', []);
     }
 }
