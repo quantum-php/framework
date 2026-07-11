@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace Quantum\Lang;
 
 use Quantum\Lang\Contracts\LangAdapterInterface;
+use Quantum\App\Exceptions\BaseException;
+use Quantum\Lang\Exceptions\LangException;
 
 /**
  * Class Lang
@@ -86,5 +88,19 @@ class Lang
     public function flush(): void
     {
         $this->adapter->flush();
+    }
+
+    /**
+     * @param array<mixed> $arguments
+     * @return mixed
+     * @throws BaseException
+     */
+    public function __call(string $method, ?array $arguments)
+    {
+        if (!method_exists($this->adapter, $method)) {
+            throw LangException::methodNotSupported($method, $this->adapter::class);
+        }
+
+        return $this->adapter->$method(...$arguments);
     }
 }

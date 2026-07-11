@@ -2,9 +2,9 @@
 
 namespace Quantum\Tests\Unit\Lang;
 
+use Quantum\Lang\Adapters\FileAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Router\MatchedRoute;
-use Quantum\Lang\Translator;
 use Quantum\Router\Route;
 use Quantum\Lang\Lang;
 
@@ -16,8 +16,7 @@ class LangTest extends AppTestCase
     {
         parent::setUp();
 
-        $translator = new Translator('en');
-        $this->lang = new Lang('en', true, $translator);
+        $this->lang = new Lang('en', true, new FileAdapter('en'));
 
         $route = new Route(
             ['POST'],
@@ -46,7 +45,7 @@ class LangTest extends AppTestCase
     {
         $this->assertTrue($this->lang->isEnabled());
 
-        $langDisabled = new Lang('en', false, new Translator('en'));
+        $langDisabled = new Lang('en', false, new FileAdapter('en'));
 
         $this->assertFalse($langDisabled->isEnabled());
     }
