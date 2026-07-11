@@ -13,9 +13,7 @@ namespace Quantum\App\Traits;
 use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Loader\Exceptions\LoaderException;
 use Quantum\Router\Exceptions\RouteException;
-use Quantum\Lang\Exceptions\LangException;
 use Quantum\App\Exceptions\BaseException;
-use Quantum\Lang\Factories\LangFactory;
 use Quantum\Di\Exceptions\DiException;
 use Quantum\ResourceCache\ViewCache;
 use Quantum\Router\RouteCollection;
@@ -50,18 +48,6 @@ trait WebAppTrait
         request()->setMatchedRoute($matchedRoute);
 
         return $matchedRoute;
-    }
-
-    /**
-     * @throws LangException|ConfigException|DiException|BaseException|ReflectionException
-     */
-    private function loadLanguage(): void
-    {
-        $lang = LangFactory::get();
-
-        if ($lang->isEnabled()) {
-            $lang->load();
-        }
     }
 
     /**

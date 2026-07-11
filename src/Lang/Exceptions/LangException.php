@@ -34,4 +34,22 @@ class LangException extends BaseException
             E_WARNING
         );
     }
+
+    public static function invalidProviderResponse(string $provider): self
+    {
+        return new self(
+            _message(ExceptionMessages::INVALID_PROVIDER_RESPONSE, [$provider]),
+            E_WARNING
+        );
+    }
+
+    public static function providerRequestFailed(string $provider, ?string $details = null): self
+    {
+        $suffix = $details ? ': ' . $details : '.';
+
+        return new self(
+            _message(ExceptionMessages::PROVIDER_REQUEST_FAILED, [$provider, $suffix]),
+            E_WARNING
+        );
+    }
 }

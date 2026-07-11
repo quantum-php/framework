@@ -23,11 +23,20 @@ class FileAdapter implements LangAdapterInterface
 {
     protected string $lang;
 
+    /**
+     * @var array<string, mixed>
+     */
+    protected array $params = [];
+
     private ?Data $translations = null;
 
-    public function __construct(string $lang)
+    /**
+     * @param array<string, mixed> $params
+     */
+    public function __construct(string $lang, array $params = [])
     {
         $this->lang = $lang;
+        $this->params = $params;
     }
 
     public function setLang(string $lang): LangAdapterInterface
@@ -78,6 +87,10 @@ class FileAdapter implements LangAdapterInterface
      */
     public function get(string $key, array|string $params = null): string
     {
+        if ($this->translations === null) {
+            $this->loadTranslations();
+        }
+
         if ($this->translations && $this->translations->has($key)) {
             $message = $this->translations->get($key);
             return $params ? _message($message, $params) : $message;

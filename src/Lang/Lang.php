@@ -66,14 +66,6 @@ class Lang
     }
 
     /**
-     * Load translations
-     */
-    public function load(): void
-    {
-        $this->adapter->loadTranslations();
-    }
-
-    /**
      * Get translation by key
      * @param string|array<int|string, mixed>|null $params
      */

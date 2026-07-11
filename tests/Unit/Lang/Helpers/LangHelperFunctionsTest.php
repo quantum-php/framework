@@ -15,8 +15,6 @@ class LangHelperFunctionsTest extends AppTestCase
         parent::setUp();
 
         $this->lang = LangFactory::get();
-
-        $this->lang->load();
     }
 
     public function testLangHelperCurrentLang(): void

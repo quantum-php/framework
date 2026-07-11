@@ -19,7 +19,5 @@ interface LangAdapterInterface
      */
     public function get(string $key, array|string $params = null): string;
 
-    public function loadTranslations(): void;
-
     public function flush(): void;
 }

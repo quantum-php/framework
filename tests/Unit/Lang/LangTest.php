@@ -54,10 +54,6 @@ class LangTest extends AppTestCase
     {
         $this->lang->flush();
 
-        $this->assertEquals('custom.test', $this->lang->getTranslation('custom.test'));
-
-        $this->lang->load();
-
         $this->assertEquals('Testing', $this->lang->getTranslation('custom.test'));
 
         $this->assertEquals('Information about the new feature', $this->lang->getTranslation('custom.info', ['new']));
@@ -65,12 +61,10 @@ class LangTest extends AppTestCase
 
     public function testLangFlushResetsTranslations(): void
     {
-        $this->lang->load();
-
         $this->assertEquals('Testing', $this->lang->getTranslation('custom.test'));
 
         $this->lang->flush();
 
-        $this->assertEquals('test', $this->lang->getTranslation('test'));
+        $this->assertEquals('Testing', $this->lang->getTranslation('custom.test'));
     }
 }

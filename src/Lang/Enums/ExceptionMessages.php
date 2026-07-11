@@ -21,4 +21,8 @@ final class ExceptionMessages extends BaseExceptionMessages
     public const TRANSLATION_FILES_NOT_FOUND = 'Translation files not found.';
 
     public const MISCONFIGURED_DEFAULT_LANG = 'Misconfigured lang default config.';
+
+    public const INVALID_PROVIDER_RESPONSE = 'The provider `{%1}` returned an invalid translation response.';
+
+    public const PROVIDER_REQUEST_FAILED = 'The translation request to `{%1}` failed{%2}.';
 }
