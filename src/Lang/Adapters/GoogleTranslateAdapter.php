@@ -72,7 +72,6 @@ class GoogleTranslateAdapter implements LangAdapterInterface
             [
                 'Content-Type' => 'application/json',
             ],
-            'POST'
         );
 
         $translation = $this->extractTranslation($response);
@@ -100,7 +99,7 @@ class GoogleTranslateAdapter implements LangAdapterInterface
         $payloadJson = json_encode($payload);
 
         if ($payloadJson === false) {
-            throw LangException::invalidProviderResponse('Google Translate');
+            throw LangException::payloadEncodingFailed('Google Translate');
         }
 
         return $payloadJson;
