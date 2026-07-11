@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
+The format is based on Keep a Changelog.
 
 ## [3.0.3] - 2026-07-10
 
