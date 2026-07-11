@@ -30,19 +30,6 @@
 <h2>Features</h2>
 <img src="https://quantumphp.io/assets/img/features.png" alt="Quantum" />
 
-<h2>Requirements</h2>
-
-- PHP 8.0 or later
-
-The HTML renderer is available by default and does not require Twig. Twig rendering remains supported as an optional
-integration. Install a currently supported Twig release separately before selecting the `twig` renderer:
-
-```bash
-composer require twig/twig:^3.27
-```
-
-Twig 3.27 and later require PHP 8.1. Applications that must remain on PHP 8.0 should use the default HTML renderer.
-
 <h2>Installation</h2>
 
 <h3> 1. Create new project </h3>
