@@ -35,6 +35,14 @@ class LangException extends BaseException
         );
     }
 
+    public static function misconfiguredDefaultAdapterConfig(): self
+    {
+        return new self(
+            ExceptionMessages::MISCONFIGURED_DEFAULT_ADAPTER,
+            E_WARNING
+        );
+    }
+
     public static function invalidProviderResponse(string $provider): self
     {
         return new self(

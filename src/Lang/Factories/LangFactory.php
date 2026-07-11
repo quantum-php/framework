@@ -68,6 +68,10 @@ class LangFactory
         $default = config()->get('lang.default_locale');
         $adapter ??= config()->get('lang.default');
 
+        if (!$adapter) {
+            throw LangException::misconfiguredDefaultAdapterConfig();
+        }
+
         $lang = $this->detectLanguage($supported, $default);
 
         if (!isset($this->instances[$adapter])) {

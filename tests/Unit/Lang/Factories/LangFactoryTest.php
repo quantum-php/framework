@@ -195,6 +195,22 @@ class LangFactoryTest extends AppTestCase
         LangFactory::get();
     }
 
+    public function testLangFactoryThrowsErrorIfNoDefaultAdapterFound(): void
+    {
+        config()->set('lang', [
+            'default' => null,
+            'default_locale' => 'en',
+            'file' => [],
+            'supported' => ['en', 'es'],
+            'url_segment' => 1,
+        ]);
+
+        $this->expectException(LangException::class);
+        $this->expectExceptionMessage('Misconfigured lang default adapter config.');
+
+        LangFactory::get();
+    }
+
     private function resetLangFactory(): void
     {
         if (!Di::isRegistered(LangFactory::class)) {
