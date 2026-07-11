@@ -2,12 +2,12 @@
 
 namespace Quantum\Tests\Unit\Lang\Adapters;
 
-use Mockery;
-use Quantum\HttpClient\HttpClient;
+use Quantum\Tests\Unit\Storage\HttpClientTestCase;
 use Quantum\Lang\Adapters\GoogleTranslateAdapter;
 use Quantum\Lang\Exceptions\LangException;
+use Quantum\HttpClient\HttpClient;
 use Quantum\Tests\Unit\AppTestCase;
-use Quantum\Tests\Unit\Storage\HttpClientTestCase;
+use Mockery;
 
 class GoogleTranslateAdapterTest extends AppTestCase
 {
@@ -96,6 +96,28 @@ class GoogleTranslateAdapterTest extends AppTestCase
 
         $this->expectException(LangException::class);
         $this->expectExceptionMessage('The provider `Google Translate` returned an invalid translation response.');
+
+        $adapter->get('Hello');
+    }
+
+    public function testGoogleTranslateAdapterReturnsEmptyStringWithoutProviderCall(): void
+    {
+        $httpClientMock = Mockery::mock(HttpClient::class);
+        $httpClientMock->shouldNotReceive('createRequest');
+
+        $adapter = new GoogleTranslateAdapter('es', $this->getParams(), $httpClientMock);
+
+        $this->assertSame('', $adapter->get(''));
+    }
+
+    public function testGoogleTranslateAdapterThrowsIfProviderRequestFails(): void
+    {
+        $this->currentErrors = ['timeout'];
+
+        $adapter = new GoogleTranslateAdapter('es', $this->getParams(), $this->mockHttpClient());
+
+        $this->expectException(LangException::class);
+        $this->expectExceptionMessage('The translation request to `Quantum\\Lang\\Adapters\\GoogleTranslateAdapter` failed');
 
         $adapter->get('Hello');
     }

@@ -25,6 +25,24 @@ class LangExceptionTest extends AppTestCase
         $this->assertSame(E_WARNING, $exception->getCode());
     }
 
+    public function testMisconfiguredDefaultAdapterConfig(): void
+    {
+        $exception = LangException::misconfiguredDefaultAdapterConfig();
+
+        $this->assertInstanceOf(LangException::class, $exception);
+        $this->assertSame('Misconfigured lang default adapter config.', $exception->getMessage());
+        $this->assertSame(E_WARNING, $exception->getCode());
+    }
+
+    public function testInvalidProviderResponse(): void
+    {
+        $exception = LangException::invalidProviderResponse('DeepL');
+
+        $this->assertInstanceOf(LangException::class, $exception);
+        $this->assertSame('The provider `DeepL` returned an invalid translation response.', $exception->getMessage());
+        $this->assertSame(E_WARNING, $exception->getCode());
+    }
+
     public function testProviderRequestFailedWithoutDetails(): void
     {
         $exception = LangException::providerRequestFailed('Google Translate');

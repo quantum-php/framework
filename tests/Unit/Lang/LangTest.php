@@ -2,6 +2,7 @@
 
 namespace Quantum\Tests\Unit\Lang;
 
+use Quantum\Lang\Exceptions\LangException;
 use Quantum\Lang\Adapters\FileAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Router\MatchedRoute;
@@ -57,5 +58,25 @@ class LangTest extends AppTestCase
         $this->lang->flush();
 
         $this->assertEquals('Testing', $this->lang->getTranslation('custom.test'));
+    }
+
+    public function testLangGetAdapter(): void
+    {
+        $this->assertInstanceOf(FileAdapter::class, $this->lang->getAdapter());
+    }
+
+    public function testLangCallForwardsToAdapterMethod(): void
+    {
+        $this->lang->flush();
+
+        $this->assertEquals('Testing', $this->lang->get('custom.test'));
+    }
+
+    public function testLangCallThrowsForUnsupportedMethod(): void
+    {
+        $this->expectException(LangException::class);
+        $this->expectExceptionMessage('The method `nonExistingMethod` is not supported for `' . FileAdapter::class . '`.');
+
+        $this->lang->nonExistingMethod();
     }
 }

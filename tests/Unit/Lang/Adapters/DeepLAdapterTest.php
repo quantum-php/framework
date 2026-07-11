@@ -2,12 +2,12 @@
 
 namespace Quantum\Tests\Unit\Lang\Adapters;
 
-use Mockery;
-use Quantum\HttpClient\HttpClient;
-use Quantum\Lang\Adapters\DeepLAdapter;
-use Quantum\Lang\Exceptions\LangException;
-use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Tests\Unit\Storage\HttpClientTestCase;
+use Quantum\Lang\Exceptions\LangException;
+use Quantum\Lang\Adapters\DeepLAdapter;
+use Quantum\Tests\Unit\AppTestCase;
+use Quantum\HttpClient\HttpClient;
+use Mockery;
 
 class DeepLAdapterTest extends AppTestCase
 {
@@ -81,6 +81,28 @@ class DeepLAdapterTest extends AppTestCase
 
         $this->expectException(LangException::class);
         $this->expectExceptionMessage('The provider `DeepL` returned an invalid translation response.');
+
+        $adapter->get('Hello');
+    }
+
+    public function testDeepLAdapterReturnsEmptyStringWithoutProviderCall(): void
+    {
+        $httpClientMock = Mockery::mock(HttpClient::class);
+        $httpClientMock->shouldNotReceive('createRequest');
+
+        $adapter = new DeepLAdapter('es', $this->getParams(), $httpClientMock);
+
+        $this->assertSame('', $adapter->get(''));
+    }
+
+    public function testDeepLAdapterThrowsIfProviderRequestFails(): void
+    {
+        $this->currentErrors = ['timeout'];
+
+        $adapter = new DeepLAdapter('es', $this->getParams(), $this->mockHttpClient());
+
+        $this->expectException(LangException::class);
+        $this->expectExceptionMessage('The translation request to `Quantum\\Lang\\Adapters\\DeepLAdapter` failed');
 
         $adapter->get('Hello');
     }

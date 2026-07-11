@@ -35,4 +35,14 @@ class FileAdapterTest extends AppTestCase
 
         $this->assertEquals('Information about the new feature', $result);
     }
+
+    public function testFileAdapterSetLangKeepsTranslationsWhenLangDoesNotChange(): void
+    {
+        $adapter = new FileAdapter('en');
+
+        $adapter->loadTranslations();
+        $adapter->setLang('en');
+
+        $this->assertEquals('Testing', $adapter->get('custom.test'));
+    }
 }
