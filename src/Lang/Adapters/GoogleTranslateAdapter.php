@@ -66,6 +66,27 @@ class GoogleTranslateAdapter implements LangAdapterInterface
             throw LangException::missingConfig('lang.google_translate.api_key');
         }
 
+        $response = $this->sendRequest(
+            (string) ($this->params['api_url'] ?? self::API_URL) . '?key=' . urlencode($apiKey),
+            $this->buildPayload($text),
+            [
+                'Content-Type' => 'application/json',
+            ],
+            'POST'
+        );
+
+        $translation = $this->extractTranslation($response);
+
+        $this->setCachedTranslation('google_translate', $text, $translation);
+
+        return $translation;
+    }
+
+    /**
+     * @throws LangException
+     */
+    private function buildPayload(string $text): string
+    {
         $payload = [
             'q' => $text,
             'target' => $this->lang,
@@ -82,15 +103,15 @@ class GoogleTranslateAdapter implements LangAdapterInterface
             throw LangException::invalidProviderResponse('Google Translate');
         }
 
-        $response = $this->sendRequest(
-            (string) ($this->params['api_url'] ?? self::API_URL) . '?key=' . urlencode($apiKey),
-            $payloadJson,
-            [
-                'Content-Type' => 'application/json',
-            ],
-            'POST'
-        );
+        return $payloadJson;
+    }
 
+    /**
+     * @param mixed $response
+     * @throws LangException
+     */
+    private function extractTranslation($response): string
+    {
         if (
             !is_object($response)
             || !isset($response->data)
@@ -103,10 +124,6 @@ class GoogleTranslateAdapter implements LangAdapterInterface
             throw LangException::invalidProviderResponse('Google Translate');
         }
 
-        $translation = html_entity_decode($response->data->translations[0]->translatedText, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-
-        $this->setCachedTranslation('google_translate', $text, $translation);
-
-        return $translation;
+        return html_entity_decode($response->data->translations[0]->translatedText, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 }

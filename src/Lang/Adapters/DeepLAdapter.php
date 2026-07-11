@@ -66,6 +66,27 @@ class DeepLAdapter implements LangAdapterInterface
             throw LangException::missingConfig('lang.deepl.auth_key');
         }
 
+        $response = $this->sendRequest(
+            (string) ($this->params['api_url'] ?? self::API_URL),
+            $this->buildPayload($text),
+            [
+                'Authorization' => 'DeepL-Auth-Key ' . $authKey,
+                'Content-Type' => 'application/json',
+            ]
+        );
+
+        $translation = $this->extractTranslation($response);
+
+        $this->setCachedTranslation('deepl', $text, $translation);
+
+        return $translation;
+    }
+
+    /**
+     * @throws LangException
+     */
+    private function buildPayload(string $text): string
+    {
         $payload = [
             'text' => [$text],
             'target_lang' => strtoupper($this->lang),
@@ -81,15 +102,15 @@ class DeepLAdapter implements LangAdapterInterface
             throw LangException::invalidProviderResponse('DeepL');
         }
 
-        $response = $this->sendRequest(
-            (string) ($this->params['api_url'] ?? self::API_URL),
-            $payloadJson,
-            [
-                'Authorization' => 'DeepL-Auth-Key ' . $authKey,
-                'Content-Type' => 'application/json',
-            ]
-        );
+        return $payloadJson;
+    }
 
+    /**
+     * @param mixed $response
+     * @throws LangException
+     */
+    private function extractTranslation($response): string
+    {
         if (
             !is_object($response)
             || !isset($response->translations)
@@ -100,10 +121,6 @@ class DeepLAdapter implements LangAdapterInterface
             throw LangException::invalidProviderResponse('DeepL');
         }
 
-        $translation = $response->translations[0]->text;
-
-        $this->setCachedTranslation('deepl', $text, $translation);
-
-        return $translation;
+        return $response->translations[0]->text;
     }
 }
