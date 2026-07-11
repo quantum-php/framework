@@ -85,8 +85,9 @@ class LangFactoryTest extends AppTestCase
     {
         config()->set('lang', [
             'enabled' => true,
-            'default' => 'en',
-            'adapter' => 'file',
+            'default' => 'file',
+            'default_locale' => 'en',
+            'file' => [],
             'supported' => ['en', 'es'],
             'url_segment' => 1,
         ]);
@@ -118,8 +119,9 @@ class LangFactoryTest extends AppTestCase
     {
         config()->set('lang', [
             'enabled' => true,
-            'default' => null,
-            'adapter' => 'file',
+            'default' => 'file',
+            'default_locale' => null,
+            'file' => [],
             'supported' => ['en', 'es'],
             'url_segment' => 1,
         ]);
@@ -137,8 +139,9 @@ class LangFactoryTest extends AppTestCase
     {
         config()->set('lang', [
             'enabled' => true,
-            'default' => 'en',
-            'adapter' => 'unknown',
+            'default' => 'unknown',
+            'default_locale' => 'en',
+            'file' => [],
             'supported' => ['en', 'es'],
             'url_segment' => 1,
         ]);

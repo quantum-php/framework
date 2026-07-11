@@ -8,7 +8,8 @@ return [
      */
     'enabled' => true,
     'supported' => ['en', 'es'],
-    'default' => 'en',
-    'adapter' => 'file',
+    'default' => 'file',
+    'default_locale' => 'en',
+    'file' => [],
     'url_segment' => 1,
 ];

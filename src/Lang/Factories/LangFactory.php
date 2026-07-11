@@ -15,8 +15,8 @@ use Quantum\Loader\Exceptions\LoaderException;
 use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Lang\Exceptions\LangException;
 use Quantum\App\Exceptions\BaseException;
-use Quantum\Di\Exceptions\DiException;
 use Quantum\Lang\Adapters\FileAdapter;
+use Quantum\Di\Exceptions\DiException;
 use Quantum\Lang\Enums\LangType;
 use Quantum\Loader\Setup;
 use ReflectionException;
@@ -61,8 +61,8 @@ class LangFactory
 
         $isEnabled = filter_var(config()->get('lang.enabled'), FILTER_VALIDATE_BOOLEAN);
         $supported = (array) config()->get('lang.supported');
-        $default = config()->get('lang.default');
-        $adapter ??= config()->get('lang.adapter');
+        $default = config()->get('lang.default_locale');
+        $adapter ??= config()->get('lang.default');
 
         $lang = $this->detectLanguage($supported, $default);
 
