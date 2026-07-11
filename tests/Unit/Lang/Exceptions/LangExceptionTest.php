@@ -24,4 +24,22 @@ class LangExceptionTest extends AppTestCase
         $this->assertSame('Misconfigured lang default config.', $exception->getMessage());
         $this->assertSame(E_WARNING, $exception->getCode());
     }
+
+    public function testProviderRequestFailedWithoutDetails(): void
+    {
+        $exception = LangException::providerRequestFailed('Google Translate');
+
+        $this->assertInstanceOf(LangException::class, $exception);
+        $this->assertSame('The translation request to `Google Translate` failed.', $exception->getMessage());
+        $this->assertSame(E_WARNING, $exception->getCode());
+    }
+
+    public function testProviderRequestFailedWithDetails(): void
+    {
+        $exception = LangException::providerRequestFailed('Google Translate', 'timeout');
+
+        $this->assertInstanceOf(LangException::class, $exception);
+        $this->assertSame('The translation request to `Google Translate` failed: timeout.', $exception->getMessage());
+        $this->assertSame(E_WARNING, $exception->getCode());
+    }
 }

@@ -45,7 +45,7 @@ class LangException extends BaseException
 
     public static function providerRequestFailed(string $provider, ?string $details = null): self
     {
-        $suffix = $details ? ': ' . $details : '.';
+        $suffix = $details ? ': ' . $details : '';
 
         return new self(
             _message(ExceptionMessages::PROVIDER_REQUEST_FAILED, [$provider, $suffix]),
