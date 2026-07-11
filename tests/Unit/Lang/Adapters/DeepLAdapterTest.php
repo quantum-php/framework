@@ -41,6 +41,7 @@ class DeepLAdapterTest extends AppTestCase
         $adapter = new DeepLAdapter('es', $this->getParams(), $this->mockHttpClient());
 
         $this->assertEquals('Hola', $adapter->get('Hello'));
+        $this->assertSame(DeepLAdapter::TIMEOUT, $this->options[$this->url][CURLOPT_TIMEOUT]);
     }
 
     public function testDeepLAdapterReturnsCachedTranslationWithoutProviderCall(): void

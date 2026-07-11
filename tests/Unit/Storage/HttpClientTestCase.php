@@ -17,6 +17,8 @@ trait HttpClientTestCase
 
     protected $data;
 
+    protected $options;
+
     protected function mockHttpClient()
     {
         $httpClientMock = Mockery::mock(HttpClient::class);
@@ -29,6 +31,11 @@ trait HttpClientTestCase
         $httpClientMock->shouldReceive('setMethod')->andReturnSelf();
 
         $httpClientMock->shouldReceive('setHeaders')->andReturnSelf();
+
+        $httpClientMock->shouldReceive('setOpt')->andReturnUsing(function ($option, $value) use ($httpClientMock) {
+            $this->options[$this->url][$option] = $value;
+            return $httpClientMock;
+        });
 
         $httpClientMock->shouldReceive('getRequestHeaders')->andReturn([]);
 

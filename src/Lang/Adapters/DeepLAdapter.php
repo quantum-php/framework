@@ -24,6 +24,8 @@ class DeepLAdapter implements LangAdapterInterface
 
     public const API_URL = 'https://api.deepl.com/v2/translate';
 
+    public const TIMEOUT = 30;
+
     protected string $lang;
 
     /**
@@ -72,6 +74,9 @@ class DeepLAdapter implements LangAdapterInterface
             [
                 'Authorization' => 'DeepL-Auth-Key ' . $authKey,
                 'Content-Type' => 'application/json',
+            ],
+            [
+                CURLOPT_TIMEOUT => self::TIMEOUT,
             ]
         );
 

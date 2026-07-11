@@ -69,6 +69,7 @@ trait RemoteAdapterTrait
     /**
      * @param array<string, mixed>|string|null $data
      * @param array<string, mixed> $headers
+     * @param array<int, mixed> $options
      * @param string $method
      * @return mixed
      * @throws BaseException
@@ -76,7 +77,7 @@ trait RemoteAdapterTrait
      * @throws LangException
      * @throws HttpClientException
      */
-    protected function sendRequest(string $url, $data = null, array $headers = [], string $method = 'POST'): mixed
+    protected function sendRequest(string $url, $data = null, array $headers = [], array $options = [], string $method = 'POST'): mixed
     {
         $request = $this->httpClient
             ->createRequest($url)
@@ -88,6 +89,10 @@ trait RemoteAdapterTrait
 
         if ($headers) {
             $request->setHeaders($headers);
+        }
+
+        foreach ($options as $option => $value) {
+            $request->setOpt($option, $value);
         }
 
         $request->start();
