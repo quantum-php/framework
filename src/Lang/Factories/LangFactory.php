@@ -64,7 +64,6 @@ class LangFactory
             config()->import(new Setup('config', 'lang'));
         }
 
-        $isEnabled = filter_var(config()->get('lang.enabled'), FILTER_VALIDATE_BOOLEAN);
         $supported = (array) config()->get('lang.supported');
         $default = config()->get('lang.default_locale');
         $adapter ??= config()->get('lang.default');
@@ -73,7 +72,7 @@ class LangFactory
 
         if (!isset($this->instances[$adapter])) {
             $adapterClass = $this->getAdapterClass($adapter);
-            $this->instances[$adapter] = $this->createInstance($adapterClass, $adapter, $lang, $isEnabled);
+            $this->instances[$adapter] = $this->createInstance($adapterClass, $adapter, $lang);
         }
 
         return $this->instances[$adapter];
@@ -94,7 +93,7 @@ class LangFactory
     /**
      * @throws BaseException|ReflectionException
      */
-    private function createInstance(string $adapterClass, string $adapter, string $lang, bool $isEnabled): Lang
+    private function createInstance(string $adapterClass, string $adapter, string $lang): Lang
     {
         $langConfig = (array) config()->get('lang.' . $adapter);
 
@@ -106,7 +105,7 @@ class LangFactory
             throw LangException::adapterNotSupported($adapter);
         }
 
-        return new Lang($lang, $isEnabled, $langAdapter);
+        return new Lang($lang, $langAdapter);
     }
 
     /**

@@ -16,7 +16,7 @@ class LangTest extends AppTestCase
     {
         parent::setUp();
 
-        $this->lang = new Lang('en', true, new FileAdapter('en'));
+        $this->lang = new Lang('en', new FileAdapter('en'));
 
         $route = new Route(
             ['POST'],
@@ -39,15 +39,6 @@ class LangTest extends AppTestCase
         $this->lang->setLang('ru');
 
         $this->assertEquals('ru', $this->lang->getLang());
-    }
-
-    public function testLangIsEnabled(): void
-    {
-        $this->assertTrue($this->lang->isEnabled());
-
-        $langDisabled = new Lang('en', false, new FileAdapter('en'));
-
-        $this->assertFalse($langDisabled->isEnabled());
     }
 
     public function testLangLoadAndGetTranslation(): void

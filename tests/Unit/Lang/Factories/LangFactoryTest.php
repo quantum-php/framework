@@ -2,8 +2,10 @@
 
 namespace Quantum\Tests\Unit\Lang\Factories;
 
+use Quantum\Lang\Adapters\GoogleTranslateAdapter;
 use Quantum\Lang\Exceptions\LangException;
 use Quantum\Lang\Factories\LangFactory;
+use Quantum\Lang\Adapters\DeepLAdapter;
 use Quantum\Lang\Adapters\FileAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Lang\Lang;
@@ -25,8 +27,6 @@ class LangFactoryTest extends AppTestCase
         $this->assertInstanceOf(Lang::class, $lang);
 
         $this->assertEquals('en', $lang->getLang());
-
-        $this->assertTrue($lang->isEnabled());
     }
 
     public function testLangFactoryGetReturnsSameInstance(): void
@@ -43,6 +43,52 @@ class LangFactoryTest extends AppTestCase
         $lang = LangFactory::get();
 
         $this->assertInstanceOf(FileAdapter::class, $lang->getAdapter());
+    }
+
+    public function testLangFactoryResolvesDeepLAdapter(): void
+    {
+        config()->set('lang', [
+            'default' => 'deepl',
+            'default_locale' => 'en',
+            'file' => [],
+            'deepl' => [
+                'auth_key' => 'test-auth-key',
+            ],
+            'google_translate' => [
+                'api_key' => 'test-api-key',
+            ],
+            'supported' => ['en', 'es'],
+            'url_segment' => 1,
+        ]);
+
+        $this->testRequest('http://127.0.0.1/api/rest');
+
+        $lang = LangFactory::get();
+
+        $this->assertInstanceOf(DeepLAdapter::class, $lang->getAdapter());
+    }
+
+    public function testLangFactoryResolvesGoogleTranslateAdapter(): void
+    {
+        config()->set('lang', [
+            'default' => 'google_translate',
+            'default_locale' => 'en',
+            'file' => [],
+            'deepl' => [
+                'auth_key' => 'test-auth-key',
+            ],
+            'google_translate' => [
+                'api_key' => 'test-api-key',
+            ],
+            'supported' => ['en', 'es'],
+            'url_segment' => 1,
+        ]);
+
+        $this->testRequest('http://127.0.0.1/api/rest');
+
+        $lang = LangFactory::get();
+
+        $this->assertInstanceOf(GoogleTranslateAdapter::class, $lang->getAdapter());
     }
 
     public function testLangFactoryDetectedFromRouteParameter(): void
@@ -84,7 +130,6 @@ class LangFactoryTest extends AppTestCase
     public function testLangFactoryFallsBackToDefaultIfProvidedLangIsNotSupported(): void
     {
         config()->set('lang', [
-            'enabled' => true,
             'default' => 'file',
             'default_locale' => 'en',
             'file' => [],
@@ -118,7 +163,6 @@ class LangFactoryTest extends AppTestCase
     public function testLangFactoryThrowsErrorIfNoDefaultLangFound(): void
     {
         config()->set('lang', [
-            'enabled' => true,
             'default' => 'file',
             'default_locale' => null,
             'file' => [],
@@ -138,7 +182,6 @@ class LangFactoryTest extends AppTestCase
     public function testLangFactoryThrowsErrorIfAdapterIsNotSupported(): void
     {
         config()->set('lang', [
-            'enabled' => true,
             'default' => 'unknown',
             'default_locale' => 'en',
             'file' => [],

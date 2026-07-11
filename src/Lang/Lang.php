@@ -11,8 +11,8 @@ declare(strict_types=1);
 namespace Quantum\Lang;
 
 use Quantum\Lang\Contracts\LangAdapterInterface;
-use Quantum\App\Exceptions\BaseException;
 use Quantum\Lang\Exceptions\LangException;
+use Quantum\App\Exceptions\BaseException;
 
 /**
  * Class Lang
@@ -24,11 +24,8 @@ class Lang
 
     private LangAdapterInterface $adapter;
 
-    private bool $isEnabled;
-
-    public function __construct(string $lang, bool $isEnabled, LangAdapterInterface $adapter)
+    public function __construct(string $lang, LangAdapterInterface $adapter)
     {
-        $this->isEnabled = $isEnabled;
         $this->adapter = $adapter;
         $this->setLang($lang);
     }
@@ -50,14 +47,6 @@ class Lang
     public function getLang(): ?string
     {
         return $this->currentLang;
-    }
-
-    /**
-     * Is multilang enabled
-     */
-    public function isEnabled(): bool
-    {
-        return $this->isEnabled;
     }
 
     public function getAdapter(): LangAdapterInterface
