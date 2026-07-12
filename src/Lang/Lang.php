@@ -10,12 +10,9 @@ declare(strict_types=1);
 
 namespace Quantum\Lang;
 
-use Quantum\Config\Exceptions\ConfigException;
-use Quantum\Loader\Exceptions\LoaderException;
+use Quantum\Lang\Contracts\LangAdapterInterface;
 use Quantum\Lang\Exceptions\LangException;
 use Quantum\App\Exceptions\BaseException;
-use Quantum\Di\Exceptions\DiException;
-use ReflectionException;
 
 /**
  * Class Lang
@@ -25,14 +22,11 @@ class Lang
 {
     private ?string $currentLang = null;
 
-    private Translator $translator;
+    private LangAdapterInterface $adapter;
 
-    private bool $isEnabled;
-
-    public function __construct(string $lang, bool $isEnabled, Translator $translator)
+    public function __construct(string $lang, LangAdapterInterface $adapter)
     {
-        $this->isEnabled = $isEnabled;
-        $this->translator = $translator;
+        $this->adapter = $adapter;
         $this->setLang($lang);
     }
 
@@ -43,6 +37,7 @@ class Lang
     public function setLang(string $lang): self
     {
         $this->currentLang = $lang;
+        $this->adapter->setLang($lang);
         return $this;
     }
 
@@ -54,37 +49,31 @@ class Lang
         return $this->currentLang;
     }
 
-    /**
-     * Is multilang enabled
-     */
-    public function isEnabled(): bool
+    public function getAdapter(): LangAdapterInterface
     {
-        return $this->isEnabled;
-    }
-
-    /**
-     * Load translations
-     * @throws LangException|LoaderException|ConfigException|DiException|BaseException|ReflectionException
-     */
-    public function load(): void
-    {
-        $this->translator->loadTranslations();
+        return $this->adapter;
     }
 
     /**
      * Get translation by key
-     * @param array<int|string, mixed>|string|null $params
+     * @param string|array<int|string, mixed>|null $params
      */
-    public function getTranslation(string $key, $params = null): ?string
+    public function getTranslation(string $key, array|string $params = null): ?string
     {
-        return $this->translator->get($key, $params);
+        return $this->adapter->get($key, $params);
     }
 
     /**
-     * Flush loaded translations
+     * @param array<mixed> $arguments
+     * @return mixed
+     * @throws BaseException
      */
-    public function flush(): void
+    public function __call(string $method, ?array $arguments)
     {
-        $this->translator->flush();
+        if (!method_exists($this->adapter, $method)) {
+            throw LangException::methodNotSupported($method, $this->adapter::class);
+        }
+
+        return $this->adapter->$method(...$arguments);
     }
 }

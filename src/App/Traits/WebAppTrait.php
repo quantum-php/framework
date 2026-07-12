@@ -53,15 +53,12 @@ trait WebAppTrait
     }
 
     /**
-     * @throws LangException|ConfigException|DiException|BaseException|ReflectionException
+     * Resolve lang config and current locale before controller hooks run.
+     * @throws LangException|ConfigException|LoaderException|DiException|ReflectionException
      */
     private function loadLanguage(): void
     {
-        $lang = LangFactory::get();
-
-        if ($lang->isEnabled()) {
-            $lang->load();
-        }
+        LangFactory::get();
     }
 
     /**

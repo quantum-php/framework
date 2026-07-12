@@ -26,12 +26,14 @@ class WebAppAdapterTest extends AppTestCase
     public function testWebAppAdapterStartSuccessfully(): void
     {
         request()->create('GET', '/test/am/tests');
+        $this->assertFalse(config()->has('lang'));
 
         ob_start();
         $result = $this->webAppAdapter->start();
         ob_end_clean();
 
         $this->assertEquals(0, $result);
+        $this->assertTrue(config()->has('lang'));
         $this->assertNull(request()->getMatchedRoute());
         $this->assertNull(request()->getUri());
     }

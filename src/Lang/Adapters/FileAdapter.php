@@ -8,8 +8,9 @@ declare(strict_types=1);
  * @link https://quantumphp.io
  */
 
-namespace Quantum\Lang;
+namespace Quantum\Lang\Adapters;
 
+use Quantum\Lang\Contracts\LangAdapterInterface;
 use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Loader\Exceptions\LoaderException;
 use Quantum\Lang\Exceptions\LangException;
@@ -18,23 +19,37 @@ use Quantum\Di\Exceptions\DiException;
 use Dflydev\DotAccessData\Data;
 use ReflectionException;
 
-/**
- * Class Translator
- * @package Quantum\Lang
- */
-class Translator
+class FileAdapter implements LangAdapterInterface
 {
     protected string $lang;
 
+    /**
+     * @var array<string, mixed>
+     */
+    protected array $params = [];
+
     private ?Data $translations = null;
 
-    public function __construct(string $lang)
+    /**
+     * @param array<string, mixed> $params
+     */
+    public function __construct(string $lang, array $params = [])
     {
         $this->lang = $lang;
+        $this->params = $params;
+    }
+
+    public function setLang(string $lang): LangAdapterInterface
+    {
+        if ($this->lang !== $lang) {
+            $this->lang = $lang;
+            $this->flush();
+        }
+
+        return $this;
     }
 
     /**
-     * Load translation files
      * @throws LangException|LoaderException|ConfigException|DiException|BaseException|ReflectionException
      */
     public function loadTranslations(): void
@@ -68,7 +83,28 @@ class Translator
     }
 
     /**
-     * Load translations
+     * @param array<int|string, mixed>|string|null $params
+     */
+    public function get(string $key, array|string $params = null): string
+    {
+        if ($this->translations === null) {
+            $this->loadTranslations();
+        }
+
+        if ($this->translations && $this->translations->has($key)) {
+            $message = $this->translations->get($key);
+            return $params ? _message($message, $params) : $message;
+        }
+
+        return $key;
+    }
+
+    public function flush(): void
+    {
+        $this->translations = null;
+    }
+
+    /**
      * @param array<string> $files
      * @throws ConfigException|DiException|BaseException|ReflectionException
      */
@@ -85,27 +121,5 @@ class Translator
                 $fileName => fs()->require($file),
             ]);
         }
-    }
-
-    /**
-     * Get translation by key
-     * @param array<int|string, mixed>|string|null $params
-     */
-    public function get(string $key, $params = null): string
-    {
-        if ($this->translations && $this->translations->has($key)) {
-            $message = $this->translations->get($key);
-            return $params ? _message($message, $params) : $message;
-        }
-
-        return $key;
-    }
-
-    /**
-     * Reset translations
-     */
-    public function flush(): void
-    {
-        $this->translations = null;
     }
 }

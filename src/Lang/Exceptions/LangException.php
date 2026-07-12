@@ -34,4 +34,38 @@ class LangException extends BaseException
             E_WARNING
         );
     }
+
+    public static function misconfiguredDefaultAdapterConfig(): self
+    {
+        return new self(
+            ExceptionMessages::MISCONFIGURED_DEFAULT_ADAPTER,
+            E_WARNING
+        );
+    }
+
+    public static function invalidProviderResponse(string $provider): self
+    {
+        return new self(
+            _message(ExceptionMessages::INVALID_PROVIDER_RESPONSE, [$provider]),
+            E_WARNING
+        );
+    }
+
+    public static function payloadEncodingFailed(string $provider): self
+    {
+        return new self(
+            _message(ExceptionMessages::PAYLOAD_ENCODING_FAILED, [$provider]),
+            E_WARNING
+        );
+    }
+
+    public static function providerRequestFailed(string $provider, ?string $details = null): self
+    {
+        $suffix = $details ? ': ' . $details : '';
+
+        return new self(
+            _message(ExceptionMessages::PROVIDER_REQUEST_FAILED, [$provider, $suffix]),
+            E_WARNING
+        );
+    }
 }

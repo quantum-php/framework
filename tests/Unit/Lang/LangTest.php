@@ -2,9 +2,10 @@
 
 namespace Quantum\Tests\Unit\Lang;
 
+use Quantum\Lang\Exceptions\LangException;
+use Quantum\Lang\Adapters\FileAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Router\MatchedRoute;
-use Quantum\Lang\Translator;
 use Quantum\Router\Route;
 use Quantum\Lang\Lang;
 
@@ -16,8 +17,7 @@ class LangTest extends AppTestCase
     {
         parent::setUp();
 
-        $translator = new Translator('en');
-        $this->lang = new Lang('en', true, $translator);
+        $this->lang = new Lang('en', new FileAdapter('en'));
 
         $route = new Route(
             ['POST'],
@@ -42,22 +42,9 @@ class LangTest extends AppTestCase
         $this->assertEquals('ru', $this->lang->getLang());
     }
 
-    public function testLangIsEnabled(): void
-    {
-        $this->assertTrue($this->lang->isEnabled());
-
-        $langDisabled = new Lang('en', false, new Translator('en'));
-
-        $this->assertFalse($langDisabled->isEnabled());
-    }
-
     public function testLangLoadAndGetTranslation(): void
     {
         $this->lang->flush();
-
-        $this->assertEquals('custom.test', $this->lang->getTranslation('custom.test'));
-
-        $this->lang->load();
 
         $this->assertEquals('Testing', $this->lang->getTranslation('custom.test'));
 
@@ -66,12 +53,30 @@ class LangTest extends AppTestCase
 
     public function testLangFlushResetsTranslations(): void
     {
-        $this->lang->load();
-
         $this->assertEquals('Testing', $this->lang->getTranslation('custom.test'));
 
         $this->lang->flush();
 
-        $this->assertEquals('test', $this->lang->getTranslation('test'));
+        $this->assertEquals('Testing', $this->lang->getTranslation('custom.test'));
+    }
+
+    public function testLangGetAdapter(): void
+    {
+        $this->assertInstanceOf(FileAdapter::class, $this->lang->getAdapter());
+    }
+
+    public function testLangCallForwardsToAdapterMethod(): void
+    {
+        $this->lang->flush();
+
+        $this->assertEquals('Testing', $this->lang->get('custom.test'));
+    }
+
+    public function testLangCallThrowsForUnsupportedMethod(): void
+    {
+        $this->expectException(LangException::class);
+        $this->expectExceptionMessage('The method `nonExistingMethod` is not supported for `' . FileAdapter::class . '`.');
+
+        $this->lang->nonExistingMethod();
     }
 }

@@ -10,11 +10,17 @@ declare(strict_types=1);
 
 namespace Quantum\Lang\Factories;
 
-use Quantum\Config\Exceptions\ConfigException;
+use Quantum\Lang\Adapters\GoogleTranslateAdapter;
+use Quantum\Lang\Contracts\LangAdapterInterface;
 use Quantum\Loader\Exceptions\LoaderException;
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Lang\Exceptions\LangException;
+use Quantum\App\Exceptions\BaseException;
+use Quantum\Lang\Adapters\DeepLAdapter;
+use Quantum\Lang\Adapters\FileAdapter;
 use Quantum\Di\Exceptions\DiException;
-use Quantum\Lang\Translator;
+use Quantum\HttpClient\HttpClient;
+use Quantum\Lang\Enums\LangType;
 use Quantum\Loader\Setup;
 use ReflectionException;
 use Quantum\Lang\Lang;
@@ -26,53 +32,84 @@ use Quantum\Di\Di;
  */
 class LangFactory
 {
-    private ?Lang $instance = null;
+    public const ADAPTERS = [
+        LangType::FILE => FileAdapter::class,
+        LangType::DEEPL => DeepLAdapter::class,
+        LangType::GOOGLE_TRANSLATE => GoogleTranslateAdapter::class,
+    ];
+
+    /**
+     * @var array<string, Lang>
+     */
+    private array $instances = [];
 
     /**
      * @throws LangException|ConfigException|LoaderException|DiException|ReflectionException
      */
-    public static function get(): Lang
+    public static function get(?string $adapter = null): Lang
     {
         if (!Di::isRegistered(self::class)) {
             Di::register(self::class);
         }
 
-        return Di::get(self::class)->resolve();
+        return Di::get(self::class)->resolve($adapter);
     }
 
     /**
-     * @throws LangException|ConfigException|DiException|ReflectionException|LoaderException
+     * @throws LangException|ConfigException|DiException|ReflectionException|LoaderException|BaseException
      */
-    public function resolve(): Lang
-    {
-        if ($this->instance !== null) {
-            return $this->instance;
-        }
-
-        [$isEnabled, $supported, $default] = $this->loadLangConfig();
-
-        $lang = $this->detectLanguage($supported, $default);
-
-        $translator = new Translator($lang);
-
-        return $this->instance = new Lang($lang, $isEnabled, $translator);
-    }
-
-    /**
-     * @return array{0: bool, 1: array<string>, 2: string}
-     * @throws LoaderException|ConfigException|DiException|ReflectionException
-     */
-    private function loadLangConfig(): array
+    public function resolve(?string $adapter = null): Lang
     {
         if (!config()->has('lang')) {
             config()->import(new Setup('config', 'lang'));
         }
 
-        return [
-            filter_var(config()->get('lang.enabled'), FILTER_VALIDATE_BOOLEAN),
-            (array) config()->get('lang.supported'),
-            config()->get('lang.default'),
-        ];
+        $supported = (array) config()->get('lang.supported');
+        $default = config()->get('lang.default_locale');
+        $adapter ??= config()->get('lang.default');
+
+        if (!$adapter) {
+            throw LangException::misconfiguredDefaultAdapterConfig();
+        }
+
+        $lang = $this->detectLanguage($supported, $default);
+
+        if (!isset($this->instances[$adapter])) {
+            $adapterClass = $this->getAdapterClass($adapter);
+            $this->instances[$adapter] = $this->createInstance($adapterClass, $adapter, $lang);
+        }
+
+        return $this->instances[$adapter];
+    }
+
+    /**
+     * @throws BaseException
+     */
+    private function getAdapterClass(string $adapter): string
+    {
+        if (!array_key_exists($adapter, self::ADAPTERS)) {
+            throw LangException::adapterNotSupported($adapter);
+        }
+
+        return self::ADAPTERS[$adapter];
+    }
+
+    /**
+     * @throws BaseException|ReflectionException
+     */
+    private function createInstance(string $adapterClass, string $adapter, string $lang): Lang
+    {
+        $langConfig = (array) config()->get('lang.' . $adapter);
+
+        $langAdapter = $adapter === LangType::FILE
+            ? new $adapterClass($lang, $langConfig)
+            : new $adapterClass($lang, $langConfig, new HttpClient());
+
+        if (!$langAdapter instanceof LangAdapterInterface) {
+            throw LangException::adapterNotSupported($adapter);
+        }
+
+        return new Lang($lang, $langAdapter);
     }
 
     /**

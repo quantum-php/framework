@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog.
 
+## [3.1.0] - TBD
+
+### Added
+- Added adapter-based Lang provider support with `DeepL` and `Google Translate` adapters plus shared remote request/caching infrastructure (#533)
+
+### Changed
+- Refactored the Lang package to resolve adapter instances through `LangFactory` configuration and load file translations lazily on first use instead of preloading them during web boot (#533)
+- **BREAKING:** Reshaped Lang configuration so `lang.default` now selects the adapter, locale fallback moved to `lang.default_locale`, and the unused `lang.enabled` toggle was removed (#533)
+- **BREAKING:** Removed `Lang::isEnabled()` from the public Lang API because it no longer affected runtime behavior (#533)
+
 ## [3.0.3] - 2026-07-10
 
 ### Changed

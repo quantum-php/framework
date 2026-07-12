@@ -24,4 +24,49 @@ class LangExceptionTest extends AppTestCase
         $this->assertSame('Misconfigured lang default config.', $exception->getMessage());
         $this->assertSame(E_WARNING, $exception->getCode());
     }
+
+    public function testMisconfiguredDefaultAdapterConfig(): void
+    {
+        $exception = LangException::misconfiguredDefaultAdapterConfig();
+
+        $this->assertInstanceOf(LangException::class, $exception);
+        $this->assertSame('Misconfigured lang default adapter config.', $exception->getMessage());
+        $this->assertSame(E_WARNING, $exception->getCode());
+    }
+
+    public function testInvalidProviderResponse(): void
+    {
+        $exception = LangException::invalidProviderResponse('DeepL');
+
+        $this->assertInstanceOf(LangException::class, $exception);
+        $this->assertSame('The provider `DeepL` returned an invalid translation response.', $exception->getMessage());
+        $this->assertSame(E_WARNING, $exception->getCode());
+    }
+
+    public function testPayloadEncodingFailed(): void
+    {
+        $exception = LangException::payloadEncodingFailed('Google Translate');
+
+        $this->assertInstanceOf(LangException::class, $exception);
+        $this->assertSame('The translation payload could not be encoded for `Google Translate`.', $exception->getMessage());
+        $this->assertSame(E_WARNING, $exception->getCode());
+    }
+
+    public function testProviderRequestFailedWithoutDetails(): void
+    {
+        $exception = LangException::providerRequestFailed('Google Translate');
+
+        $this->assertInstanceOf(LangException::class, $exception);
+        $this->assertSame('The translation request to `Google Translate` failed.', $exception->getMessage());
+        $this->assertSame(E_WARNING, $exception->getCode());
+    }
+
+    public function testProviderRequestFailedWithDetails(): void
+    {
+        $exception = LangException::providerRequestFailed('Google Translate', 'timeout');
+
+        $this->assertInstanceOf(LangException::class, $exception);
+        $this->assertSame('The translation request to `Google Translate` failed: timeout.', $exception->getMessage());
+        $this->assertSame(E_WARNING, $exception->getCode());
+    }
 }

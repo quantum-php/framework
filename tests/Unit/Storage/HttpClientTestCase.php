@@ -15,6 +15,10 @@ trait HttpClientTestCase
 
     protected $currentErrors;
 
+    protected array $data = [];
+
+    protected $options;
+
     protected function mockHttpClient()
     {
         $httpClientMock = Mockery::mock(HttpClient::class);
@@ -28,11 +32,19 @@ trait HttpClientTestCase
 
         $httpClientMock->shouldReceive('setHeaders')->andReturnSelf();
 
+        $httpClientMock->shouldReceive('setOpt')->andReturnUsing(function ($option, $value) use ($httpClientMock) {
+            $this->options[$this->url][$option] = $value;
+            return $httpClientMock;
+        });
+
         $httpClientMock->shouldReceive('getRequestHeaders')->andReturn([]);
 
-        $httpClientMock->shouldReceive('getData')->andReturn([]);
+        $httpClientMock->shouldReceive('getData')->andReturnUsing(fn () => $this->data[$this->url] ?? []);
 
-        $httpClientMock->shouldReceive('setData')->andReturn($httpClientMock);
+        $httpClientMock->shouldReceive('setData')->andReturnUsing(function ($data) use ($httpClientMock) {
+            $this->data[$this->url] = $data;
+            return $httpClientMock;
+        });
 
         $httpClientMock->shouldReceive('start')->andReturnUsing(function () use ($httpClientMock) {
             $this->response[$this->url]['body'] = $this->currentResponse;
