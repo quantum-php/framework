@@ -10,14 +10,18 @@ declare(strict_types=1);
 
 namespace Quantum\Lang\Traits;
 
-use ErrorException;
-use Quantum\Config\Exceptions\ConfigException;
 use Quantum\HttpClient\Exceptions\HttpClientException;
+use Quantum\Lang\Adapters\GoogleTranslateAdapter;
+use Quantum\Config\Exceptions\ConfigException;
+use Quantum\Loader\Exceptions\LoaderException;
 use Quantum\Lang\Exceptions\LangException;
 use Quantum\App\Exceptions\BaseException;
+use Quantum\Lang\Adapters\DeepLAdapter;
+use Quantum\Lang\Adapters\FileAdapter;
 use Quantum\Di\Exceptions\DiException;
 use Quantum\HttpClient\HttpClient;
 use ReflectionException;
+use ErrorException;
 
 trait RemoteAdapterTrait
 {
@@ -30,10 +34,37 @@ trait RemoteAdapterTrait
 
     /**
      * @param array<int|string, mixed>|string|null $params
+     * @throws LangException|LoaderException|ConfigException|DiException|BaseException|ReflectionException
      */
     protected function buildSourceText(string $key, array|string $params = null): string
     {
+        if ($this->usesSourceCatalog()) {
+            $sourceLocale = $this->getSourceLocale();
+
+            if ($sourceLocale === null || $sourceLocale === '') {
+                throw LangException::missingConfig($this->getSourceLocaleConfigPath());
+            }
+
+            return (new FileAdapter($sourceLocale))->get($key, $params);
+        }
+
         return $params ? _message($key, $params) : $key;
+    }
+
+    protected function shouldBypassProvider(string $key, string $text): bool
+    {
+        if ($text === '') {
+            return true;
+        }
+
+        if (!$this->usesSourceCatalog()) {
+            return false;
+        }
+
+        $sourceLocale = $this->getSourceLocale();
+
+        return $text === $key
+            || ($sourceLocale !== null && strcasecmp($sourceLocale, $this->lang) === 0);
     }
 
     /**
@@ -135,5 +166,28 @@ trait RemoteAdapterTrait
         $sourceLocale = (string) ($this->params['source_locale'] ?? 'auto');
 
         return $prefix . sha1($adapter . '|' . $this->lang . '|' . $sourceLocale . '|' . $text);
+    }
+
+    private function usesSourceCatalog(): bool
+    {
+        return filter_var($this->params['use_source_catalog'] ?? false, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    private function getSourceLocale(): ?string
+    {
+        if (!isset($this->params['source_locale']) || $this->params['source_locale'] === '') {
+            return null;
+        }
+
+        return (string) $this->params['source_locale'];
+    }
+
+    private function getSourceLocaleConfigPath(): string
+    {
+        return match (static::class) {
+            DeepLAdapter::class => 'lang.deepl.source_locale',
+            GoogleTranslateAdapter::class => 'lang.google_translate.source_locale',
+            default => 'lang.source_locale',
+        };
     }
 }

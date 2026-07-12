@@ -120,6 +120,72 @@ class GoogleTranslateAdapterTest extends AppTestCase
         $this->assertSame('', $adapter->get(''));
     }
 
+    public function testGoogleTranslateAdapterTranslatesResolvedSourceCatalogText(): void
+    {
+        $this->currentResponse = (object) [
+            'data' => (object) [
+                'translations' => [
+                    (object) ['translatedText' => 'Hola'],
+                ],
+            ],
+        ];
+
+        $adapter = new GoogleTranslateAdapter('es', $this->getParams([
+            'use_source_catalog' => true,
+            'source_locale' => 'en',
+        ]), $this->mockHttpClient());
+
+        $this->assertSame('Hola', $adapter->get('custom.test'));
+        $this->assertJsonStringEqualsJsonString(
+            json_encode([
+                'q' => 'Testing',
+                'target' => 'es',
+                'format' => 'text',
+                'source' => 'en',
+            ]),
+            (string) $this->data[$this->url]
+        );
+    }
+
+    public function testGoogleTranslateAdapterReturnsResolvedSourceTextWithoutProviderCallWhenTargetMatchesSourceLocale(): void
+    {
+        $httpClientMock = Mockery::mock(HttpClient::class);
+        $httpClientMock->shouldNotReceive('createRequest');
+
+        $adapter = new GoogleTranslateAdapter('en', $this->getParams([
+            'use_source_catalog' => true,
+            'source_locale' => 'en',
+        ]), $httpClientMock);
+
+        $this->assertSame('Testing', $adapter->get('custom.test'));
+    }
+
+    public function testGoogleTranslateAdapterReturnsKeyWithoutProviderCallWhenSourceCatalogMisses(): void
+    {
+        $httpClientMock = Mockery::mock(HttpClient::class);
+        $httpClientMock->shouldNotReceive('createRequest');
+
+        $adapter = new GoogleTranslateAdapter('es', $this->getParams([
+            'use_source_catalog' => true,
+            'source_locale' => 'en',
+        ]), $httpClientMock);
+
+        $this->assertSame('custom.missing', $adapter->get('custom.missing'));
+    }
+
+    public function testGoogleTranslateAdapterThrowsIfSourceCatalogLocaleIsMissing(): void
+    {
+        $adapter = new GoogleTranslateAdapter('es', $this->getParams([
+            'use_source_catalog' => true,
+            'source_locale' => null,
+        ]), $this->mockHttpClient());
+
+        $this->expectException(LangException::class);
+        $this->expectExceptionMessage('Could not load config `lang.google_translate.source_locale` properly.');
+
+        $adapter->get('custom.test');
+    }
+
     public function testGoogleTranslateAdapterThrowsIfProviderRequestFails(): void
     {
         $this->currentErrors = ['timeout'];

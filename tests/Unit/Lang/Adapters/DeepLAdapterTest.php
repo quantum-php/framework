@@ -106,6 +106,69 @@ class DeepLAdapterTest extends AppTestCase
         $this->assertSame('', $adapter->get(''));
     }
 
+    public function testDeepLAdapterTranslatesResolvedSourceCatalogText(): void
+    {
+        $this->currentResponse = (object) [
+            'translations' => [
+                (object) ['text' => 'Hola'],
+            ],
+        ];
+
+        $adapter = new DeepLAdapter('es', $this->getParams([
+            'use_source_catalog' => true,
+            'source_locale' => 'en',
+        ]), $this->mockHttpClient());
+
+        $this->assertSame('Hola', $adapter->get('custom.test'));
+        $this->assertJsonStringEqualsJsonString(
+            json_encode([
+                'text' => ['Testing'],
+                'target_lang' => 'ES',
+                'source_lang' => 'EN',
+            ]),
+            (string) $this->data[$this->url]
+        );
+    }
+
+    public function testDeepLAdapterReturnsResolvedSourceTextWithoutProviderCallWhenTargetMatchesSourceLocale(): void
+    {
+        $httpClientMock = Mockery::mock(HttpClient::class);
+        $httpClientMock->shouldNotReceive('createRequest');
+
+        $adapter = new DeepLAdapter('en', $this->getParams([
+            'use_source_catalog' => true,
+            'source_locale' => 'en',
+        ]), $httpClientMock);
+
+        $this->assertSame('Testing', $adapter->get('custom.test'));
+    }
+
+    public function testDeepLAdapterReturnsKeyWithoutProviderCallWhenSourceCatalogMisses(): void
+    {
+        $httpClientMock = Mockery::mock(HttpClient::class);
+        $httpClientMock->shouldNotReceive('createRequest');
+
+        $adapter = new DeepLAdapter('es', $this->getParams([
+            'use_source_catalog' => true,
+            'source_locale' => 'en',
+        ]), $httpClientMock);
+
+        $this->assertSame('custom.missing', $adapter->get('custom.missing'));
+    }
+
+    public function testDeepLAdapterThrowsIfSourceCatalogLocaleIsMissing(): void
+    {
+        $adapter = new DeepLAdapter('es', $this->getParams([
+            'use_source_catalog' => true,
+            'source_locale' => null,
+        ]), $this->mockHttpClient());
+
+        $this->expectException(LangException::class);
+        $this->expectExceptionMessage('Could not load config `lang.deepl.source_locale` properly.');
+
+        $adapter->get('custom.test');
+    }
+
     public function testDeepLAdapterThrowsIfProviderRequestFails(): void
     {
         $this->currentErrors = ['timeout'];

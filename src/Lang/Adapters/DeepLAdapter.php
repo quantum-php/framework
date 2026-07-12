@@ -52,7 +52,7 @@ class DeepLAdapter implements LangAdapterInterface
     {
         $text = $this->buildSourceText($key, $params);
 
-        if ($text === '') {
+        if ($this->shouldBypassProvider($key, $text)) {
             return $text;
         }
 
