@@ -80,6 +80,8 @@ class WebAppAdapter extends AppAdapter
             return ExitCode::SUCCESS;
         }
 
+        $this->loadLanguage();
+
         $this->logDebugInfo();
 
         $viewCache = $this->setupViewCache();
