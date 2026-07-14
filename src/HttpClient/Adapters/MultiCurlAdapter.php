@@ -38,14 +38,18 @@ class MultiCurlAdapter implements MultiCurlAdapterInterface
 
     public function success(callable $callback): MultiCurlAdapterInterface
     {
-        $this->client->success($callback);
+        $this->client->success(function (Curl $instance) use ($callback): void {
+            $callback(new CurlAdapter($instance));
+        });
 
         return $this;
     }
 
     public function error(callable $callback): MultiCurlAdapterInterface
     {
-        $this->client->error($callback);
+        $this->client->error(function (Curl $instance) use ($callback): void {
+            $callback(new CurlAdapter($instance));
+        });
 
         return $this;
     }

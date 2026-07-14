@@ -45,17 +45,32 @@ class MultiCurlAdapterTest extends AppTestCase
 
     public function testMultiCurlAdapterRegistersCallbacks(): void
     {
-        $success = fn () => null;
-        $error = fn () => null;
+        $curl = Mockery::mock(Curl::class);
 
         $multiCurl = Mockery::mock(MultiCurl::class);
-        $multiCurl->shouldReceive('success')->once()->with($success)->andReturnNull();
-        $multiCurl->shouldReceive('error')->once()->with($error)->andReturnNull();
+        $multiCurl->shouldReceive('success')
+            ->once()
+            ->andReturnUsing(function (callable $callback) use ($curl): void {
+                $callback($curl);
+            });
+        $multiCurl->shouldReceive('error')
+            ->once()
+            ->andReturnUsing(function (callable $callback) use ($curl): void {
+                $callback($curl);
+            });
 
         $adapter = new MultiCurlAdapter($multiCurl);
+        $successWrapped = null;
+        $errorWrapped = null;
 
-        $this->assertSame($adapter, $adapter->success($success));
-        $this->assertSame($adapter, $adapter->error($error));
+        $this->assertSame($adapter, $adapter->success(function (CurlAdapter $instance) use (&$successWrapped): void {
+            $successWrapped = $instance;
+        }));
+        $this->assertSame($adapter, $adapter->error(function (CurlAdapter $instance) use (&$errorWrapped): void {
+            $errorWrapped = $instance;
+        }));
+        $this->assertInstanceOf(CurlAdapter::class, $successWrapped);
+        $this->assertInstanceOf(CurlAdapter::class, $errorWrapped);
     }
 
     public function testMultiCurlAdapterWrapsCompleteCallbackInstance(): void

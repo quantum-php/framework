@@ -233,18 +233,37 @@ class HttpClientTest extends AppTestCase
 
     public function testHttpClientCreateAsyncMultiRequestRegistersCallbacks(): void
     {
-        $success = fn () => null;
-        $error = fn () => null;
+        $curl = Mockery::mock(Curl::class);
+        $successWrapped = null;
+        $errorWrapped = null;
+        $success = function (CurlAdapter $instance) use (&$successWrapped): void {
+            $successWrapped = $instance;
+        };
+        $error = function (CurlAdapter $instance) use (&$errorWrapped): void {
+            $errorWrapped = $instance;
+        };
 
         $multi = Mockery::mock(MultiCurl::class);
-        $multi->shouldReceive('success')->once()->with($success)->andReturnSelf();
-        $multi->shouldReceive('error')->once()->with($error)->andReturnSelf();
+        $multi->shouldReceive('success')
+            ->once()
+            ->andReturnUsing(function (callable $callback) use ($curl): void {
+                $callback($curl);
+            });
+        $multi->shouldReceive('error')
+            ->once()
+            ->andReturnUsing(function (callable $callback) use ($curl): void {
+                $callback($curl);
+            });
 
         $this->httpClient->createAsyncMultiRequest($success, $error, $multi);
 
         $this->assertTrue($this->httpClient->isMultiRequest());
 
         $this->assertInstanceOf(MultiCurlAdapter::class, $this->httpClient->getAdapter());
+
+        $this->assertInstanceOf(CurlAdapter::class, $successWrapped);
+
+        $this->assertInstanceOf(CurlAdapter::class, $errorWrapped);
     }
 
     public function testHttpClientInfoAndUrl(): void
