@@ -32,6 +32,8 @@ class HttpClientTest extends AppTestCase
 
     public function testHttpClientGetSetMethod(): void
     {
+        $this->assertNull($this->httpClient->getAdapter());
+
         $this->assertEquals('GET', $this->httpClient->getMethod());
 
         $this->httpClient->setMethod('POST');
