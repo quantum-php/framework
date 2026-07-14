@@ -86,6 +86,13 @@ class HttpClientTest extends AppTestCase
         $this->httpClient->start();
     }
 
+    public function testHttpClientReturnsEmptyResponseAndErrorsBeforeRequestCreated(): void
+    {
+        $this->assertSame([], $this->httpClient->getResponse());
+
+        $this->assertSame([], $this->httpClient->getErrors());
+    }
+
     public function testHttpClientEnsureSingleRequestThrowsOnMulti(): void
     {
         $multi = Mockery::mock(MultiCurl::class);

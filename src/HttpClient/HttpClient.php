@@ -270,11 +270,12 @@ class HttpClient
     /**
      * Gets the entire response
      * @return array<int|string, mixed>
-     * @throws BaseException
      */
     public function getResponse(): array
     {
-        $this->ensureRequestCreated();
+        if ($this->client === null) {
+            return [];
+        }
 
         if ($this->isMultiRequest()) {
             return $this->response;
@@ -286,11 +287,12 @@ class HttpClient
     /**
      * Returns the errors
      * @return array<int|string, mixed>
-     * @throws BaseException
      */
     public function getErrors(): array
     {
-        $this->ensureRequestCreated();
+        if ($this->client === null) {
+            return [];
+        }
 
         if ($this->isMultiRequest()) {
             return $this->errors;
