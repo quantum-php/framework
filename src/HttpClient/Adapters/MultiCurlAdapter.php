@@ -12,6 +12,7 @@ namespace Quantum\HttpClient\Adapters;
 
 use Quantum\HttpClient\Contracts\MultiCurlAdapterInterface;
 use Curl\MultiCurl;
+use Curl\Curl;
 
 /**
  * Class MultiCurlAdapter
@@ -28,7 +29,9 @@ class MultiCurlAdapter implements MultiCurlAdapterInterface
 
     public function complete(callable $callback): MultiCurlAdapterInterface
     {
-        $this->client->complete($callback);
+        $this->client->complete(function (Curl $instance) use ($callback): void {
+            $callback(new CurlAdapter($instance));
+        });
 
         return $this;
     }
