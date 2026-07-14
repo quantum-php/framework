@@ -297,4 +297,15 @@ class HttpClientTest extends AppTestCase
 
         $this->assertEquals('https://example.com', $this->httpClient->url());
     }
+
+    public function testHttpClientPassesZeroInfoOption(): void
+    {
+        $curl = Mockery::mock(Curl::class);
+        $curl->shouldReceive('setUrl')->once();
+        $curl->shouldReceive('getInfo')->with(0)->once()->andReturn('zero');
+
+        $this->httpClient->createRequest('https://example.com', $curl);
+
+        $this->assertSame('zero', $this->httpClient->info(0));
+    }
 }

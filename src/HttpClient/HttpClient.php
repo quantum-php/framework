@@ -310,7 +310,7 @@ class HttpClient
     {
         $this->ensureSingleRequest();
 
-        return $option ? $this->client->getInfo($option) : $this->client->getInfo();
+        return $option !== null ? $this->client->getInfo($option) : $this->client->getInfo();
     }
 
     /**
