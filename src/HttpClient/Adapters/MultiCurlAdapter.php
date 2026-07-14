@@ -64,7 +64,7 @@ class MultiCurlAdapter implements MultiCurlAdapterInterface
      */
     public function addGet(string $url, array $data = [])
     {
-        return $this->client->addGet($url, $data);
+        return $this->wrapCurlResult($this->client->addGet($url, $data));
     }
 
     /**
@@ -73,7 +73,7 @@ class MultiCurlAdapter implements MultiCurlAdapterInterface
      */
     public function addPost(string $url, $data = '', bool $follow_303_with_post = false)
     {
-        return $this->client->addPost($url, $data, $follow_303_with_post);
+        return $this->wrapCurlResult($this->client->addPost($url, $data, $follow_303_with_post));
     }
 
     /**
@@ -128,5 +128,14 @@ class MultiCurlAdapter implements MultiCurlAdapterInterface
     public function callMethod(string $method, array $arguments)
     {
         return $this->client->$method(...$arguments);
+    }
+
+    /**
+     * @param mixed $result
+     * @return mixed
+     */
+    private function wrapCurlResult($result)
+    {
+        return $result instanceof Curl ? new CurlAdapter($result) : $result;
     }
 }

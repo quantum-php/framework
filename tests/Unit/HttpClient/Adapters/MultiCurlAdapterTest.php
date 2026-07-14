@@ -20,13 +20,16 @@ class MultiCurlAdapterTest extends AppTestCase
 
     public function testMultiCurlAdapterDelegatesRequestMethods(): void
     {
+        $getCurl = Mockery::mock(Curl::class);
+        $postCurl = Mockery::mock(Curl::class);
+
         $multiCurl = Mockery::mock(MultiCurl::class);
         $multiCurl->shouldReceive('setHeader')->once()->with('Accept', 'application/json');
         $multiCurl->shouldReceive('setHeaders')->once()->with(['X-Test' => 'yes']);
         $multiCurl->shouldReceive('setOpt')->once()->with(CURLOPT_TIMEOUT, 10);
         $multiCurl->shouldReceive('setOpts')->once()->with([CURLOPT_CONNECTTIMEOUT => 5]);
-        $multiCurl->shouldReceive('addGet')->once()->with('https://example.com', ['a' => 1])->andReturn((object) ['id' => 1]);
-        $multiCurl->shouldReceive('addPost')->once()->with('https://example.com', 'payload', true)->andReturn((object) ['id' => 2]);
+        $multiCurl->shouldReceive('addGet')->once()->with('https://example.com', ['a' => 1])->andReturn($getCurl);
+        $multiCurl->shouldReceive('addPost')->once()->with('https://example.com', 'payload', true)->andReturn($postCurl);
         $multiCurl->shouldReceive('start')->once()->andReturnNull();
 
         $adapter = new MultiCurlAdapter($multiCurl);
@@ -35,8 +38,8 @@ class MultiCurlAdapterTest extends AppTestCase
         $this->assertSame($adapter, $adapter->setHeaders(['X-Test' => 'yes']));
         $this->assertSame($adapter, $adapter->setOpt(CURLOPT_TIMEOUT, 10));
         $this->assertSame($adapter, $adapter->setOpts([CURLOPT_CONNECTTIMEOUT => 5]));
-        $this->assertEquals((object) ['id' => 1], $adapter->addGet('https://example.com', ['a' => 1]));
-        $this->assertEquals((object) ['id' => 2], $adapter->addPost('https://example.com', 'payload', true));
+        $this->assertInstanceOf(CurlAdapter::class, $adapter->addGet('https://example.com', ['a' => 1]));
+        $this->assertInstanceOf(CurlAdapter::class, $adapter->addPost('https://example.com', 'payload', true));
         $this->assertNull($adapter->start());
     }
 
