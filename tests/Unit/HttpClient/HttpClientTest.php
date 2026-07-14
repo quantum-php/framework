@@ -3,6 +3,8 @@
 namespace Quantum\Tests\Unit\HttpClient;
 
 use Quantum\HttpClient\Exceptions\HttpClientException;
+use Quantum\HttpClient\Adapters\MultiCurlAdapter;
+use Quantum\HttpClient\Adapters\CurlAdapter;
 use Quantum\HttpClient\HttpClient;
 use Quantum\Tests\Unit\AppTestCase;
 use Curl\CaseInsensitiveArray;
@@ -66,9 +68,13 @@ class HttpClientTest extends AppTestCase
 
         $this->assertFalse($this->httpClient->isMultiRequest());
 
+        $this->assertInstanceOf(CurlAdapter::class, $this->httpClient->getAdapter());
+
         $this->httpClient->createMultiRequest($multi);
 
         $this->assertTrue($this->httpClient->isMultiRequest());
+
+        $this->assertInstanceOf(MultiCurlAdapter::class, $this->httpClient->getAdapter());
     }
 
     public function testHttpClientRequestNotCreated(): void
@@ -235,6 +241,8 @@ class HttpClientTest extends AppTestCase
         $this->httpClient->createAsyncMultiRequest($success, $error, $multi);
 
         $this->assertTrue($this->httpClient->isMultiRequest());
+
+        $this->assertInstanceOf(MultiCurlAdapter::class, $this->httpClient->getAdapter());
     }
 
     public function testHttpClientInfoAndUrl(): void
