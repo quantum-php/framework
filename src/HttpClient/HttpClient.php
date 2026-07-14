@@ -176,7 +176,7 @@ class HttpClient
     /**
      * Checks if the request is multi cURL
      * @phpstan-assert-if-true MultiCurlAdapterInterface $this->client
-     * @phpstan-assert-if-false CurlAdapterInterface $this->client
+     * @phpstan-assert-if-false CurlAdapterInterface|null $this->client
      */
     public function isMultiRequest(): bool
     {
@@ -270,9 +270,12 @@ class HttpClient
     /**
      * Gets the entire response
      * @return array<int|string, mixed>
+     * @throws BaseException
      */
     public function getResponse(): array
     {
+        $this->ensureRequestCreated();
+
         if ($this->isMultiRequest()) {
             return $this->response;
         }
@@ -283,9 +286,12 @@ class HttpClient
     /**
      * Returns the errors
      * @return array<int|string, mixed>
+     * @throws BaseException
      */
     public function getErrors(): array
     {
+        $this->ensureRequestCreated();
+
         if ($this->isMultiRequest()) {
             return $this->errors;
         }
