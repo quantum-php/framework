@@ -403,6 +403,8 @@ class HttpClient
      */
     private function ensureSingleRequest(): void
     {
+        $this->ensureRequestCreated();
+
         if ($this->isMultiRequest()) {
             throw HttpClientException::methodNotSupported(__METHOD__, MultiCurlAdapter::class);
         }
