@@ -68,6 +68,16 @@ class CurlAdapterTest extends AppTestCase
         $this->assertSame('https://example.com', $adapter->getUrl());
     }
 
+    public function testCurlAdapterPassesZeroInfoOption(): void
+    {
+        $curl = Mockery::mock(Curl::class);
+        $curl->shouldReceive('getInfo')->with(0)->once()->andReturn('zero');
+
+        $adapter = new CurlAdapter($curl);
+
+        $this->assertSame('zero', $adapter->getInfo(0));
+    }
+
     public function testCurlAdapterSupportsAndCallsVendorMethods(): void
     {
         $curl = Mockery::mock(Curl::class);

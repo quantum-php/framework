@@ -142,7 +142,7 @@ class CurlAdapter implements CurlAdapterInterface
      */
     public function getInfo(?int $option = null)
     {
-        return $option ? $this->client->getInfo($option) : $this->client->getInfo();
+        return $option !== null ? $this->client->getInfo($option) : $this->client->getInfo();
     }
 
     public function getUrl(): ?string
