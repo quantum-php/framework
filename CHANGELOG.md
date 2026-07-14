@@ -10,6 +10,7 @@ The format is based on Keep a Changelog.
 - Added adapter-based Lang provider support with `DeepL` and `Google Translate` adapters plus shared remote request/caching infrastructure (#533)
 
 ### Changed
+- Refactored `HttpClient` internals behind explicit `CurlAdapter` and `MultiCurlAdapter` wrappers while preserving the existing facade methods and keeping `php-curl-class` as the underlying transport for this phase (#534)
 - Refactored the Lang package to resolve adapter instances through `LangFactory` configuration and load file translations lazily on first use instead of preloading them during web boot (#533)
 - **BREAKING:** Reshaped Lang configuration so `lang.default` now selects the adapter, locale fallback moved to `lang.default_locale`, and the unused `lang.enabled` toggle was removed (#533)
 - **BREAKING:** Removed `Lang::isEnabled()` from the public Lang API because it no longer affected runtime behavior (#533)
