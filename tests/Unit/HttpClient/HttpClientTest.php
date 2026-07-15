@@ -3,6 +3,8 @@
 namespace Quantum\Tests\Unit\HttpClient;
 
 use Quantum\HttpClient\Exceptions\HttpClientException;
+use Quantum\HttpClient\Adapters\MultiCurlAdapter;
+use Quantum\HttpClient\Adapters\CurlAdapter;
 use Quantum\HttpClient\HttpClient;
 use Quantum\Tests\Unit\AppTestCase;
 use Curl\CaseInsensitiveArray;
@@ -30,6 +32,8 @@ class HttpClientTest extends AppTestCase
 
     public function testHttpClientGetSetMethod(): void
     {
+        $this->assertNull($this->httpClient->getAdapter());
+
         $this->assertEquals('GET', $this->httpClient->getMethod());
 
         $this->httpClient->setMethod('POST');
@@ -66,9 +70,13 @@ class HttpClientTest extends AppTestCase
 
         $this->assertFalse($this->httpClient->isMultiRequest());
 
+        $this->assertInstanceOf(CurlAdapter::class, $this->httpClient->getAdapter());
+
         $this->httpClient->createMultiRequest($multi);
 
         $this->assertTrue($this->httpClient->isMultiRequest());
+
+        $this->assertInstanceOf(MultiCurlAdapter::class, $this->httpClient->getAdapter());
     }
 
     public function testHttpClientRequestNotCreated(): void
@@ -76,6 +84,13 @@ class HttpClientTest extends AppTestCase
         $this->expectException(HttpClientException::class);
 
         $this->httpClient->start();
+    }
+
+    public function testHttpClientReturnsEmptyResponseAndErrorsBeforeRequestCreated(): void
+    {
+        $this->assertSame([], $this->httpClient->getResponse());
+
+        $this->assertSame([], $this->httpClient->getErrors());
     }
 
     public function testHttpClientEnsureSingleRequestThrowsOnMulti(): void
@@ -225,16 +240,37 @@ class HttpClientTest extends AppTestCase
 
     public function testHttpClientCreateAsyncMultiRequestRegistersCallbacks(): void
     {
-        $success = fn () => null;
-        $error = fn () => null;
+        $curl = Mockery::mock(Curl::class);
+        $successWrapped = null;
+        $errorWrapped = null;
+        $success = function (CurlAdapter $instance) use (&$successWrapped): void {
+            $successWrapped = $instance;
+        };
+        $error = function (CurlAdapter $instance) use (&$errorWrapped): void {
+            $errorWrapped = $instance;
+        };
 
         $multi = Mockery::mock(MultiCurl::class);
-        $multi->shouldReceive('success')->once()->with($success)->andReturnSelf();
-        $multi->shouldReceive('error')->once()->with($error)->andReturnSelf();
+        $multi->shouldReceive('success')
+            ->once()
+            ->andReturnUsing(function (callable $callback) use ($curl): void {
+                $callback($curl);
+            });
+        $multi->shouldReceive('error')
+            ->once()
+            ->andReturnUsing(function (callable $callback) use ($curl): void {
+                $callback($curl);
+            });
 
         $this->httpClient->createAsyncMultiRequest($success, $error, $multi);
 
         $this->assertTrue($this->httpClient->isMultiRequest());
+
+        $this->assertInstanceOf(MultiCurlAdapter::class, $this->httpClient->getAdapter());
+
+        $this->assertInstanceOf(CurlAdapter::class, $successWrapped);
+
+        $this->assertInstanceOf(CurlAdapter::class, $errorWrapped);
     }
 
     public function testHttpClientInfoAndUrl(): void
@@ -260,5 +296,16 @@ class HttpClientTest extends AppTestCase
         $this->assertEquals(200, $this->httpClient->info(CURLINFO_HTTP_CODE));
 
         $this->assertEquals('https://example.com', $this->httpClient->url());
+    }
+
+    public function testHttpClientPassesZeroInfoOption(): void
+    {
+        $curl = Mockery::mock(Curl::class);
+        $curl->shouldReceive('setUrl')->once();
+        $curl->shouldReceive('getInfo')->with(0)->once()->andReturn('zero');
+
+        $this->httpClient->createRequest('https://example.com', $curl);
+
+        $this->assertSame('zero', $this->httpClient->info(0));
     }
 }
