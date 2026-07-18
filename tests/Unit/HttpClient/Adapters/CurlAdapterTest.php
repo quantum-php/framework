@@ -36,7 +36,8 @@ class CurlAdapterTest extends AppTestCase
         $this->assertSame($adapter, $adapter->setOpt(CURLOPT_TIMEOUT, 10));
         $this->assertSame($adapter, $adapter->setOpts([CURLOPT_CONNECTTIMEOUT => 5]));
         $this->assertSame('a=1', $adapter->buildPostData(['a' => 1]));
-        $this->assertSame('ok', $adapter->start());
+
+        $adapter->start();
     }
 
     public function testCurlAdapterDelegatesResponseMethods(): void

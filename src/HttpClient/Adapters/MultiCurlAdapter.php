@@ -54,12 +54,9 @@ class MultiCurlAdapter implements MultiCurlAdapterInterface
         return $this;
     }
 
-    /**
-     * @return mixed
-     */
-    public function start()
+    public function start(): void
     {
-        return $this->client->start();
+        $this->client->start();
     }
 
     /**
