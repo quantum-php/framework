@@ -1,29 +1,28 @@
 <?php
 
-namespace Quantum\Tests\Unit\HttpClient\Factories;
+namespace Quantum\Tests\Unit\HttpClient\Helpers;
 
-use Quantum\HttpClient\Factories\HttpClientFactory;
 use Quantum\HttpClient\Adapters\MultiCurlAdapter;
 use Quantum\HttpClient\Adapters\CurlAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\HttpClient\HttpClient;
 
-class HttpClientFactoryTest extends AppTestCase
+class HttpClientHelperFunctionsTest extends AppTestCase
 {
-    public function testHttpClientFactoryCreatesSingleRequest(): void
+    public function testHttpRequestHelperCreatesSingleRequest(): void
     {
-        $httpClient1 = HttpClientFactory::createRequest('https://example.com');
-        $httpClient2 = HttpClientFactory::createRequest('https://example.org');
+        $httpClient1 = httpRequest('https://example.com');
+        $httpClient2 = httpRequest('https://example.org');
 
         $this->assertInstanceOf(HttpClient::class, $httpClient1);
         $this->assertInstanceOf(CurlAdapter::class, $httpClient1->getAdapter());
         $this->assertNotSame($httpClient1, $httpClient2);
     }
 
-    public function testHttpClientFactoryCreatesMultiRequest(): void
+    public function testHttpMultiRequestHelperCreatesMultiRequest(): void
     {
-        $httpClient1 = HttpClientFactory::createMultiRequest();
-        $httpClient2 = HttpClientFactory::createMultiRequest();
+        $httpClient1 = httpMultiRequest();
+        $httpClient2 = httpMultiRequest();
 
         $this->assertInstanceOf(HttpClient::class, $httpClient1);
         $this->assertTrue($httpClient1->isMultiRequest());
@@ -31,7 +30,7 @@ class HttpClientFactoryTest extends AppTestCase
         $this->assertNotSame($httpClient1, $httpClient2);
     }
 
-    public function testHttpClientFactoryCreatesAsyncMultiRequest(): void
+    public function testHttpAsyncMultiRequestHelperCreatesAsyncMultiRequest(): void
     {
         $success = static function (): void {
         };
@@ -39,8 +38,8 @@ class HttpClientFactoryTest extends AppTestCase
         $error = static function (): void {
         };
 
-        $httpClient1 = HttpClientFactory::createAsyncMultiRequest($success, $error);
-        $httpClient2 = HttpClientFactory::createAsyncMultiRequest($success, $error);
+        $httpClient1 = httpAsyncMultiRequest($success, $error);
+        $httpClient2 = httpAsyncMultiRequest($success, $error);
 
         $this->assertInstanceOf(HttpClient::class, $httpClient1);
         $this->assertTrue($httpClient1->isMultiRequest());
