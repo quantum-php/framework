@@ -284,7 +284,8 @@ class CurlAdapter implements CurlAdapterInterface
 
     public function supportsMethod(string $method): bool
     {
-        return $this->client !== null && method_exists($this->client, $method);
+        return in_array($method, ['setHeader', 'setHeaders', 'setOpt', 'setOpts'], true)
+            || ($this->client !== null && method_exists($this->client, $method));
     }
 
     /**
@@ -293,6 +294,10 @@ class CurlAdapter implements CurlAdapterInterface
      */
     public function callMethod(string $method, array $arguments)
     {
+        if (in_array($method, ['setHeader', 'setHeaders', 'setOpt', 'setOpts'], true)) {
+            return $this->$method(...$arguments);
+        }
+
         if ($this->client === null) {
             return null;
         }
@@ -340,7 +345,7 @@ class CurlAdapter implements CurlAdapterInterface
         $headers['Status-Line'] = $rawLines[0];
 
         for ($i = 1, $count = count($rawLines); $i < $count; $i++) {
-            if (strpos($rawLines[$i], ':') === false) {
+            if (!str_contains($rawLines[$i], ':')) {
                 continue;
             }
 

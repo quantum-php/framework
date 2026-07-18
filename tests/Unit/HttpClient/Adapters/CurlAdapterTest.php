@@ -167,4 +167,13 @@ class CurlAdapterTest extends AppTestCase
         $this->assertFalse($adapter->supportsMethod('missingMethod'));
         $this->assertNull($adapter->callMethod('setTimeout', [15]));
     }
+
+    public function testCurlAdapterSupportsAndCallsNativeFacadeMethods(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $this->assertTrue($adapter->supportsMethod('setHeaders'));
+        $this->assertFalse($adapter->supportsMethod('setTimeout'));
+        $this->assertSame($adapter, $adapter->callMethod('setHeaders', [['Accept' => 'application/json']]));
+    }
 }
