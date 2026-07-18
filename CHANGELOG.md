@@ -11,6 +11,7 @@ The format is based on Keep a Changelog.
 
 ### Changed
 - Refactored `HttpClient` internals behind explicit `CurlAdapter` and `MultiCurlAdapter` wrappers while preserving the existing facade methods and keeping `php-curl-class` as the underlying transport for this phase (#534)
+- Replaced the single-request `HttpClient` `CurlAdapter` execution path with native PHP cURL while keeping the multi-curl adapter and `php-curl-class` dependency in place until the multi-request migration is complete (#566)
 - Refactored the Lang package to resolve adapter instances through `LangFactory` configuration and load file translations lazily on first use instead of preloading them during web boot (#533)
 - **BREAKING:** Reshaped Lang configuration so `lang.default` now selects the adapter, locale fallback moved to `lang.default_locale`, and the unused `lang.enabled` toggle was removed (#533)
 - **BREAKING:** Removed `Lang::isEnabled()` from the public Lang API because it no longer affected runtime behavior (#533)
