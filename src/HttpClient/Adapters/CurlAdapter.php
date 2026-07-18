@@ -82,12 +82,9 @@ class CurlAdapter implements CurlAdapterInterface
         return $this->client->buildPostData($data);
     }
 
-    /**
-     * @return mixed
-     */
-    public function start()
+    public function start(): void
     {
-        return $this->client->exec();
+        $this->client->exec();
     }
 
     /**

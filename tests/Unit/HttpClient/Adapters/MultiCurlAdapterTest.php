@@ -40,7 +40,8 @@ class MultiCurlAdapterTest extends AppTestCase
         $this->assertSame($adapter, $adapter->setOpts([CURLOPT_CONNECTTIMEOUT => 5]));
         $this->assertInstanceOf(CurlAdapter::class, $adapter->addGet('https://example.com', ['a' => 1]));
         $this->assertInstanceOf(CurlAdapter::class, $adapter->addPost('https://example.com', 'payload', true));
-        $this->assertNull($adapter->start());
+
+        $adapter->start();
     }
 
     public function testMultiCurlAdapterRegistersCallbacks(): void

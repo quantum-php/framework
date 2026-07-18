@@ -18,9 +18,8 @@ interface HttpClientAdapterInterface
 {
     /**
      * Starts request execution
-     * @return mixed
      */
-    public function start();
+    public function start(): void;
 
     /**
      * Sets request header
