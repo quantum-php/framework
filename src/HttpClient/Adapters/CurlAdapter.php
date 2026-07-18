@@ -256,9 +256,13 @@ class CurlAdapter implements CurlAdapterInterface
 
         $this->error = $curlErrorCode !== 0 || in_array((int) floor($httpStatusCode / 100), [4, 5], true);
         $this->errorCode = $this->error ? ($curlErrorCode !== 0 ? $curlErrorCode : $httpStatusCode) : 0;
-        $this->errorMessage = $curlErrorCode !== 0
-            ? trim(curl_strerror($curlErrorCode) . ($curlErrorMessage !== '' ? ': ' . $curlErrorMessage : ''))
-            : ($this->responseHeaders['Status-Line'] ?? '');
+        $this->errorMessage = $this->error
+            ? (
+                $curlErrorCode !== 0
+                    ? trim(curl_strerror($curlErrorCode) . ($curlErrorMessage !== '' ? ': ' . $curlErrorMessage : ''))
+                    : ($this->responseHeaders['Status-Line'] ?? '')
+            )
+            : null;
     }
 
     /**
@@ -322,7 +326,7 @@ class CurlAdapter implements CurlAdapterInterface
 
     public function getUrl(): ?string
     {
-        return $this->url;
+        return $this->url ?? $this->client?->getUrl();
     }
 
     public function supportsMethod(string $method): bool

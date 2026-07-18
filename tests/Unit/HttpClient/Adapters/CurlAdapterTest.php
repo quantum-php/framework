@@ -171,6 +171,19 @@ class CurlAdapterTest extends AppTestCase
         $this->assertSame('HTTP/1.1 404 Not Found', $adapter->getErrorMessage());
     }
 
+    public function testCurlAdapterKeepsNativeErrorMessageNullOnSuccess(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $this->setPrivateProperty($adapter, 'error', false);
+        $this->setPrivateProperty($adapter, 'errorCode', 0);
+        $this->setPrivateProperty($adapter, 'errorMessage', null);
+
+        $this->assertFalse($adapter->isError());
+        $this->assertSame(0, $adapter->getErrorCode());
+        $this->assertNull($adapter->getErrorMessage());
+    }
+
     public function testCurlAdapterKeepsInjectedVendorClientAsTransitionBridge(): void
     {
         $headers = new CaseInsensitiveArray(['Content-Type' => 'application/json']);
@@ -209,6 +222,16 @@ class CurlAdapterTest extends AppTestCase
         $this->assertSame($response, $adapter->getResponse());
         $this->assertSame(200, $adapter->getInfo(CURLINFO_HTTP_CODE));
         $this->assertSame('https://example.com', $adapter->getUrl());
+    }
+
+    public function testCurlAdapterGetsUrlFromWrappedVendorClient(): void
+    {
+        $curl = Mockery::mock(Curl::class);
+        $curl->shouldReceive('getUrl')->once()->andReturn('https://example.com/from-multi');
+
+        $adapter = new CurlAdapter($curl);
+
+        $this->assertSame('https://example.com/from-multi', $adapter->getUrl());
     }
 
     public function testCurlAdapterPassesZeroInfoOption(): void
