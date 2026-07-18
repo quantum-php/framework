@@ -10,11 +10,9 @@ declare(strict_types=1);
 
 namespace Quantum\HttpClient\Factories;
 
-use Quantum\App\Exceptions\BaseException;
-use Quantum\Di\Exceptions\DiException;
 use Quantum\HttpClient\HttpClient;
-use Quantum\Di\Di;
-use ReflectionException;
+use Curl\MultiCurl;
+use Curl\Curl;
 
 /**
  * Class HttpClientFactory
@@ -22,31 +20,18 @@ use ReflectionException;
  */
 class HttpClientFactory
 {
-    private ?HttpClient $instance = null;
-
-    /**
-     * @throws DiException|BaseException|ReflectionException
-     */
-    public static function get(): HttpClient
+    public static function createRequest(string $url, ?Curl $client = null): HttpClient
     {
-        if (!Di::isRegistered(self::class)) {
-            Di::register(self::class);
-        }
-
-        return Di::get(self::class)->resolve();
+        return (new HttpClient())->createRequest($url, $client);
     }
 
-    public function resolve(): HttpClient
+    public static function createMultiRequest(?MultiCurl $client = null): HttpClient
     {
-        if (!$this->instance) {
-            $this->instance = $this->createInstance();
-        }
-
-        return $this->instance;
+        return (new HttpClient())->createMultiRequest($client);
     }
 
-    private function createInstance(): HttpClient
+    public static function createAsyncMultiRequest(callable $success, callable $error, ?MultiCurl $client = null): HttpClient
     {
-        return new HttpClient();
+        return (new HttpClient())->createAsyncMultiRequest($success, $error, $client);
     }
 }
