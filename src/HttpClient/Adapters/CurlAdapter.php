@@ -365,7 +365,7 @@ class CurlAdapter implements CurlAdapterInterface
 
     private function parseCookieHeader(string $header): void
     {
-        if (preg_match('/^Set-Cookie:\s*([^=]+)=([^;]+)/i', $header, $cookie) === 1) {
+        if (preg_match('/^Set-Cookie:\s*([^=]+)=([^;]*)/i', $header, $cookie) === 1) {
             $this->responseCookies[$cookie[1]] = rawurldecode(trim($cookie[2], " \n\r\t\0\x0B"));
         }
     }
@@ -424,7 +424,14 @@ class CurlAdapter implements CurlAdapterInterface
         }
 
         if (is_string($contentType) && preg_match('/\bxml\b/i', $contentType) === 1) {
-            $xml = simplexml_load_string($rawResponse);
+            $previousUseInternalErrors = libxml_use_internal_errors(true);
+
+            try {
+                $xml = simplexml_load_string($rawResponse);
+            } finally {
+                libxml_use_internal_errors($previousUseInternalErrors);
+            }
+
             return $xml !== false ? $xml : $response;
         }
 

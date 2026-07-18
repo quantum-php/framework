@@ -95,6 +95,16 @@ class CurlAdapterTest extends AppTestCase
         $this->assertSame(['sid' => 'abc 123'], $adapter->getResponseCookies());
     }
 
+    public function testCurlAdapterParsesEmptyNativeCookieValue(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $this->invokePrivateMethod($adapter, 'parseCookieHeader', ['Set-Cookie: sid=abc123; Path=/; HttpOnly']);
+        $this->invokePrivateMethod($adapter, 'parseCookieHeader', ['Set-Cookie: sid=; Max-Age=0; Path=/']);
+
+        $this->assertSame(['sid' => ''], $adapter->getResponseCookies());
+    }
+
     public function testCurlAdapterParsesJsonResponse(): void
     {
         $adapter = new CurlAdapter();
@@ -129,9 +139,16 @@ class CurlAdapterTest extends AppTestCase
         ]);
         $this->setPrivateProperty($adapter, 'responseHeaders', $headers);
 
-        $response = $this->invokePrivateMethod($adapter, 'parseResponse', ['<root>']);
+        $previousUseInternalErrors = libxml_use_internal_errors(false);
 
-        $this->assertSame('<root>', $response);
+        try {
+            $response = $this->invokePrivateMethod($adapter, 'parseResponse', ['<root>']);
+
+            $this->assertSame('<root>', $response);
+            $this->assertFalse(libxml_use_internal_errors());
+        } finally {
+            libxml_use_internal_errors($previousUseInternalErrors);
+        }
     }
 
     public function testCurlAdapterDecodesGzipResponse(): void
