@@ -59,6 +59,9 @@ class CurlAdapter implements CurlAdapterInterface
 
     private ?string $errorMessage = null;
 
+    /**
+     * The injected vendor client is a temporary bridge for MultiCurlAdapter until #567.
+     */
     public function __construct(?Curl $client = null)
     {
         $this->client = $client;

@@ -94,7 +94,7 @@ class CurlAdapterTest extends AppTestCase
         $this->assertSame('yes', (string) $response->ok);
     }
 
-    public function testCurlAdapterDelegatesResponseMethods(): void
+    public function testCurlAdapterKeepsInjectedVendorClientAsTransitionBridge(): void
     {
         $headers = new CaseInsensitiveArray(['Content-Type' => 'application/json']);
         $response = (object) ['ok' => true];
