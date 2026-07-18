@@ -51,12 +51,21 @@ class CurlAdapterTest extends AppTestCase
         $adapter = new CurlAdapter();
 
         $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', [
-            "HTTP/1.1 100 Continue\r\n\r\nHTTP/1.1 200 OK\r\nContent-Type: application/json\r\nX-Test: one\r\nX-Test: two\r\n\r\n",
+            "HTTP/1.1 100 Continue\r\n\r\nHTTP/1.1 200 OK\r\nContent-Type: application/json\r\nMalformed Header\r\nX-Test: one\r\nX-Test: two\r\n\r\n",
         ]);
 
         $this->assertSame('HTTP/1.1 200 OK', $headers['status-line']);
         $this->assertSame('application/json', $headers['content-type']);
         $this->assertSame('one,two', $headers['x-test']);
+    }
+
+    public function testCurlAdapterReturnsEmptyHeadersWhenNoHttpHeaderBlockExists(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', ['']);
+
+        $this->assertCount(0, $headers);
     }
 
     public function testCurlAdapterParsesNativeCookieHeader(): void
@@ -92,6 +101,19 @@ class CurlAdapterTest extends AppTestCase
         $response = $this->invokePrivateMethod($adapter, 'parseResponse', ['<root><ok>yes</ok></root>']);
 
         $this->assertSame('yes', (string) $response->ok);
+    }
+
+    public function testCurlAdapterDecodesGzipResponse(): void
+    {
+        $adapter = new CurlAdapter();
+        $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', [
+            "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n\r\n",
+        ]);
+        $this->setPrivateProperty($adapter, 'responseHeaders', $headers);
+
+        $response = $this->invokePrivateMethod($adapter, 'parseResponse', [gzencode('compressed response')]);
+
+        $this->assertSame('compressed response', $response);
     }
 
     public function testCurlAdapterPassesZeroInfoOptionToNativeCurl(): void
