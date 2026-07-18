@@ -19,16 +19,7 @@ class CurlAdapterTest extends AppTestCase
 
     public function testCurlAdapterDelegatesRequestMethods(): void
     {
-        $curl = Mockery::mock(Curl::class);
-        $curl->shouldReceive('setUrl')->once()->with('https://example.com');
-        $curl->shouldReceive('setHeader')->once()->with('Accept', 'application/json');
-        $curl->shouldReceive('setHeaders')->once()->with(['X-Test' => 'yes']);
-        $curl->shouldReceive('setOpt')->once()->with(CURLOPT_TIMEOUT, 10);
-        $curl->shouldReceive('setOpts')->once()->with([CURLOPT_CONNECTTIMEOUT => 5]);
-        $curl->shouldReceive('buildPostData')->once()->with(['a' => 1])->andReturn('a=1');
-        $curl->shouldReceive('exec')->once()->andReturn('ok');
-
-        $adapter = new CurlAdapter($curl);
+        $adapter = new CurlAdapter();
 
         $this->assertSame($adapter, $adapter->setUrl('https://example.com'));
         $this->assertSame($adapter, $adapter->setHeader('Accept', 'application/json'));
@@ -36,8 +27,71 @@ class CurlAdapterTest extends AppTestCase
         $this->assertSame($adapter, $adapter->setOpt(CURLOPT_TIMEOUT, 10));
         $this->assertSame($adapter, $adapter->setOpts([CURLOPT_CONNECTTIMEOUT => 5]));
         $this->assertSame('a=1', $adapter->buildPostData(['a' => 1]));
+        $this->assertSame('https://example.com', $adapter->getUrl());
+    }
 
-        $adapter->start();
+    public function testCurlAdapterBuildsJsonPostData(): void
+    {
+        $adapter = new CurlAdapter();
+        $adapter->setHeader('Content-Type', 'application/json');
+
+        $this->assertSame('{"a":1}', $adapter->buildPostData(['a' => 1]));
+    }
+
+    public function testCurlAdapterGeneratesNativeRequestIds(): void
+    {
+        $adapter1 = new CurlAdapter();
+        $adapter2 = new CurlAdapter();
+
+        $this->assertNotSame($adapter1->getId(), $adapter2->getId());
+    }
+
+    public function testCurlAdapterParsesNativeResponseHeaders(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', [
+            "HTTP/1.1 100 Continue\r\n\r\nHTTP/1.1 200 OK\r\nContent-Type: application/json\r\nX-Test: one\r\nX-Test: two\r\n\r\n",
+        ]);
+
+        $this->assertSame('HTTP/1.1 200 OK', $headers['status-line']);
+        $this->assertSame('application/json', $headers['content-type']);
+        $this->assertSame('one,two', $headers['x-test']);
+    }
+
+    public function testCurlAdapterParsesNativeCookieHeader(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $this->invokePrivateMethod($adapter, 'parseCookieHeader', ['Set-Cookie: sid=abc%20123; Path=/; HttpOnly']);
+
+        $this->assertSame(['sid' => 'abc 123'], $adapter->getResponseCookies());
+    }
+
+    public function testCurlAdapterParsesJsonResponse(): void
+    {
+        $adapter = new CurlAdapter();
+        $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', [
+            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n",
+        ]);
+        $this->setPrivateProperty($adapter, 'responseHeaders', $headers);
+
+        $response = $this->invokePrivateMethod($adapter, 'parseResponse', ['{"ok":true}']);
+
+        $this->assertTrue($response->ok);
+    }
+
+    public function testCurlAdapterParsesXmlResponse(): void
+    {
+        $adapter = new CurlAdapter();
+        $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', [
+            "HTTP/1.1 200 OK\r\nContent-Type: application/xml\r\n\r\n",
+        ]);
+        $this->setPrivateProperty($adapter, 'responseHeaders', $headers);
+
+        $response = $this->invokePrivateMethod($adapter, 'parseResponse', ['<root><ok>yes</ok></root>']);
+
+        $this->assertSame('yes', (string) $response->ok);
     }
 
     public function testCurlAdapterDelegatesResponseMethods(): void
@@ -54,9 +108,8 @@ class CurlAdapterTest extends AppTestCase
         $curl->shouldReceive('getResponseCookies')->once()->andReturn(['sid' => 'abc']);
         $curl->shouldReceive('getResponse')->once()->andReturn($response);
         $curl->shouldReceive('getInfo')->with(CURLINFO_HTTP_CODE)->once()->andReturn(200);
-        $curl->shouldReceive('getUrl')->once()->andReturn('https://example.com');
-
         $adapter = new CurlAdapter($curl);
+        $adapter->setUrl('https://example.com');
 
         $this->assertSame(7, $adapter->getId());
         $this->assertFalse($adapter->isError());
