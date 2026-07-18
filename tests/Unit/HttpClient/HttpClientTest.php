@@ -59,8 +59,7 @@ class HttpClientTest extends AppTestCase
     public function testHttpClientIsMultiRequest(): void
     {
         $curl = Mockery::mock(Curl::class);
-
-        $curl->shouldReceive('setUrl')->once();
+        $curl->shouldReceive('setUrl')->with('https://example.com')->once();
 
         $multi = Mockery::mock(MultiCurl::class);
 
@@ -109,8 +108,8 @@ class HttpClientTest extends AppTestCase
     public function testHttpClientSingleRequestResponseFlow(): void
     {
         $curl = Mockery::mock(Curl::class);
-        $curl->shouldReceive('setUrl')->once();
-        $curl->shouldReceive('setOpt')->atLeast()->once();
+        $curl->shouldReceive('setUrl')->with('https://example.com')->once();
+        $curl->shouldReceive('setOpt')->with(CURLOPT_CUSTOMREQUEST, 'GET')->once();
         $curl->shouldReceive('exec')->once();
         $curl->shouldReceive('isError')->andReturn(false);
         $curl->shouldReceive('getId')->andReturn(0);
@@ -133,10 +132,10 @@ class HttpClientTest extends AppTestCase
     public function testHttpClientPostRequestWithData(): void
     {
         $curl = Mockery::mock(Curl::class);
-        $curl->shouldReceive('setUrl')->once();
+        $curl->shouldReceive('setUrl')->with('https://example.com')->once();
         $curl->shouldReceive('setOpt')->with(CURLOPT_CUSTOMREQUEST, 'POST')->once();
-        $curl->shouldReceive('buildPostData')->once()->andReturn('payload');
-        $curl->shouldReceive('setOpt')->with(CURLOPT_POSTFIELDS, 'payload')->once();
+        $curl->shouldReceive('buildPostData')->with(['x' => 1])->once()->andReturn('x=1');
+        $curl->shouldReceive('setOpt')->with(CURLOPT_POSTFIELDS, 'x=1')->once();
         $curl->shouldReceive('exec')->once();
         $curl->shouldReceive('isError')->andReturn(false);
         $curl->shouldReceive('getId')->andReturn(0);
@@ -156,8 +155,8 @@ class HttpClientTest extends AppTestCase
     public function testHttpClientSingleRequestError(): void
     {
         $curl = Mockery::mock(Curl::class);
-        $curl->shouldReceive('setUrl')->once();
-        $curl->shouldReceive('setOpt')->atLeast()->once();
+        $curl->shouldReceive('setUrl')->with('https://bad.local')->once();
+        $curl->shouldReceive('setOpt')->with(CURLOPT_CUSTOMREQUEST, 'GET')->once();
         $curl->shouldReceive('exec')->once();
         $curl->shouldReceive('isError')->andReturn(true);
         $curl->shouldReceive('getId')->andReturn(0);
@@ -276,8 +275,8 @@ class HttpClientTest extends AppTestCase
     public function testHttpClientInfoAndUrl(): void
     {
         $curl = Mockery::mock(Curl::class);
-        $curl->shouldReceive('setUrl')->once();
-        $curl->shouldReceive('setOpt')->atLeast()->once();
+        $curl->shouldReceive('setUrl')->with('https://example.com')->once();
+        $curl->shouldReceive('setOpt')->with(CURLOPT_CUSTOMREQUEST, 'GET')->once();
         $curl->shouldReceive('exec')->once();
         $curl->shouldReceive('isError')->andReturn(false);
         $curl->shouldReceive('getId')->andReturn(0);
@@ -287,7 +286,6 @@ class HttpClientTest extends AppTestCase
         $curl->shouldReceive('getInfo')->andReturnUsing(
             fn ($opt = null) => $opt === CURLINFO_HTTP_CODE ? 200 : ['http_code' => 200]
         );
-        $curl->shouldReceive('getUrl')->andReturn('https://example.com');
 
         $this->httpClient
             ->createRequest('https://example.com', $curl)
@@ -301,7 +299,7 @@ class HttpClientTest extends AppTestCase
     public function testHttpClientPassesZeroInfoOption(): void
     {
         $curl = Mockery::mock(Curl::class);
-        $curl->shouldReceive('setUrl')->once();
+        $curl->shouldReceive('setUrl')->with('https://example.com')->once();
         $curl->shouldReceive('getInfo')->with(0)->once()->andReturn('zero');
 
         $this->httpClient->createRequest('https://example.com', $curl);
