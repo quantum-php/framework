@@ -11,8 +11,6 @@ declare(strict_types=1);
 namespace Quantum\HttpClient\Factories;
 
 use Quantum\HttpClient\HttpClient;
-use Curl\MultiCurl;
-use Curl\Curl;
 
 /**
  * Class HttpClientFactory
@@ -20,18 +18,18 @@ use Curl\Curl;
  */
 class HttpClientFactory
 {
-    public static function createRequest(string $url, ?Curl $client = null): HttpClient
+    public static function createRequest(string $url): HttpClient
     {
-        return (new HttpClient())->createRequest($url, $client);
+        return (new HttpClient())->createRequest($url);
     }
 
-    public static function createMultiRequest(?MultiCurl $client = null): HttpClient
+    public static function createMultiRequest(): HttpClient
     {
-        return (new HttpClient())->createMultiRequest($client);
+        return (new HttpClient())->createMultiRequest();
     }
 
-    public static function createAsyncMultiRequest(callable $success, callable $error, ?MultiCurl $client = null): HttpClient
+    public static function createAsyncMultiRequest(callable $success, callable $error): HttpClient
     {
-        return (new HttpClient())->createAsyncMultiRequest($success, $error, $client);
+        return (new HttpClient())->createAsyncMultiRequest($success, $error);
     }
 }
