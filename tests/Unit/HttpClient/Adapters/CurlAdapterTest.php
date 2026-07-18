@@ -38,6 +38,24 @@ class CurlAdapterTest extends AppTestCase
         $this->assertSame('{"a":1}', $adapter->buildPostData(['a' => 1]));
     }
 
+    public function testCurlAdapterPreservesMultipartPostData(): void
+    {
+        $adapter = new CurlAdapter();
+        $adapter->setHeader('Content-Type', 'multipart/form-data');
+        $data = ['name' => 'avatar'];
+
+        $this->assertSame($data, $adapter->buildPostData($data));
+    }
+
+    public function testCurlAdapterPreservesCurlFilePostData(): void
+    {
+        $adapter = new CurlAdapter();
+        $file = new \CURLFile(__FILE__);
+        $data = ['file' => $file];
+
+        $this->assertSame($data, $adapter->buildPostData($data));
+    }
+
     public function testCurlAdapterGeneratesNativeRequestIds(): void
     {
         $adapter1 = new CurlAdapter();
@@ -103,6 +121,19 @@ class CurlAdapterTest extends AppTestCase
         $this->assertSame('yes', (string) $response->ok);
     }
 
+    public function testCurlAdapterReturnsRawResponseWhenXmlParsingFails(): void
+    {
+        $adapter = new CurlAdapter();
+        $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', [
+            "HTTP/1.1 200 OK\r\nContent-Type: application/xml\r\n\r\n",
+        ]);
+        $this->setPrivateProperty($adapter, 'responseHeaders', $headers);
+
+        $response = $this->invokePrivateMethod($adapter, 'parseResponse', ['<root>']);
+
+        $this->assertSame('<root>', $response);
+    }
+
     public function testCurlAdapterDecodesGzipResponse(): void
     {
         $adapter = new CurlAdapter();
@@ -146,6 +177,12 @@ class CurlAdapterTest extends AppTestCase
         $response = (object) ['ok' => true];
 
         $curl = Mockery::mock(Curl::class);
+        $curl->shouldReceive('setUrl')->once()->with('https://example.com');
+        $curl->shouldReceive('setHeader')->once()->with('Accept', 'application/json');
+        $curl->shouldReceive('setHeaders')->once()->with(['X-Test' => 'yes']);
+        $curl->shouldReceive('setOpt')->once()->with(CURLOPT_TIMEOUT, 10);
+        $curl->shouldReceive('buildPostData')->once()->with(['a' => 1])->andReturn('payload');
+        $curl->shouldReceive('exec')->once();
         $curl->shouldReceive('getId')->once()->andReturn(7);
         $curl->shouldReceive('isError')->once()->andReturn(false);
         $curl->shouldReceive('getErrorCode')->once()->andReturn(0);
@@ -155,8 +192,14 @@ class CurlAdapterTest extends AppTestCase
         $curl->shouldReceive('getResponse')->once()->andReturn($response);
         $curl->shouldReceive('getInfo')->with(CURLINFO_HTTP_CODE)->once()->andReturn(200);
         $adapter = new CurlAdapter($curl);
-        $adapter->setUrl('https://example.com');
+        $adapter
+            ->setUrl('https://example.com')
+            ->setHeader('Accept', 'application/json')
+            ->setHeaders(['X-Test' => 'yes'])
+            ->setOpt(CURLOPT_TIMEOUT, 10)
+            ->start();
 
+        $this->assertSame('payload', $adapter->buildPostData(['a' => 1]));
         $this->assertSame(7, $adapter->getId());
         $this->assertFalse($adapter->isError());
         $this->assertSame(0, $adapter->getErrorCode());

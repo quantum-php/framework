@@ -13,10 +13,10 @@ namespace Quantum\HttpClient\Adapters;
 use Quantum\HttpClient\Contracts\CurlAdapterInterface;
 use Curl\CaseInsensitiveArray;
 use JsonSerializable;
-use SimpleXMLElement;
 use RuntimeException;
 use CurlHandle;
 use Curl\Curl;
+use CURLFile;
 
 /**
  * Class CurlAdapter
@@ -102,6 +102,7 @@ class CurlAdapter implements CurlAdapterInterface
     {
         $this->url = $url;
         $this->applyOption(CURLOPT_URL, $url);
+        $this->client?->setUrl($url);
 
         return $this;
     }
@@ -112,6 +113,7 @@ class CurlAdapter implements CurlAdapterInterface
     public function setOpt(int $option, $value): CurlAdapterInterface
     {
         $this->applyOption($option, $value);
+        $this->client?->setOpt($option, $value);
 
         return $this;
     }
@@ -135,6 +137,7 @@ class CurlAdapter implements CurlAdapterInterface
     {
         $this->headers[$key] = $value;
         $this->applyHeaders();
+        $this->client?->setHeader($key, $value);
 
         return $this;
     }
@@ -149,6 +152,7 @@ class CurlAdapter implements CurlAdapterInterface
         }
 
         $this->applyHeaders();
+        $this->client?->setHeaders($headers);
 
         return $this;
     }
@@ -159,6 +163,10 @@ class CurlAdapter implements CurlAdapterInterface
      */
     public function buildPostData($data)
     {
+        if ($this->client !== null) {
+            return $this->client->buildPostData($data);
+        }
+
         if (
             $this->hasJsonContentType() &&
             (
@@ -169,7 +177,13 @@ class CurlAdapter implements CurlAdapterInterface
             return json_encode($data) ?: '';
         }
 
-        return is_array($data) ? http_build_query($data) : $data;
+        if (is_array($data)) {
+            return $this->hasMultipartContentType() || $this->hasCurlFile($data)
+                ? $data
+                : http_build_query($data);
+        }
+
+        return $data;
     }
 
     private function applyHeaders(): void
@@ -188,6 +202,35 @@ class CurlAdapter implements CurlAdapterInterface
         foreach ($this->headers as $key => $value) {
             if (strtolower((string) $key) === 'content-type') {
                 return preg_match('/^application\/(?:[a-z.-]+\+)?json\b/i', (string) $value) === 1;
+            }
+        }
+
+        return false;
+    }
+
+    private function hasMultipartContentType(): bool
+    {
+        foreach ($this->headers as $key => $value) {
+            if (strtolower((string) $key) === 'content-type') {
+                return stripos((string) $value, 'multipart/form-data') !== false;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array<mixed> $data
+     */
+    private function hasCurlFile(array $data): bool
+    {
+        foreach ($data as $value) {
+            if ($value instanceof CURLFile) {
+                return true;
+            }
+
+            if (is_array($value) && $this->hasCurlFile($value)) {
+                return true;
             }
         }
 
@@ -378,7 +421,7 @@ class CurlAdapter implements CurlAdapterInterface
 
         if (is_string($contentType) && preg_match('/\bxml\b/i', $contentType) === 1) {
             $xml = simplexml_load_string($rawResponse);
-            return $xml instanceof SimpleXMLElement ? $xml : $response;
+            return $xml !== false ? $xml : $response;
         }
 
         if (($this->responseHeaders['Content-Encoding'] ?? null) === 'gzip') {
