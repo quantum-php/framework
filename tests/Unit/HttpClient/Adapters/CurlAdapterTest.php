@@ -94,6 +94,30 @@ class CurlAdapterTest extends AppTestCase
         $this->assertSame('yes', (string) $response->ok);
     }
 
+    public function testCurlAdapterPassesZeroInfoOptionToNativeCurl(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $this->assertFalse($adapter->getInfo(0));
+    }
+
+    public function testCurlAdapterStoresNativeHttpErrorState(): void
+    {
+        $adapter = new CurlAdapter();
+        $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', [
+            "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\n",
+        ]);
+
+        $this->setPrivateProperty($adapter, 'responseHeaders', $headers);
+        $this->setPrivateProperty($adapter, 'error', true);
+        $this->setPrivateProperty($adapter, 'errorCode', 404);
+        $this->setPrivateProperty($adapter, 'errorMessage', $headers['Status-Line']);
+
+        $this->assertTrue($adapter->isError());
+        $this->assertSame(404, $adapter->getErrorCode());
+        $this->assertSame('HTTP/1.1 404 Not Found', $adapter->getErrorMessage());
+    }
+
     public function testCurlAdapterKeepsInjectedVendorClientAsTransitionBridge(): void
     {
         $headers = new CaseInsensitiveArray(['Content-Type' => 'application/json']);
