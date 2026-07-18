@@ -164,6 +164,19 @@ class CurlAdapterTest extends AppTestCase
         $this->assertSame('compressed response', $response);
     }
 
+    public function testCurlAdapterParsesGzippedJsonResponse(): void
+    {
+        $adapter = new CurlAdapter();
+        $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', [
+            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Encoding: GZip\r\n\r\n",
+        ]);
+        $this->setPrivateProperty($adapter, 'responseHeaders', $headers);
+
+        $response = $this->invokePrivateMethod($adapter, 'parseResponse', [gzencode('{"ok":true}')]);
+
+        $this->assertTrue($response->ok);
+    }
+
     public function testCurlAdapterPassesZeroInfoOptionToNativeCurl(): void
     {
         $adapter = new CurlAdapter();

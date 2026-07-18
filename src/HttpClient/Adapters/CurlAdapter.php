@@ -417,9 +417,15 @@ class CurlAdapter implements CurlAdapterInterface
     {
         $response = $rawResponse;
         $contentType = $this->responseHeaders['Content-Type'] ?? null;
+        $contentEncoding = $this->responseHeaders['Content-Encoding'] ?? null;
+
+        if (is_string($contentEncoding) && strtolower($contentEncoding) === 'gzip') {
+            $decoded = gzdecode($rawResponse);
+            $response = $decoded !== false ? $decoded : $response;
+        }
 
         if (is_string($contentType) && preg_match('/\bjson\b/i', $contentType) === 1) {
-            $decoded = json_decode($rawResponse);
+            $decoded = json_decode($response);
             return json_last_error() === JSON_ERROR_NONE ? $decoded : $response;
         }
 
@@ -427,17 +433,12 @@ class CurlAdapter implements CurlAdapterInterface
             $previousUseInternalErrors = libxml_use_internal_errors(true);
 
             try {
-                $xml = simplexml_load_string($rawResponse);
+                $xml = simplexml_load_string($response);
             } finally {
                 libxml_use_internal_errors($previousUseInternalErrors);
             }
 
             return $xml !== false ? $xml : $response;
-        }
-
-        if (($this->responseHeaders['Content-Encoding'] ?? null) === 'gzip') {
-            $decoded = gzdecode($rawResponse);
-            return $decoded !== false ? $decoded : $response;
         }
 
         return $response;
