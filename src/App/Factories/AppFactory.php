@@ -10,10 +10,10 @@ declare(strict_types=1);
 
 namespace Quantum\App\Factories;
 
-use Quantum\App\Adapters\ConsoleAppAdapter;
+use Quantum\App\Adapters\Console\ConsoleAppAdapter;
+use Quantum\App\Adapters\Web\WebAppAdapter;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\App\Exceptions\AppException;
-use Quantum\App\Adapters\WebAppAdapter;
 use Quantum\App\Enums\AppType;
 use Quantum\App\AppContext;
 use Quantum\Di\DiContainer;

@@ -2,14 +2,14 @@
 
 namespace Quantum\Tests\Unit\App;
 
-use Quantum\App\Stages\SetupErrorHandlerStage;
+use Quantum\App\Stages\Boot\SetupErrorHandlerStage;
 use Quantum\App\Contracts\BootStageInterface;
-use Quantum\App\Stages\LoadEnvironmentStage;
-use Quantum\App\Stages\LoadAppConfigStage;
-use Quantum\App\Stages\InitDebuggerStage;
-use Quantum\App\Stages\LoadModulesStage;
-use Quantum\App\Stages\LoadHelpersStage;
-use Quantum\App\Stages\InitHttpStage;
+use Quantum\App\Stages\Boot\LoadEnvironmentStage;
+use Quantum\App\Stages\Boot\LoadAppConfigStage;
+use Quantum\App\Stages\Boot\InitDebuggerStage;
+use Quantum\App\Stages\Boot\LoadModulesStage;
+use Quantum\App\Stages\Boot\LoadHelpersStage;
+use Quantum\App\Stages\Boot\InitHttpStage;
 use Quantum\Tests\Unit\AppTestCase;
 use InvalidArgumentException;
 use Quantum\App\BootPipeline;

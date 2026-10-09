@@ -11,6 +11,10 @@ The format is based on Keep a Changelog.
 - Added adapter-based Lang provider support with `DeepL` and `Google Translate` adapters plus shared remote request/caching infrastructure (#533)
 
 ### Changed
+- **BREAKING:** Refactored the web and console runtime into staged pipelines (#537):
+  - `WebAppAdapter::start()` now runs a `RequestPipeline` of the preflight, route resolution, not found, prepare, dispatch, and send stages with a `RequestContext`, and `ConsoleAppAdapter::start()` runs a `ConsolePipeline` of the register core commands, register app commands, validate, and run stages with a `ConsoleContext`. Behavior is unchanged, and runtime stage events are not dispatched yet.
+  - Moved the web adapter, context, and pipeline to `Quantum\App\Adapters\Web`, the console ones to `Quantum\App\Adapters\Console`, and the boot stages to `Quantum\App\Stages\Boot`. Code that goes through `AppFactory` is unaffected; code that references these classes directly must update its imports.
+  - Removed the `AppAdapter` base class and the `WebAppTrait` and `ConsoleAppTrait` traits. `WebAppAdapter` and `ConsoleAppAdapter` now implement `AppInterface` directly, and `ConsoleAppAdapter::createApplication()` stays public.
 - **BREAKING:** Replaced the `Quantum\Hook` package with `Quantum\Event` (#536):
   - `hook()` is now `event()`; `on()` and `fire()` are now `listen()` and `dispatch()`, and no aliases remain. Listeners receive one named payload array, which is empty when none is given.
   - Event names no longer need to be registered, so `shared/config/hooks.php` is no longer read; dispatching a name without listeners does nothing and an empty name throws `EventException`.

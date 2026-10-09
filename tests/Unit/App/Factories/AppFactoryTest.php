@@ -2,10 +2,10 @@
 
 namespace Quantum\Tests\Unit\App\Factories;
 
-use Quantum\App\Adapters\ConsoleAppAdapter;
+use Quantum\App\Adapters\Console\ConsoleAppAdapter;
 use Quantum\App\Exceptions\AppException;
 use Quantum\App\Contracts\AppInterface;
-use Quantum\App\Adapters\WebAppAdapter;
+use Quantum\App\Adapters\Web\WebAppAdapter;
 use Quantum\App\Factories\AppFactory;
 use PHPUnit\Framework\TestCase;
 use Quantum\App\Enums\AppType;

@@ -2,9 +2,9 @@
 
 namespace Quantum\Tests\Unit\App;
 
-use Quantum\App\Adapters\ConsoleAppAdapter;
+use Quantum\App\Adapters\Console\ConsoleAppAdapter;
 use Quantum\App\Exceptions\AppException;
-use Quantum\App\Adapters\WebAppAdapter;
+use Quantum\App\Adapters\Web\WebAppAdapter;
 use Quantum\App\Contracts\AppInterface;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\App\App;
