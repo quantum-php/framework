@@ -46,7 +46,7 @@ php qt serve
 <br/>
 
 <h2>Quick Demo</h2>
-<img src="https://quantumphp.io/assets/img/qt_demo.gif"/>
+<img src="https://quantumphp.io/images/quick-demo.gif"/>
 
 > **Note:** This repository contains the core code of the Quantum framework. If you want to start a new project visit the main [Quantum PHP Project repository](https://github.com/quantum-php/project).
 
