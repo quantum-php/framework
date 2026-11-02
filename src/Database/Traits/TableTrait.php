@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace Quantum\Database\Traits;
 
+use Quantum\Database\Enums\TableAction;
 use Quantum\Database\Schemas\Column;
 use Quantum\Database\Enums\Key;
 
@@ -151,7 +152,7 @@ trait TableTrait
         $sql = '';
 
         if (isset($this->indexKeys['primary'])) {
-            $sql .= ($this->action == self::ALTER ? 'ADD ' : '');
+            $sql .= ($this->action === TableAction::ALTER ? 'ADD ' : '');
 
             $sql .= 'PRIMARY KEY (';
 
@@ -177,7 +178,7 @@ trait TableTrait
             $indexes = [];
 
             foreach ($this->indexKeys[$type] as $indexKey) {
-                $indexString = ($this->action == self::ALTER ? 'ADD ' : '');
+                $indexString = ($this->action === TableAction::ALTER ? 'ADD ' : '');
                 $indexString .= strtoupper($type);
                 $indexString .= ($indexKey['indexName'] ? ' `' . $indexKey['indexName'] . '`' : '');
                 $indexString .= ' (`' . $indexKey['columnName'] . '`)';

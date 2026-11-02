@@ -2,6 +2,7 @@
 
 namespace Quantum\Tests\Unit\Database\Schema;
 
+use Quantum\Database\Enums\TableAction;
 use Quantum\Database\Schemas\Column;
 use Quantum\Database\Schemas\Table;
 use Quantum\Database\Enums\Type;
@@ -26,11 +27,23 @@ class TableTest extends TestCase
     public function testSetActionAndGetQuery(): void
     {
         $table = new Table('test');
-        $table->setAction(Table::RENAME, ['newName' => 'general']);
+        $table->setAction(TableAction::RENAME, ['newName' => 'general']);
 
         $expectedSql = 'RENAME TABLE `test` TO `general`;';
 
         $this->assertEquals($expectedSql, $table->getSql());
+    }
+
+    public function testGetSqlIsEmptyWhenNoActionIsSet(): void
+    {
+        $this->assertSame('', (new Table('test'))->getSql());
+    }
+
+    public function testSetActionRejectsTheActionAsNumber(): void
+    {
+        $this->expectException(TypeError::class);
+
+        (new Table('test'))->setAction(2);
     }
 
     public function testTableConstructor(): void
@@ -41,7 +54,7 @@ class TableTest extends TestCase
     public function testAddColumn(): void
     {
         $table = new Table('test');
-        $table->setAction(Table::CREATE);
+        $table->setAction(TableAction::CREATE);
         $table->addColumn('id', Type::INT, 11);
 
         $expectedSql = 'CREATE TABLE `test` (`id` INT(11) NOT NULL);';
@@ -52,7 +65,7 @@ class TableTest extends TestCase
     public function testAddColumnWithAttributes(): void
     {
         $table = new Table('test');
-        $table->setAction(Table::CREATE);
+        $table->setAction(TableAction::CREATE);
         $table->addColumn('id', Type::INT, 11)->autoIncrement()->attribute(Column::ATTR_UNSIGNED);
 
         $expectedSql = 'CREATE TABLE `test` (`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT, PRIMARY KEY (`id`));';
@@ -63,7 +76,7 @@ class TableTest extends TestCase
     public function testAddColumnWithIndexs(): void
     {
         $table = new Table('test');
-        $table->setAction(Table::CREATE);
+        $table->setAction(TableAction::CREATE);
         $table->addColumn('profile_id', Type::INT, 11)->index();
         $table->addColumn('username', Type::INT, 11)->unique();
         $table->addColumn('email', Type::INT, 11)->unique();
@@ -76,7 +89,7 @@ class TableTest extends TestCase
     public function testModifyColumn(): void
     {
         $table = new Table('test');
-        $table->setAction(Table::ALTER);
+        $table->setAction(TableAction::ALTER);
         $table->modifyColumn('name', Type::VARCHAR, 50);
 
         $expectedSql = 'ALTER TABLE `test` MODIFY COLUMN `name` VARCHAR(50) NOT NULL;';
@@ -87,7 +100,7 @@ class TableTest extends TestCase
     public function testModifyColumnWithAttributes(): void
     {
         $table = new Table('test');
-        $table->setAction(Table::ALTER);
+        $table->setAction(TableAction::ALTER);
         $table->modifyColumn('name', Type::VARCHAR, 100)->default('New user')->comment('User nikname');
 
         $expectedSql = 'ALTER TABLE `test` MODIFY COLUMN `name` VARCHAR(100) NOT NULL DEFAULT \'New user\' COMMENT \'User nikname\';';
@@ -98,7 +111,7 @@ class TableTest extends TestCase
     public function testAddColumnAndModifyColumn(): void
     {
         $table = new Table('test');
-        $table->setAction(Table::ALTER);
+        $table->setAction(TableAction::ALTER);
         $table->addColumn('surename', Type::VARCHAR, 50);
         $table->modifyColumn('profession', Type::ENUM, ['plumber', 'driver', 'security'])->default('driver');
 
@@ -110,7 +123,7 @@ class TableTest extends TestCase
     public function testRenameColumn(): void
     {
         $table = new Table('test');
-        $table->setAction(Table::ALTER);
+        $table->setAction(TableAction::ALTER);
         $table->renameColumn('courses', 'lessons');
 
         $expectedSql = 'ALTER TABLE `test` RENAME COLUMN `courses` TO `lessons`;';
@@ -121,7 +134,7 @@ class TableTest extends TestCase
     public function testDropColumn(): void
     {
         $table = new Table('test');
-        $table->setAction(Table::ALTER);
+        $table->setAction(TableAction::ALTER);
         $table->dropColumn('courses');
 
         $expectedSql = 'ALTER TABLE `test` DROP COLUMN `courses`;';
@@ -132,7 +145,7 @@ class TableTest extends TestCase
     public function testAddIndex(): void
     {
         $table = new Table('test');
-        $table->setAction(Table::ALTER);
+        $table->setAction(TableAction::ALTER);
         $table->addIndex('name', Key::INDEX);
 
         $expectedSql = 'ALTER TABLE `test` ADD INDEX (`name`);';
@@ -146,7 +159,7 @@ class TableTest extends TestCase
     public function testAddIndexOfEveryKey(Key $key, string $expectedSql): void
     {
         $table = new Table('test');
-        $table->setAction(Table::ALTER);
+        $table->setAction(TableAction::ALTER);
         $table->addIndex('name', $key, 'idx_name');
 
         $this->assertEquals($expectedSql, $table->getSql());
@@ -169,7 +182,7 @@ class TableTest extends TestCase
     public function testAddIndexRejectsTheIndexTypeAsText(): void
     {
         $table = new Table('test');
-        $table->setAction(Table::ALTER);
+        $table->setAction(TableAction::ALTER);
 
         $this->expectException(TypeError::class);
 
@@ -179,7 +192,7 @@ class TableTest extends TestCase
     public function testAddIndexWithName(): void
     {
         $table = new Table('test');
-        $table->setAction(Table::ALTER);
+        $table->setAction(TableAction::ALTER);
         $table->addIndex('name', Key::UNIQUE, 'idx_name');
 
         $expectedSql = 'ALTER TABLE `test` ADD UNIQUE `idx_name` (`name`);';
@@ -190,7 +203,7 @@ class TableTest extends TestCase
     public function testAddingMultipleIndexes(): void
     {
         $table = new Table('test');
-        $table->setAction(Table::ALTER);
+        $table->setAction(TableAction::ALTER);
         $table->addIndex('email', Key::UNIQUE, 'idx_email');
         $table->addIndex('username', Key::INDEX, 'idx_username');
 
@@ -202,7 +215,7 @@ class TableTest extends TestCase
     public function testDropIndex(): void
     {
         $table = new Table('test');
-        $table->setAction(Table::ALTER);
+        $table->setAction(TableAction::ALTER);
         $table->dropIndex('idx_name');
 
         $expectedSql = 'ALTER TABLE `test` DROP INDEX `idx_name`;';
@@ -213,7 +226,7 @@ class TableTest extends TestCase
     public function testAfterColumn(): void
     {
         $table = new Table('test');
-        $table->setAction(Table::ALTER);
+        $table->setAction(TableAction::ALTER);
         $table->addColumn('profile_id', Type::INT, 11)->after('id');
 
         $expectedSql = 'ALTER TABLE `test` ADD COLUMN `profile_id` INT(11) NOT NULL AFTER `id`;';
