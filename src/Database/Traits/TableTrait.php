@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace Quantum\Database\Traits;
 
+use Quantum\Database\Enums\TableAction;
 use Quantum\Database\Schemas\Column;
 use Quantum\Database\Enums\Key;
 
@@ -151,7 +152,7 @@ trait TableTrait
         $sql = '';
 
         if (isset($this->indexKeys['primary'])) {
-            $sql .= ($this->action == self::ALTER ? 'ADD ' : '');
+            $sql .= ($this->action === TableAction::ALTER ? 'ADD ' : '');
 
             $sql .= 'PRIMARY KEY (';
 
@@ -177,7 +178,7 @@ trait TableTrait
             $indexes = [];
 
             foreach ($this->indexKeys[$type] as $indexKey) {
-                $indexString = ($this->action == self::ALTER ? 'ADD ' : '');
+                $indexString = ($this->action === TableAction::ALTER ? 'ADD ' : '');
                 $indexString .= strtoupper($type);
                 $indexString .= ($indexKey['indexName'] ? ' `' . $indexKey['indexName'] . '`' : '');
                 $indexString .= ' (`' . $indexKey['columnName'] . '`)';
@@ -198,10 +199,10 @@ trait TableTrait
     {
         $indexes = [
             $this->primaryKeysSql(),
-            $this->indexKeysSql(Key::INDEX),
-            $this->indexKeysSql(Key::UNIQUE),
-            $this->indexKeysSql(Key::FULLTEXT),
-            $this->indexKeysSql(Key::SPATIAL),
+            $this->indexKeysSql(Key::INDEX->value),
+            $this->indexKeysSql(Key::UNIQUE->value),
+            $this->indexKeysSql(Key::FULLTEXT->value),
+            $this->indexKeysSql(Key::SPATIAL->value),
         ];
 
         return implode(', ', array_filter($indexes));

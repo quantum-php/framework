@@ -74,7 +74,7 @@ function redirect(string $url, int $code = StatusCode::FOUND): Response
  */
 function redirectWith(string $url, array $data, int $code = StatusCode::FOUND): Response
 {
-    session()->set(ReservedKeys::PREV_REQUEST, $data);
+    session()->set(ReservedKeys::PREV_REQUEST->value, $data);
     return response()->redirect($url, $code);
 }
 
@@ -95,11 +95,11 @@ function back(array $data = [], int $code = StatusCode::FOUND): Response
  */
 function old(string $key)
 {
-    if (!session()->has(ReservedKeys::PREV_REQUEST)) {
+    if (!session()->has(ReservedKeys::PREV_REQUEST->value)) {
         return null;
     }
 
-    $prevRequest = session()->get(ReservedKeys::PREV_REQUEST);
+    $prevRequest = session()->get(ReservedKeys::PREV_REQUEST->value);
 
     if (!is_array($prevRequest) || !isset($prevRequest[$key])) {
         return null;
@@ -108,7 +108,7 @@ function old(string $key)
     $value = $prevRequest[$key];
     unset($prevRequest[$key]);
 
-    session()->set(ReservedKeys::PREV_REQUEST, $prevRequest);
+    session()->set(ReservedKeys::PREV_REQUEST->value, $prevRequest);
 
     return $value;
 }

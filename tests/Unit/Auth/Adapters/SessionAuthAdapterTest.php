@@ -2,12 +2,14 @@
 
 namespace Quantum\Tests\Unit\Auth\Adapters;
 
+use Quantum\Auth\Contracts\AuthServiceInterface;
 use Quantum\Auth\Adapters\SessionAuthAdapter;
 use Quantum\Auth\Exceptions\AuthException;
 use Quantum\Auth\Enums\ExceptionMessages;
 use Quantum\Tests\Unit\Auth\AuthTestCase;
 use Quantum\Hasher\Hasher;
 use Quantum\Auth\User;
+use Mockery;
 
 class SessionAuthAdapterTest extends AuthTestCase
 {
@@ -46,6 +48,20 @@ class SessionAuthAdapterTest extends AuthTestCase
     public function testWebAdapterConstructor(): void
     {
         $this->assertInstanceOf(SessionAuthAdapter::class, $this->sessionAuth);
+    }
+
+    public function testWebAdapterRejectsAUserSchemaWithAMissingKey(): void
+    {
+        $schema = $this->userSchema;
+        unset($schema['otpToken']);
+
+        $authService = Mockery::mock(AuthServiceInterface::class);
+        $authService->shouldReceive('userSchema')->andReturn($schema);
+
+        $this->expectException(AuthException::class);
+        $this->expectExceptionMessage(ExceptionMessages::INCORRECT_USER_SCHEMA);
+
+        new SessionAuthAdapter($authService, $this->mailer, (new Hasher())->setCost(4), (array) config()->get('auth'));
     }
 
     public function testWebSigninIncorrectCredentials(): void

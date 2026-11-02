@@ -21,7 +21,6 @@ use Quantum\Mailer\Mailer;
 use Quantum\Hasher\Hasher;
 use ReflectionException;
 use Quantum\Auth\User;
-use ReflectionClass;
 use DateInterval;
 use Exception;
 use DateTime;
@@ -77,8 +76,8 @@ trait AuthTrait
     {
         $activationToken = $this->generateToken();
 
-        $userData[$this->keyFields[AuthKeys::PASSWORD]] = $this->hasher->hash($userData[$this->keyFields[AuthKeys::PASSWORD]]);
-        $userData[$this->keyFields[AuthKeys::ACTIVATION_TOKEN]] = $activationToken;
+        $userData[$this->keyFields[AuthKeys::PASSWORD->value]] = $this->hasher->hash($userData[$this->keyFields[AuthKeys::PASSWORD->value]]);
+        $userData[$this->keyFields[AuthKeys::ACTIVATION_TOKEN->value]] = $activationToken;
 
         $user = $this->authService->add($userData);
 
@@ -105,9 +104,9 @@ trait AuthTrait
     public function activate(string $token): void
     {
         $this->authService->update(
-            $this->keyFields[AuthKeys::ACTIVATION_TOKEN],
+            $this->keyFields[AuthKeys::ACTIVATION_TOKEN->value],
             $token,
-            [$this->keyFields[AuthKeys::ACTIVATION_TOKEN] => '']
+            [$this->keyFields[AuthKeys::ACTIVATION_TOKEN->value] => '']
         );
     }
 
@@ -116,7 +115,7 @@ trait AuthTrait
      */
     public function forget(string $username): ?string
     {
-        $user = $this->authService->get($this->keyFields[AuthKeys::USERNAME], $username);
+        $user = $this->authService->get($this->keyFields[AuthKeys::USERNAME->value], $username);
 
         if (!$user) {
             return null;
@@ -125,9 +124,9 @@ trait AuthTrait
         $resetToken = $this->generateToken();
 
         $this->authService->update(
-            $this->keyFields[AuthKeys::USERNAME],
+            $this->keyFields[AuthKeys::USERNAME->value],
             $username,
-            [$this->keyFields[AuthKeys::RESET_TOKEN] => $resetToken]
+            [$this->keyFields[AuthKeys::RESET_TOKEN->value] => $resetToken]
         );
 
         $body = [
@@ -148,7 +147,7 @@ trait AuthTrait
      */
     public function reset(string $token, string $password): void
     {
-        $user = $this->authService->get($this->keyFields[AuthKeys::RESET_TOKEN], $token);
+        $user = $this->authService->get($this->keyFields[AuthKeys::RESET_TOKEN->value], $token);
 
         if ($user) {
             if (!$this->isActivated($user)) {
@@ -156,11 +155,11 @@ trait AuthTrait
             }
 
             $this->authService->update(
-                $this->keyFields[AuthKeys::RESET_TOKEN],
+                $this->keyFields[AuthKeys::RESET_TOKEN->value],
                 $token,
                 [
-                    $this->keyFields[AuthKeys::PASSWORD] => $this->hasher->hash($password),
-                    $this->keyFields[AuthKeys::RESET_TOKEN] => '',
+                    $this->keyFields[AuthKeys::PASSWORD->value] => $this->hasher->hash($password),
+                    $this->keyFields[AuthKeys::RESET_TOKEN->value] => '',
                 ]
             );
         }
@@ -173,7 +172,7 @@ trait AuthTrait
      */
     public function resendOtp(string $otpToken): string
     {
-        $user = $this->authService->get($this->keyFields[AuthKeys::OTP_TOKEN], $otpToken);
+        $user = $this->authService->get($this->keyFields[AuthKeys::OTP_TOKEN->value], $otpToken);
 
         if (!$user) {
             throw AuthException::incorrectCredentials();
@@ -189,13 +188,13 @@ trait AuthTrait
      */
     protected function getUser(string $username, string $password): User
     {
-        $user = $this->authService->get($this->keyFields[AuthKeys::USERNAME], $username);
+        $user = $this->authService->get($this->keyFields[AuthKeys::USERNAME->value], $username);
 
         if (!$user) {
             throw AuthException::incorrectCredentials();
         }
 
-        if (!$this->hasher->check($password, $user->getFieldValue($this->keyFields[AuthKeys::PASSWORD]) ?? '')) {
+        if (!$this->hasher->check($password, $user->getFieldValue($this->keyFields[AuthKeys::PASSWORD->value]) ?? '')) {
             throw AuthException::incorrectCredentials();
         }
 
@@ -214,19 +213,19 @@ trait AuthTrait
     {
         $otp = random_number($this->otpLength);
 
-        $otpToken = $this->generateToken($user->getFieldValue($this->keyFields[AuthKeys::USERNAME]));
+        $otpToken = $this->generateToken($user->getFieldValue($this->keyFields[AuthKeys::USERNAME->value]));
 
         $time = new DateTime();
 
         $time->add(new DateInterval('PT' . ($this->config['otp_expires'] ?? 2) . 'M'));
 
         $this->authService->update(
-            $this->keyFields[AuthKeys::USERNAME],
-            $user->getFieldValue($this->keyFields[AuthKeys::USERNAME]),
+            $this->keyFields[AuthKeys::USERNAME->value],
+            $user->getFieldValue($this->keyFields[AuthKeys::USERNAME->value]),
             [
-                $this->keyFields[AuthKeys::OTP] => $otp,
-                $this->keyFields[AuthKeys::OTP_EXPIRY] => $time->format('Y-m-d H:i'),
-                $this->keyFields[AuthKeys::OTP_TOKEN] => $otpToken,
+                $this->keyFields[AuthKeys::OTP->value] => $otp,
+                $this->keyFields[AuthKeys::OTP_EXPIRY->value] => $time->format('Y-m-d H:i'),
+                $this->keyFields[AuthKeys::OTP_TOKEN->value] => $otpToken,
             ]
         );
 
@@ -250,25 +249,25 @@ trait AuthTrait
      */
     protected function verifyAndUpdateOtp(int $otp, string $otpToken): User
     {
-        $user = $this->authService->get($this->keyFields[AuthKeys::OTP_TOKEN], $otpToken);
+        $user = $this->authService->get($this->keyFields[AuthKeys::OTP_TOKEN->value], $otpToken);
 
-        if (!$user || $otp != $user->getFieldValue($this->keyFields[AuthKeys::OTP])) {
+        if (!$user || $otp != $user->getFieldValue($this->keyFields[AuthKeys::OTP->value])) {
             throw AuthException::incorrectVerificationCode();
         }
 
-        $otpExpiry = $user->getFieldValue($this->keyFields[AuthKeys::OTP_EXPIRY]);
+        $otpExpiry = $user->getFieldValue($this->keyFields[AuthKeys::OTP_EXPIRY->value]);
 
         if (!$otpExpiry || new DateTime() >= new DateTime($otpExpiry)) {
             throw AuthException::verificationCodeExpired();
         }
 
         $this->authService->update(
-            $this->keyFields[AuthKeys::USERNAME],
-            $user->getFieldValue($this->keyFields[AuthKeys::USERNAME]),
+            $this->keyFields[AuthKeys::USERNAME->value],
+            $user->getFieldValue($this->keyFields[AuthKeys::USERNAME->value]),
             [
-                $this->keyFields[AuthKeys::OTP] => null,
-                $this->keyFields[AuthKeys::OTP_EXPIRY] => null,
-                $this->keyFields[AuthKeys::OTP_TOKEN] => null,
+                $this->keyFields[AuthKeys::OTP->value] => null,
+                $this->keyFields[AuthKeys::OTP_EXPIRY->value] => null,
+                $this->keyFields[AuthKeys::OTP_TOKEN->value] => null,
             ]
         );
 
@@ -299,7 +298,7 @@ trait AuthTrait
      */
     protected function isActivated(User $user): bool
     {
-        return in_array($user->getFieldValue($this->keyFields[AuthKeys::ACTIVATION_TOKEN]), [null, '', '0'], true);
+        return in_array($user->getFieldValue($this->keyFields[AuthKeys::ACTIVATION_TOKEN->value]), [null, '', '0'], true);
     }
 
     /**
@@ -322,7 +321,7 @@ trait AuthTrait
         $appName = config()->get('app.name') ?: '';
 
         $this->mailer->setFrom($appEmail, $appName)
-            ->setAddress($user->getFieldValue($this->keyFields[AuthKeys::USERNAME]) ?? '', $fullName)
+            ->setAddress($user->getFieldValue($this->keyFields[AuthKeys::USERNAME->value]) ?? '', $fullName)
             ->setBody($body)
             ->send();
     }
@@ -334,14 +333,12 @@ trait AuthTrait
      */
     protected function verifySchema(array $schema): void
     {
-        $constants = (new ReflectionClass(AuthKeys::class))->getConstants();
-
-        foreach ($constants as $constant) {
-            if (!isset($schema[$constant]) || !isset($schema[$constant]['name'])) {
+        foreach (AuthKeys::cases() as $authKey) {
+            if (!isset($schema[$authKey->value]) || !isset($schema[$authKey->value]['name'])) {
                 throw AuthException::incorrectUserSchema();
             }
 
-            $this->keyFields[$constant] = $schema[$constant]['name'];
+            $this->keyFields[$authKey->value] = $schema[$authKey->value]['name'];
         }
 
         foreach ($schema as $field) {

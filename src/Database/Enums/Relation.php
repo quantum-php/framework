@@ -11,18 +11,14 @@ declare(strict_types=1);
 namespace Quantum\Database\Enums;
 
 /**
- * Class Relation
+ * Enum Relation
  * @package Quantum\Database
  * @codeCoverageIgnore
  */
-final class Relation
+enum Relation: string
 {
-    public const HAS_ONE = 'hasOne';
-    public const HAS_MANY = 'hasMany';
-    public const BELONGS_TO = 'belongsTo';
-    public const BELONGS_TO_MANY = 'belongsToMany';
-
-    private function __construct()
-    {
-    }
+    case HAS_ONE = 'hasOne';
+    case HAS_MANY = 'hasMany';
+    case BELONGS_TO = 'belongsTo';
+    case BELONGS_TO_MANY = 'belongsToMany';
 }

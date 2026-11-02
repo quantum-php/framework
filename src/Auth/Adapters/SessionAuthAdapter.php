@@ -111,7 +111,7 @@ class SessionAuthAdapter implements AuthenticatableInterface
             return (new User())->setData(session()->get(self::AUTH_USER));
         }
 
-        if (cookie()->has($this->keyFields[AuthKeys::REMEMBER_TOKEN])) {
+        if (cookie()->has($this->keyFields[AuthKeys::REMEMBER_TOKEN->value])) {
             $user = $this->checkRememberToken();
 
             if ($user) {
@@ -171,15 +171,15 @@ class SessionAuthAdapter implements AuthenticatableInterface
     private function checkRememberToken(): false|\Quantum\Auth\User
     {
         $user = $this->authService->get(
-            $this->keyFields[AuthKeys::REMEMBER_TOKEN],
-            cookie()->get($this->keyFields[AuthKeys::REMEMBER_TOKEN])
+            $this->keyFields[AuthKeys::REMEMBER_TOKEN->value],
+            cookie()->get($this->keyFields[AuthKeys::REMEMBER_TOKEN->value])
         );
 
         if (!$user) {
             return false;
         }
 
-        if ($this->isTwoFactorEnabled() && !empty($user->getFieldValue($this->keyFields[AuthKeys::OTP_TOKEN]))) {
+        if ($this->isTwoFactorEnabled() && !empty($user->getFieldValue($this->keyFields[AuthKeys::OTP_TOKEN->value]))) {
             return false;
         }
 
@@ -195,15 +195,15 @@ class SessionAuthAdapter implements AuthenticatableInterface
         $rememberToken = $this->generateToken();
 
         $this->authService->update(
-            $this->keyFields[AuthKeys::USERNAME],
-            $user->getFieldValue($this->keyFields[AuthKeys::USERNAME]),
-            [$this->keyFields[AuthKeys::REMEMBER_TOKEN] => $rememberToken]
+            $this->keyFields[AuthKeys::USERNAME->value],
+            $user->getFieldValue($this->keyFields[AuthKeys::USERNAME->value]),
+            [$this->keyFields[AuthKeys::REMEMBER_TOKEN->value] => $rememberToken]
         );
 
         $rememberLifetime = (int) ($this->config['session']['remember_lifetime'] ?? self::DEFAULT_REMEMBER_LIFETIME);
 
         cookie()->set(
-            $this->keyFields[AuthKeys::REMEMBER_TOKEN],
+            $this->keyFields[AuthKeys::REMEMBER_TOKEN->value],
             $rememberToken,
             $rememberLifetime,
             '/',
@@ -218,21 +218,21 @@ class SessionAuthAdapter implements AuthenticatableInterface
      */
     private function removeRememberToken(): void
     {
-        if (cookie()->has($this->keyFields[AuthKeys::REMEMBER_TOKEN])) {
+        if (cookie()->has($this->keyFields[AuthKeys::REMEMBER_TOKEN->value])) {
             $user = $this->authService->get(
-                $this->keyFields[AuthKeys::REMEMBER_TOKEN],
-                cookie()->get($this->keyFields[AuthKeys::REMEMBER_TOKEN])
+                $this->keyFields[AuthKeys::REMEMBER_TOKEN->value],
+                cookie()->get($this->keyFields[AuthKeys::REMEMBER_TOKEN->value])
             );
 
             if ($user) {
                 $this->authService->update(
-                    $this->keyFields[AuthKeys::REMEMBER_TOKEN],
-                    $user->getFieldValue($this->keyFields[AuthKeys::REMEMBER_TOKEN]),
-                    [$this->keyFields[AuthKeys::REMEMBER_TOKEN] => '']
+                    $this->keyFields[AuthKeys::REMEMBER_TOKEN->value],
+                    $user->getFieldValue($this->keyFields[AuthKeys::REMEMBER_TOKEN->value]),
+                    [$this->keyFields[AuthKeys::REMEMBER_TOKEN->value] => '']
                 );
             }
 
-            cookie()->delete($this->keyFields[AuthKeys::REMEMBER_TOKEN]);
+            cookie()->delete($this->keyFields[AuthKeys::REMEMBER_TOKEN->value]);
         }
     }
 }

@@ -11,63 +11,59 @@ declare(strict_types=1);
 namespace Quantum\Auth\Enums;
 
 /**
- * Class AuthKeys
+ * Enum AuthKeys
  * @package Quantum\Auth
  * @codeCoverageIgnore
  */
-final class AuthKeys
+enum AuthKeys: string
 {
     /**
      * One time password key
      */
-    public const OTP = 'otp';
+    case OTP = 'otp';
 
     /**
      * One time password expiry key
      */
-    public const OTP_EXPIRY = 'otpExpiry';
+    case OTP_EXPIRY = 'otpExpiry';
 
     /**
      * One time password token key
      */
-    public const OTP_TOKEN = 'otpToken';
+    case OTP_TOKEN = 'otpToken';
 
     /**
      * Username key
      */
-    public const USERNAME = 'username';
+    case USERNAME = 'username';
 
     /**
      * Password key
      */
-    public const PASSWORD = 'password';
+    case PASSWORD = 'password';
 
     /**
      * Access token key
      */
-    public const ACCESS_TOKEN = 'accessToken';
+    case ACCESS_TOKEN = 'accessToken';
 
     /**
      * Refresh token key
      */
-    public const REFRESH_TOKEN = 'refreshToken';
+    case REFRESH_TOKEN = 'refreshToken';
 
     /**
      * Activation token key
      */
-    public const ACTIVATION_TOKEN = 'activationToken';
+    case ACTIVATION_TOKEN = 'activationToken';
 
     /**
      * Reset token key
      */
-    public const RESET_TOKEN = 'resetToken';
+    case RESET_TOKEN = 'resetToken';
 
     /**
      * Remember token key
      */
-    public const REMEMBER_TOKEN = 'rememberToken';
-
-    private function __construct()
-    {
-    }
+    case REMEMBER_TOKEN = 'rememberToken';
 }

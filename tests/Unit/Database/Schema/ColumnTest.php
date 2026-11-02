@@ -13,6 +13,20 @@ class ColumnTest extends TestCase
         $this->assertInstanceOf(Column::class, new Column('test'));
     }
 
+    public function testColumnAcceptsAnySqlTypeAsText(): void
+    {
+        $this->assertSame('BIGINT', (new Column('test', 'bigint', 20))->get(Column::TYPE));
+        $this->assertSame('INTEGER', (new Column('test', 'integer'))->get(Column::TYPE));
+    }
+
+    public function testColumnTypeIsTheSameFromTheEnumAndFromText(): void
+    {
+        $this->assertSame(
+            (new Column('test', Type::VARCHAR, 255))->get(Column::TYPE),
+            (new Column('test', 'varchar', 255))->get(Column::TYPE)
+        );
+    }
+
     public function testColumnRename(): void
     {
         $column = new Column('test', Type::INT, 11);

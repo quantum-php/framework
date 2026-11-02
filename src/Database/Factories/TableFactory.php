@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace Quantum\Database\Factories;
 
 use Quantum\Database\Exceptions\DatabaseException;
+use Quantum\Database\Enums\TableAction;
 use Quantum\Database\Schemas\Table;
 use Quantum\Database\Database;
 use Exception;
@@ -31,7 +32,7 @@ class TableFactory
             throw DatabaseException::tableAlreadyExists($name);
         }
 
-        return $this->createInstance($name)->setAction(Table::CREATE);
+        return $this->createInstance($name)->setAction(TableAction::CREATE);
     }
 
     /**
@@ -44,7 +45,7 @@ class TableFactory
             throw DatabaseException::tableDoesNotExists($name);
         }
 
-        return $this->createInstance($name)->setAction(Table::ALTER);
+        return $this->createInstance($name)->setAction(TableAction::ALTER);
     }
 
     /**
@@ -57,7 +58,7 @@ class TableFactory
             throw DatabaseException::tableDoesNotExists($oldName);
         }
 
-        $this->createInstance($oldName)->setAction(Table::RENAME, ['newName' => $newName]);
+        $this->createInstance($oldName)->setAction(TableAction::RENAME, ['newName' => $newName]);
         return true;
     }
 
@@ -71,7 +72,7 @@ class TableFactory
             throw DatabaseException::tableDoesNotExists($name);
         }
 
-        $this->createInstance($name)->setAction(Table::DROP);
+        $this->createInstance($name)->setAction(TableAction::DROP);
         return true;
     }
 
