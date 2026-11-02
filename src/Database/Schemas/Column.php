@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace Quantum\Database\Schemas;
 
+use Quantum\Database\Enums\Type;
 use Quantum\Database\Enums\Key;
 
 /**
@@ -151,12 +152,12 @@ class Column
      * Column constructor.
      * @param mixed $constraint
      */
-    public function __construct(string $name, ?string $type = null, $constraint = null)
+    public function __construct(string $name, ?Type $type = null, $constraint = null)
     {
         $this->name = $name;
 
-        if ($type) {
-            $this->type = strtoupper($type);
+        if ($type !== null) {
+            $this->type = strtoupper($type->value);
             $this->constraint = $constraint;
         }
     }

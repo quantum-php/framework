@@ -11,98 +11,94 @@ declare(strict_types=1);
 namespace Quantum\Database\Enums;
 
 /**
- * Class Type
+ * Enum Type
  * @package Quantum\Database
  * @codeCoverageIgnore
  */
-final class Type
+enum Type: string
 {
     /**
      * Type integer
      */
-    public const INT = 'int';
+    case INT = 'int';
 
     /**
      * Type tiny integer
      */
-    public const TINYINT = 'tinyint';
+    case TINYINT = 'tinyint';
 
     /**
      * Type float
      */
-    public const FLOAT = 'float';
+    case FLOAT = 'float';
 
     /**
      * Type double
      */
-    public const DOUBLE = 'double';
+    case DOUBLE = 'double';
 
     /**
      * Type decimal
      */
-    public const DECIMAL = 'decimal';
+    case DECIMAL = 'decimal';
 
     /**
      * Type boolean
      */
-    public const BOOL = 'bool';
+    case BOOL = 'bool';
 
     /**
      * Type char
      */
-    public const CHAR = 'char';
+    case CHAR = 'char';
 
     /**
      * Type varchar
      */
-    public const VARCHAR = 'varchar';
+    case VARCHAR = 'varchar';
 
     /**
      * Type text
      */
-    public const TEXT = 'text';
+    case TEXT = 'text';
 
     /**
      * Type binary
      */
-    public const BINARY = 'binary';
+    case BINARY = 'binary';
 
     /**
      * Type blob
      */
-    public const BLOB = 'blob';
+    case BLOB = 'blob';
 
     /**
      * Type enum
      */
-    public const ENUM = 'enum';
+    case ENUM = 'enum';
 
     /**
      * Type date
      */
-    public const DATE = 'date';
+    case DATE = 'date';
 
     /**
      * Type datetime
      */
-    public const DATETIME = 'datetime';
+    case DATETIME = 'datetime';
 
     /**
      * Type timestamp
      */
-    public const TIMESTAMP = 'timestamp';
+    case TIMESTAMP = 'timestamp';
 
     /**
      * Type json
      */
-    public const JSON = 'json';
+    case JSON = 'json';
 
     /**
      * Type geometry
      */
-    public const GEOMETRY = 'geometry';
-
-    private function __construct()
-    {
-    }
+    case GEOMETRY = 'geometry';
 }

@@ -62,6 +62,26 @@ class TableTest extends TestCase
         $this->assertEquals($expectedSql, $table->getSql());
     }
 
+    public function testAddColumnRejectsTheTypeAsText(): void
+    {
+        $table = new Table('test');
+        $table->setAction(TableAction::CREATE);
+
+        $this->expectException(TypeError::class);
+
+        $table->addColumn('id', 'int', 11);
+    }
+
+    public function testModifyColumnRejectsTheTypeAsText(): void
+    {
+        $table = new Table('test');
+        $table->setAction(TableAction::ALTER);
+
+        $this->expectException(TypeError::class);
+
+        $table->modifyColumn('name', 'varchar', 50);
+    }
+
     public function testAddColumnWithAttributes(): void
     {
         $table = new Table('test');
