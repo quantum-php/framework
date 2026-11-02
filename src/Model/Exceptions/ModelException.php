@@ -12,6 +12,7 @@ namespace Quantum\Model\Exceptions;
 
 use Quantum\Model\Enums\ExceptionMessages;
 use Quantum\App\Exceptions\BaseException;
+use Quantum\Database\Enums\Relation;
 
 /**
  * Class ModelException
@@ -59,10 +60,10 @@ class ModelException extends BaseException
         );
     }
 
-    public static function unsupportedRelationType(string $relationType): self
+    public static function unsupportedRelationType(Relation|string $relationType): self
     {
         return new self(
-            _message(ExceptionMessages::UNSUPPORTED_RELATION, [$relationType]),
+            _message(ExceptionMessages::UNSUPPORTED_RELATION, [$relationType instanceof Relation ? $relationType->value : $relationType]),
             E_ERROR
         );
     }
