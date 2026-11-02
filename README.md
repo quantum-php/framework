@@ -28,7 +28,7 @@
 </p>
 
 <h2>Features</h2>
-<img src="https://quantumphp.io/assets/img/features.png" alt="Quantum" />
+<img src="https://quantumphp.io/images/features.png" alt="Quantum" />
 
 <h2>Installation</h2>
 
