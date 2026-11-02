@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace Quantum\Paginator\Traits;
 
 use Quantum\Config\Exceptions\ConfigException;
+use Quantum\Paginator\Enums\PaginationLimit;
 use Quantum\Lang\Exceptions\LangException;
 use Quantum\Paginator\Enums\Pagination;
 use Quantum\Di\Exceptions\DiException;
@@ -112,7 +113,7 @@ trait PaginatorTrait
      */
     public function firstPageLink(bool $withBaseUrl = false): ?string
     {
-        return $this->getPageLink(Pagination::FIRST_PAGE_NUMBER, $withBaseUrl);
+        return $this->getPageLink(PaginationLimit::FIRST_PAGE_NUMBER, $withBaseUrl);
     }
 
     /**
@@ -179,9 +180,9 @@ trait PaginatorTrait
             return null;
         }
 
-        $pageItemsCount = max(Pagination::MINIMUM_PAGE_ITEMS_COUNT, $pageItemsCount ?? Pagination::MINIMUM_PAGE_ITEMS_COUNT);
+        $pageItemsCount = max(PaginationLimit::MINIMUM_PAGE_ITEMS_COUNT, $pageItemsCount ?? PaginationLimit::MINIMUM_PAGE_ITEMS_COUNT);
 
-        $pagination = ['<ul class="' . Pagination::PAGINATION_CLASS . '">'];
+        $pagination = ['<ul class="' . Pagination::PAGINATION_CLASS->value . '">'];
 
         if ($currentPage > 1) {
             $pagination[] = $this->getPreviousPageItem($this->previousPageLink());
@@ -224,7 +225,7 @@ trait PaginatorTrait
     protected function getPageLink(?int $pageNumber, bool $withBaseUrl = false): ?string
     {
         if ($pageNumber !== null && $pageNumber !== 0) {
-            return $this->getUri($withBaseUrl) . Pagination::PER_PAGE . '=' . $this->perPage . '&' . Pagination::PAGE . '=' . $pageNumber;
+            return $this->getUri($withBaseUrl) . Pagination::PER_PAGE->value . '=' . $this->perPage . '&' . Pagination::PAGE->value . '=' . $pageNumber;
         }
 
         return null;
@@ -274,7 +275,7 @@ trait PaginatorTrait
         $pagination = [];
 
         for ($i = $startPage; $i <= $endPage; $i++) {
-            $active = $i === $currentPage ? 'class="' . Pagination::PAGINATION_CLASS_ACTIVE . '"' : '';
+            $active = $i === $currentPage ? 'class="' . Pagination::PAGINATION_CLASS_ACTIVE->value . '"' : '';
             $pagination[] = '<li ' . $active . '><a href="' . $links[$i - 1] . '">' . $i . '</a></li>';
         }
 
@@ -287,8 +288,8 @@ trait PaginatorTrait
      */
     protected function calculateStartEndPages(int $currentPage, int $totalPages, int $pageItemsCount): array
     {
-        $startPage = (int) max(1, $currentPage - ceil(($pageItemsCount - Pagination::EDGE_PADDING) / 2));
-        $endPage = (int) min($totalPages, $startPage + $pageItemsCount - Pagination::EDGE_PADDING);
+        $startPage = (int) max(1, $currentPage - ceil(($pageItemsCount - PaginationLimit::EDGE_PADDING) / 2));
+        $endPage = (int) min($totalPages, $startPage + $pageItemsCount - PaginationLimit::EDGE_PADDING);
 
         return [$startPage, $endPage];
     }
@@ -301,7 +302,7 @@ trait PaginatorTrait
         $pagination = [];
 
         if ($startPage > 1) {
-            $pagination[] = '<li><a href="' . $this->firstPageLink() . '">' . Pagination::FIRST_PAGE_NUMBER . '</a></li>';
+            $pagination[] = '<li><a href="' . $this->firstPageLink() . '">' . PaginationLimit::FIRST_PAGE_NUMBER . '</a></li>';
             if ($startPage > 2) {
                 $pagination[] = '<li><span>...</span></li>';
             }
