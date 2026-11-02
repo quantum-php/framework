@@ -167,7 +167,7 @@ trait Body
             $this->setStatusCode($code);
         }
 
-        $this->__response[ReservedKeys::RENDERED_VIEW] = $html;
+        $this->__response[ReservedKeys::RENDERED_VIEW->value] = $html;
 
         return $this;
     }
@@ -273,7 +273,7 @@ trait Body
      */
     private function formatHtml(): string
     {
-        return $this->get(ReservedKeys::RENDERED_VIEW) ?? '';
+        return $this->get(ReservedKeys::RENDERED_VIEW->value) ?? '';
     }
 
     /**

@@ -111,7 +111,7 @@ trait Header
     public function back(array $data = [], int $code = 302): self
     {
         if ($data !== []) {
-            session()->set(ReservedKeys::PREV_REQUEST, $data);
+            session()->set(ReservedKeys::PREV_REQUEST->value, $data);
         }
 
         $referrer = get_referrer();
