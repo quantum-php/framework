@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://quantumphp.io">
-        <img src="https://quantumphp.io/assets/img/quantum-favicon.png" alt="Quantum" height="150"/>
+        <img src="https://quantumphp.io/quantum-logo.png" alt="Quantum" height="150"/>
     </a>
 </p>
 
