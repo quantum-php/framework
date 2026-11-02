@@ -107,7 +107,7 @@ class Table
      * Adds column to the table
      * @param mixed $constraint
      */
-    public function addColumn(string $name, Type $type, $constraint = null): Table
+    public function addColumn(string $name, Type|string $type, $constraint = null): Table
     {
         $this->columns[] = [
             'column' => new Column($name, $type, $constraint),
@@ -121,7 +121,7 @@ class Table
      * Modifies the column
      * @param mixed $constraint
      */
-    public function modifyColumn(string $name, Type $type, $constraint = null): Table
+    public function modifyColumn(string $name, Type|string $type, $constraint = null): Table
     {
         if ($this->action === TableAction::ALTER) {
             $this->columns[] = [

@@ -62,24 +62,28 @@ class TableTest extends TestCase
         $this->assertEquals($expectedSql, $table->getSql());
     }
 
-    public function testAddColumnRejectsTheTypeAsText(): void
+    public function testAddColumnAcceptsAnySqlTypeAsText(): void
     {
         $table = new Table('test');
         $table->setAction(TableAction::CREATE);
+        $table->addColumn('id', 'bigint', 20)->primary()->autoIncrement();
+        $table->addColumn('code', 'integer');
+        $table->addColumn('body', 'mediumtext');
 
-        $this->expectException(TypeError::class);
+        $expectedSql = 'CREATE TABLE `test` (`id` BIGINT(20) NOT NULL AUTO_INCREMENT, `code` INTEGER NOT NULL, `body` MEDIUMTEXT NOT NULL, PRIMARY KEY (`id`));';
 
-        $table->addColumn('id', 'int', 11);
+        $this->assertEquals($expectedSql, $table->getSql());
     }
 
-    public function testModifyColumnRejectsTheTypeAsText(): void
+    public function testModifyColumnAcceptsTheTypeAsText(): void
     {
         $table = new Table('test');
         $table->setAction(TableAction::ALTER);
-
-        $this->expectException(TypeError::class);
-
         $table->modifyColumn('name', 'varchar', 50);
+
+        $expectedSql = 'ALTER TABLE `test` MODIFY COLUMN `name` VARCHAR(50) NOT NULL;';
+
+        $this->assertEquals($expectedSql, $table->getSql());
     }
 
     public function testAddColumnWithAttributes(): void

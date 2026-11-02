@@ -152,12 +152,12 @@ class Column
      * Column constructor.
      * @param mixed $constraint
      */
-    public function __construct(string $name, ?Type $type = null, $constraint = null)
+    public function __construct(string $name, Type|string|null $type = null, $constraint = null)
     {
         $this->name = $name;
 
-        if ($type !== null) {
-            $this->type = strtoupper($type->value);
+        if ($type) {
+            $this->type = strtoupper($type instanceof Type ? $type->value : $type);
             $this->constraint = $constraint;
         }
     }

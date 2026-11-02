@@ -5,7 +5,6 @@ namespace Quantum\Tests\Unit\Database\Schema;
 use Quantum\Database\Schemas\Column;
 use Quantum\Database\Enums\Type;
 use PHPUnit\Framework\TestCase;
-use TypeError;
 
 class ColumnTest extends TestCase
 {
@@ -14,11 +13,18 @@ class ColumnTest extends TestCase
         $this->assertInstanceOf(Column::class, new Column('test'));
     }
 
-    public function testColumnRejectsTheTypeAsText(): void
+    public function testColumnAcceptsAnySqlTypeAsText(): void
     {
-        $this->expectException(TypeError::class);
+        $this->assertSame('BIGINT', (new Column('test', 'bigint', 20))->get(Column::TYPE));
+        $this->assertSame('INTEGER', (new Column('test', 'integer'))->get(Column::TYPE));
+    }
 
-        new Column('test', 'int', 11);
+    public function testColumnTypeIsTheSameFromTheEnumAndFromText(): void
+    {
+        $this->assertSame(
+            (new Column('test', Type::VARCHAR, 255))->get(Column::TYPE),
+            (new Column('test', 'varchar', 255))->get(Column::TYPE)
+        );
     }
 
     public function testColumnRename(): void
