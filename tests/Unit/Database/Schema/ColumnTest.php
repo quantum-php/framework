@@ -5,12 +5,20 @@ namespace Quantum\Tests\Unit\Database\Schema;
 use Quantum\Database\Schemas\Column;
 use Quantum\Database\Enums\Type;
 use PHPUnit\Framework\TestCase;
+use TypeError;
 
 class ColumnTest extends TestCase
 {
     public function testColumnConstructor(): void
     {
         $this->assertInstanceOf(Column::class, new Column('test'));
+    }
+
+    public function testColumnRejectsTheTypeAsText(): void
+    {
+        $this->expectException(TypeError::class);
+
+        new Column('test', 'int', 11);
     }
 
     public function testColumnRename(): void

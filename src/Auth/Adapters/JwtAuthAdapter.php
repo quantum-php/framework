@@ -71,18 +71,18 @@ class JwtAuthAdapter implements AuthenticatableInterface
      */
     public function signout(): bool
     {
-        $refreshToken = request()->getHeader($this->keyFields[AuthKeys::REFRESH_TOKEN]);
+        $refreshToken = request()->getHeader($this->keyFields[AuthKeys::REFRESH_TOKEN->value]);
 
-        $user = $this->authService->get($this->keyFields[AuthKeys::REFRESH_TOKEN], $refreshToken);
+        $user = $this->authService->get($this->keyFields[AuthKeys::REFRESH_TOKEN->value], $refreshToken);
 
         if ($user) {
             $this->authService->update(
-                $this->keyFields[AuthKeys::REFRESH_TOKEN],
+                $this->keyFields[AuthKeys::REFRESH_TOKEN->value],
                 $refreshToken,
-                array_merge($this->getVisibleFields($user), [$this->keyFields[AuthKeys::REFRESH_TOKEN] => ''])
+                array_merge($this->getVisibleFields($user), [$this->keyFields[AuthKeys::REFRESH_TOKEN->value] => ''])
             );
 
-            request()->deleteHeader($this->keyFields[AuthKeys::REFRESH_TOKEN]);
+            request()->deleteHeader($this->keyFields[AuthKeys::REFRESH_TOKEN->value]);
             request()->deleteHeader('Authorization');
             response()->delete('tokens');
 
@@ -142,8 +142,8 @@ class JwtAuthAdapter implements AuthenticatableInterface
     {
 
         return [
-            $this->keyFields[AuthKeys::REFRESH_TOKEN] => $this->generateToken(),
-            $this->keyFields[AuthKeys::ACCESS_TOKEN] => base64_encode($this->jwt->setData($this->getVisibleFields($user))->compose()),
+            $this->keyFields[AuthKeys::REFRESH_TOKEN->value] => $this->generateToken(),
+            $this->keyFields[AuthKeys::ACCESS_TOKEN->value] => base64_encode($this->jwt->setData($this->getVisibleFields($user))->compose()),
         ];
     }
 
@@ -157,13 +157,13 @@ class JwtAuthAdapter implements AuthenticatableInterface
         $tokens = $this->getUpdatedTokens($user);
 
         $this->authService->update(
-            $this->keyFields[AuthKeys::USERNAME],
-            $user->getFieldValue($this->keyFields[AuthKeys::USERNAME]),
-            array_merge($this->getVisibleFields($user), [$this->keyFields[AuthKeys::REFRESH_TOKEN] => $tokens[$this->keyFields[AuthKeys::REFRESH_TOKEN]]])
+            $this->keyFields[AuthKeys::USERNAME->value],
+            $user->getFieldValue($this->keyFields[AuthKeys::USERNAME->value]),
+            array_merge($this->getVisibleFields($user), [$this->keyFields[AuthKeys::REFRESH_TOKEN->value] => $tokens[$this->keyFields[AuthKeys::REFRESH_TOKEN->value]]])
         );
 
-        request()->setHeader($this->keyFields[AuthKeys::REFRESH_TOKEN], $tokens[$this->keyFields[AuthKeys::REFRESH_TOKEN]]);
-        request()->setHeader('Authorization', 'Bearer ' . $tokens[$this->keyFields[AuthKeys::ACCESS_TOKEN]]);
+        request()->setHeader($this->keyFields[AuthKeys::REFRESH_TOKEN->value], $tokens[$this->keyFields[AuthKeys::REFRESH_TOKEN->value]]);
+        request()->setHeader('Authorization', 'Bearer ' . $tokens[$this->keyFields[AuthKeys::ACCESS_TOKEN->value]]);
         response()->set('tokens', $tokens);
 
         return $tokens;
@@ -175,8 +175,8 @@ class JwtAuthAdapter implements AuthenticatableInterface
     protected function checkRefreshToken(): ?User
     {
         return $this->authService->get(
-            $this->keyFields[AuthKeys::REFRESH_TOKEN],
-            request()->getHeader($this->keyFields[AuthKeys::REFRESH_TOKEN])
+            $this->keyFields[AuthKeys::REFRESH_TOKEN->value],
+            request()->getHeader($this->keyFields[AuthKeys::REFRESH_TOKEN->value])
         );
     }
 
@@ -203,7 +203,7 @@ class JwtAuthAdapter implements AuthenticatableInterface
      */
     private function getUserFromRefreshToken(): ?User
     {
-        if (!request()->hasHeader($this->keyFields[AuthKeys::REFRESH_TOKEN])) {
+        if (!request()->hasHeader($this->keyFields[AuthKeys::REFRESH_TOKEN->value])) {
             return null;
         }
 

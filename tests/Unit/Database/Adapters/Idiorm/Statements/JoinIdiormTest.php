@@ -13,6 +13,7 @@ use Quantum\Tests\_root\shared\Models\TestEventModel;
 use Quantum\Tests\_root\shared\Models\TestUserModel;
 use Quantum\Database\Adapters\Idiorm\IdiormDbal;
 use Quantum\Model\Exceptions\ModelException;
+use Quantum\Database\Enums\Relation;
 use Quantum\Model\Factories\ModelFactory;
 use Quantum\Model\ModelCollection;
 use Quantum\Model\DbModel;
@@ -42,6 +43,22 @@ class BrokenProfileUnsupportedRelationModel extends DbModel
         return [
             TestUserModel::class => [
                 'type' => 'SIDEWAYS',
+                'foreign_key' => 'user_id',
+                'local_key' => 'id',
+            ],
+        ];
+    }
+}
+
+class BrokenProfileBelongsToManyRelationModel extends DbModel
+{
+    public string $table = 'profiles';
+
+    public function relations(): array
+    {
+        return [
+            TestUserModel::class => [
+                'type' => Relation::BELONGS_TO_MANY,
                 'foreign_key' => 'user_id',
                 'local_key' => 'id',
             ],
@@ -403,6 +420,16 @@ class JoinIdiormTest extends IdiormDbalTestCase
         $this->expectExceptionMessage('Relation type is missing for model `' . BrokenProfileMissingTypeModel::class . '`');
 
         ModelFactory::get(BrokenProfileMissingTypeModel::class)
+            ->joinTo(ModelFactory::get(TestUserModel::class))
+            ->get();
+    }
+
+    public function testIdiormJoinThrowsExceptionForBelongsToManyRelationType(): void
+    {
+        $this->expectException(ModelException::class);
+        $this->expectExceptionMessage('Relation type `belongsToMany` is not supported');
+
+        ModelFactory::get(BrokenProfileBelongsToManyRelationModel::class)
             ->joinTo(ModelFactory::get(TestUserModel::class))
             ->get();
     }

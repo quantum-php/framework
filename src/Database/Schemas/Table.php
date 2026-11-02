@@ -13,7 +13,10 @@ namespace Quantum\Database\Schemas;
 use Quantum\Migration\Exceptions\MigrationException;
 use Quantum\Database\Exceptions\DatabaseException;
 use Quantum\App\Exceptions\BaseException;
+use Quantum\Database\Enums\TableAction;
 use Quantum\Database\Traits\TableTrait;
+use Quantum\Database\Enums\Type;
+use Quantum\Database\Enums\Key;
 use Quantum\Database\Database;
 
 /**
@@ -36,31 +39,11 @@ class Table
 {
     use TableTrait;
 
-    /**
-     * Action create
-     */
-    public const CREATE = 1;
-
-    /**
-     * Action alter
-     */
-    public const ALTER = 2;
-
-    /**
-     * Action drop
-     */
-    public const DROP = 3;
-
-    /**
-     * Action rename
-     */
-    public const RENAME = 4;
-
     private string $name;
 
     private string $newName = '';
 
-    private ?int $action = null;
+    private ?TableAction $action = null;
 
     /**
      * @var array<int|string, mixed>
@@ -108,7 +91,7 @@ class Table
      * Sets an action on a table to be performed
      * @param array<string, mixed> $data
      */
-    public function setAction(int $action, ?array $data = null): Table
+    public function setAction(TableAction $action, ?array $data = null): Table
     {
         $this->action = $action;
 
@@ -124,11 +107,11 @@ class Table
      * Adds column to the table
      * @param mixed $constraint
      */
-    public function addColumn(string $name, string $type, $constraint = null): Table
+    public function addColumn(string $name, Type $type, $constraint = null): Table
     {
         $this->columns[] = [
             'column' => new Column($name, $type, $constraint),
-            'action' => $this->action == self::ALTER ? Column::ADD : null,
+            'action' => $this->action === TableAction::ALTER ? Column::ADD : null,
         ];
 
         return $this;
@@ -138,9 +121,9 @@ class Table
      * Modifies the column
      * @param mixed $constraint
      */
-    public function modifyColumn(string $name, string $type, $constraint = null): Table
+    public function modifyColumn(string $name, Type $type, $constraint = null): Table
     {
-        if ($this->action == self::ALTER) {
+        if ($this->action === TableAction::ALTER) {
             $this->columns[] = [
                 'column' => new Column($name, $type, $constraint),
                 'action' => Column::MODIFY,
@@ -155,7 +138,7 @@ class Table
      */
     public function renameColumn(string $oldName, string $newName): void
     {
-        if ($this->action == self::ALTER) {
+        if ($this->action === TableAction::ALTER) {
             $this->columns[] = [
                 'column' => (new Column($oldName))->renameTo($newName),
                 'action' => Column::RENAME,
@@ -168,7 +151,7 @@ class Table
      */
     public function dropColumn(string $name): void
     {
-        if ($this->action == self::ALTER) {
+        if ($this->action === TableAction::ALTER) {
             $this->columns[] = [
                 'column' => new Column($name),
                 'action' => Column::DROP,
@@ -179,15 +162,21 @@ class Table
     /**
      * Adds new index to column
      */
-    public function addIndex(string $columnName, string $indexType, ?string $indexName = null): void
+    public function addIndex(string $columnName, Key $indexType, ?string $indexName = null): void
     {
-        if ($this->action == self::ALTER) {
+        if ($this->action === TableAction::ALTER) {
             $this->columns[] = [
                 'column' => new Column($columnName),
                 'action' => Column::ADD_INDEX,
             ];
 
-            $this->$indexType($indexName);
+            match ($indexType) {
+                Key::PRIMARY => $this->primary(),
+                Key::INDEX => $this->index($indexName),
+                Key::UNIQUE => $this->unique($indexName),
+                Key::FULLTEXT => $this->fulltext($indexName),
+                Key::SPATIAL => $this->spatial($indexName),
+            };
         }
     }
 
@@ -196,7 +185,7 @@ class Table
      */
     public function dropIndex(string $indexName): void
     {
-        if ($this->action == self::ALTER) {
+        if ($this->action === TableAction::ALTER) {
             $this->columns[] = [
                 'column' => (new Column('dummy'))->indexDrop($indexName),
                 'action' => Column::DROP_INDEX,
@@ -218,17 +207,13 @@ class Table
      */
     public function getSql(): string
     {
-        $sql = '';
-
-        $sql = match ($this->action) {
-            self::CREATE => $this->createTableSql(),
-            self::ALTER => $this->alterTableSql(),
-            self::RENAME => $this->renameTableSql(),
-            self::DROP => $this->dropTableSql(),
-            default => $sql,
+        return match ($this->action) {
+            TableAction::CREATE => $this->createTableSql(),
+            TableAction::ALTER => $this->alterTableSql(),
+            TableAction::RENAME => $this->renameTableSql(),
+            TableAction::DROP => $this->dropTableSql(),
+            null => '',
         };
-
-        return $sql;
     }
 
     /**

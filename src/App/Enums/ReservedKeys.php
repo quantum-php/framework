@@ -11,19 +11,18 @@ declare(strict_types=1);
 namespace Quantum\App\Enums;
 
 /**
- * Class ReservedKeys
+ * Enum ReservedKeys
  * @package Quantum\App
  */
-final class ReservedKeys
+enum ReservedKeys: string
 {
     /**
      * Internal response key for rendered view
      */
-    public const RENDERED_VIEW = '_qt_rendered_view';
+    case RENDERED_VIEW = '_qt_rendered_view';
 
     /**
      * Internal session key for previous request
      */
-    public const PREV_REQUEST = '_qt_prev_request';
-
+    case PREV_REQUEST = '_qt_prev_request';
 }

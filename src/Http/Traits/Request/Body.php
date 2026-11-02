@@ -60,7 +60,7 @@ trait Body
      */
     public function set(string $key, $value): void
     {
-        if ($key === ReservedKeys::RENDERED_VIEW) {
+        if ($key === ReservedKeys::RENDERED_VIEW->value) {
             throw new InvalidArgumentException("Cannot set reserved key: `$key`");
         }
 

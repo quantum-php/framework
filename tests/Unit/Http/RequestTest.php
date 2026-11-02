@@ -5,11 +5,20 @@ namespace Quantum\Tests\Unit\Http;
 use Quantum\Router\RouteCollection;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Router\MatchedRoute;
+use InvalidArgumentException;
 use Quantum\Router\Route;
 use Quantum\Di\Di;
 
 class RequestTest extends AppTestCase
 {
+    public function testSetRejectsTheReservedRenderedViewKey(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot set reserved key: `_qt_rendered_view`');
+
+        request()->set('_qt_rendered_view', 'content');
+    }
+
     public function testSetGetMethod(): void
     {
         $request = request();
