@@ -14,6 +14,7 @@ use Quantum\Migration\Exceptions\MigrationException;
 use Quantum\Database\Exceptions\DatabaseException;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Database\Traits\TableTrait;
+use Quantum\Database\Enums\Key;
 use Quantum\Database\Database;
 
 /**
@@ -179,7 +180,7 @@ class Table
     /**
      * Adds new index to column
      */
-    public function addIndex(string $columnName, string $indexType, ?string $indexName = null): void
+    public function addIndex(string $columnName, Key $indexType, ?string $indexName = null): void
     {
         if ($this->action == self::ALTER) {
             $this->columns[] = [
@@ -187,7 +188,13 @@ class Table
                 'action' => Column::ADD_INDEX,
             ];
 
-            $this->$indexType($indexName);
+            match ($indexType) {
+                Key::PRIMARY => $this->primary(),
+                Key::INDEX => $this->index($indexName),
+                Key::UNIQUE => $this->unique($indexName),
+                Key::FULLTEXT => $this->fulltext($indexName),
+                Key::SPATIAL => $this->spatial($indexName),
+            };
         }
     }
 

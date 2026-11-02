@@ -11,38 +11,34 @@ declare(strict_types=1);
 namespace Quantum\Database\Enums;
 
 /**
- * Class Key
+ * Enum Key
  * @package Quantum\Database
  * @codeCoverageIgnore
  */
-final class Key
+enum Key: string
 {
     /**
      * Primary key definition
      */
-    public const PRIMARY = 'primary';
+    case PRIMARY = 'primary';
 
     /**
      * Index key definition
      */
-    public const INDEX = 'index';
+    case INDEX = 'index';
 
     /**
      * Unique key definition
      */
-    public const UNIQUE = 'unique';
+    case UNIQUE = 'unique';
 
     /**
      * Full-text key definition
      */
-    public const FULLTEXT = 'fulltext';
+    case FULLTEXT = 'fulltext';
 
     /**
      * Spatial key definition
      */
-    public const SPATIAL = 'spatial';
-
-    private function __construct()
-    {
-    }
+    case SPATIAL = 'spatial';
 }

@@ -198,10 +198,10 @@ trait TableTrait
     {
         $indexes = [
             $this->primaryKeysSql(),
-            $this->indexKeysSql(Key::INDEX),
-            $this->indexKeysSql(Key::UNIQUE),
-            $this->indexKeysSql(Key::FULLTEXT),
-            $this->indexKeysSql(Key::SPATIAL),
+            $this->indexKeysSql(Key::INDEX->value),
+            $this->indexKeysSql(Key::UNIQUE->value),
+            $this->indexKeysSql(Key::FULLTEXT->value),
+            $this->indexKeysSql(Key::SPATIAL->value),
         ];
 
         return implode(', ', array_filter($indexes));

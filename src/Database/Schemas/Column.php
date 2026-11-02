@@ -199,7 +199,7 @@ class Column
      */
     public function primary(): void
     {
-        $this->indexKey = Key::PRIMARY;
+        $this->indexKey = Key::PRIMARY->value;
     }
 
     /**
@@ -207,7 +207,7 @@ class Column
      */
     public function index(?string $name = null): void
     {
-        $this->indexKey = Key::INDEX;
+        $this->indexKey = Key::INDEX->value;
 
         if ($name) {
             $this->indexName = $name;
@@ -219,7 +219,7 @@ class Column
      */
     public function unique(?string $name = null): void
     {
-        $this->indexKey = Key::UNIQUE;
+        $this->indexKey = Key::UNIQUE->value;
 
         if ($name) {
             $this->indexName = $name;
@@ -231,7 +231,7 @@ class Column
      */
     public function fulltext(?string $name = null): void
     {
-        $this->indexKey = Key::FULLTEXT;
+        $this->indexKey = Key::FULLTEXT->value;
 
         if ($name) {
             $this->indexName = $name;
@@ -243,7 +243,7 @@ class Column
      */
     public function spatial(?string $name = null): void
     {
-        $this->indexKey = Key::SPATIAL;
+        $this->indexKey = Key::SPATIAL->value;
 
         if ($name) {
             $this->indexName = $name;

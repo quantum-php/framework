@@ -7,6 +7,7 @@ use Quantum\Database\Schemas\Table;
 use Quantum\Database\Enums\Type;
 use Quantum\Database\Enums\Key;
 use PHPUnit\Framework\TestCase;
+use TypeError;
 use Mockery;
 
 /**
@@ -137,6 +138,42 @@ class TableTest extends TestCase
         $expectedSql = 'ALTER TABLE `test` ADD INDEX (`name`);';
 
         $this->assertEquals($expectedSql, $table->getSql());
+    }
+
+    /**
+     * @dataProvider indexTypeProvider
+     */
+    public function testAddIndexOfEveryKey(Key $key, string $expectedSql): void
+    {
+        $table = new Table('test');
+        $table->setAction(Table::ALTER);
+        $table->addIndex('name', $key, 'idx_name');
+
+        $this->assertEquals($expectedSql, $table->getSql());
+    }
+
+    /**
+     * @return array<string, array{0: Key, 1: string}>
+     */
+    public static function indexTypeProvider(): array
+    {
+        return [
+            'primary' => [Key::PRIMARY, 'ALTER TABLE `test` ADD PRIMARY KEY (`name`);'],
+            'index' => [Key::INDEX, 'ALTER TABLE `test` ADD INDEX `idx_name` (`name`);'],
+            'unique' => [Key::UNIQUE, 'ALTER TABLE `test` ADD UNIQUE `idx_name` (`name`);'],
+            'fulltext' => [Key::FULLTEXT, 'ALTER TABLE `test` ADD FULLTEXT `idx_name` (`name`);'],
+            'spatial' => [Key::SPATIAL, 'ALTER TABLE `test` ADD SPATIAL `idx_name` (`name`);'],
+        ];
+    }
+
+    public function testAddIndexRejectsTheIndexTypeAsText(): void
+    {
+        $table = new Table('test');
+        $table->setAction(Table::ALTER);
+
+        $this->expectException(TypeError::class);
+
+        $table->addIndex('name', 'unique', 'idx_name');
     }
 
     public function testAddIndexWithName(): void
