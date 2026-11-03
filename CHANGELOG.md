@@ -8,6 +8,7 @@ The format is based on Keep a Changelog.
 
 ### Added
 - Added `Response::back()` and the `back()` helper, which redirect to the referrer and fall back to `base_url()` when the request has none, or when the referrer is not on the application origin (same scheme, host and port), which is compared with `base_url()`: behind a proxy that terminates TLS, or where the `Host` header is not pinned, set `app.base_url`. They take the old input to keep for the next request, read with `old()` as after `redirectWith()`, and an optional status code (`back($data, $code)`) (#540)
+- The `DemoWeb` About page asks visitors to star Quantum on GitHub, at the top of the page: a button that links to `https://github.com/quantum-php/framework`, with the current star count from a shields.io badge, which the browser loads from the internet. The texts are translation keys, `common.star.message`, `common.star.button` and `common.star.badge_alt`, which the starter project adds to its `common` lang files in English and Spanish; until a project has them the page shows the key names. Modules generated before keep their page (#542)
 
 ### Changed
 - **BREAKING:** Converted the constant classes `ReservedKeys`, `AuthKeys`, `Pagination` and the database `Type`, `Key` and `Relation` to PHP enums, and moved the table actions of `Table` into the new `TableAction` enum (#612). An enum case is not its value, so code that needs the text or number reads `->value`, and text that comes from outside is turned into a case with `::from()` or `::tryFrom()`:
