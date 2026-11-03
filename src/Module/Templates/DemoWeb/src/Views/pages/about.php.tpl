@@ -5,9 +5,9 @@
         <div class="card teal accent-4">
             <div class="card-content">
                 <div class="star-message section">
-                    <h6>Would you like to show some love by starring Quantum on GitHub?</h6>
-                    <a class="btn waves-effect waves-light" href="https://github.com/quantum-php/framework" target="_blank" rel="noopener noreferrer">Star on GitHub</a>
-                    <img src="https://img.shields.io/github/stars/quantum-php/framework?style=social" alt="GitHub stars">
+                    <h6><?php _t('common.star.message'); ?></h6>
+                    <a class="btn waves-effect waves-light" href="https://github.com/quantum-php/framework" target="_blank" rel="noopener noreferrer"><?php _t('common.star.button'); ?></a>
+                    <img src="https://img.shields.io/github/stars/quantum-php/framework?style=social" alt="<?php _t('common.star.badge_alt'); ?>">
                 </div>
 
                 <h6><?php _t('common.about_framework'); ?></h6>

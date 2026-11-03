@@ -15,9 +15,18 @@ class AboutTemplateTest extends TestCase
         );
     }
 
-    public function testAboutPageAsksForAStarOnGitHub(): void
+    public function testStarTextsAreTranslated(): void
     {
-        $this->assertStringContainsString('starring Quantum on GitHub', $this->template);
+        $this->assertStringContainsString("_t('common.star.message')", $this->template);
+        $this->assertStringContainsString("_t('common.star.button')", $this->template);
+        $this->assertStringContainsString("_t('common.star.badge_alt')", $this->template);
+    }
+
+    public function testAboutPageHasNoHardCodedStarText(): void
+    {
+        $this->assertStringNotContainsString('starring Quantum', $this->template);
+        $this->assertStringNotContainsString('Star on GitHub', $this->template);
+        $this->assertStringNotContainsString('alt="GitHub stars"', $this->template);
     }
 
     public function testAboutPageLinksToTheFrameworkRepository(): void
@@ -39,14 +48,14 @@ class AboutTemplateTest extends TestCase
     public function testAboutPageShowsTheStarCountBadge(): void
     {
         $this->assertMatchesRegularExpression(
-            '#<img [^>]*src="https://img\.shields\.io/github/stars/quantum-php/framework[^"]*"[^>]*alt="GitHub stars"[^>]*>#',
+            '#<img [^>]*src="https://img\.shields\.io/github/stars/quantum-php/framework[^"]*"[^>]*alt="<\?php _t\(\'common\.star\.badge_alt\'\); \?>"[^>]*>#',
             $this->template
         );
     }
 
     public function testStarMessageComesBeforeTheCliCommands(): void
     {
-        $star = strpos($this->template, 'starring Quantum on GitHub');
+        $star = strpos($this->template, "_t('common.star.message')");
         $commands = strpos($this->template, 'common.cli_commands');
 
         $this->assertNotFalse($star);
