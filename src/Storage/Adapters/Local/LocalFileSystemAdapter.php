@@ -173,7 +173,7 @@ class LocalFileSystemAdapter implements LocalFilesystemAdapterInterface
      * @inheritDoc
      * @return array<string>|false
      */
-    public function glob(string $pattern, int $flags = 0)
+    public function glob(string $pattern, int $flags = 0): array|false
     {
         return glob($pattern, $flags);
     }
