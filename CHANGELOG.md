@@ -6,6 +6,9 @@ The format is based on Keep a Changelog.
 
 ## [Unreleased]
 
+### Changed
+- `LocalFileSystemAdapter::glob()` declares its return type, `array|false`, which Rector 2.8.4 requires. A class that extends the adapter and overrides `glob()` without a return type must declare it too. `LocalFilesystemAdapterInterface` is unchanged (#656)
+
 ### Fixed
 - `LangFactory::resolve()` returns the cached adapter before it detects the language, so `_t()` and `current_lang()` no longer repeat the query-parameter, URL-segment and `Accept-Language` checks on every call, and no longer throw `LangException::misconfiguredDefaultConfig()` when an adapter is already cached. No public signature changes (#654)
 
