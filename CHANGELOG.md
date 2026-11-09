@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog.
 
+## [Unreleased]
+
+### Fixed
+- `LangFactory::resolve()` returns the cached adapter before it detects the language, so `_t()` and `current_lang()` no longer repeat the query-parameter, URL-segment and `Accept-Language` checks on every call, and no longer throw `LangException::misconfiguredDefaultConfig()` when an adapter is already cached. No public signature changes (#654)
+
 ## [3.1.1] - 2026-11-03
 
 ### Added
