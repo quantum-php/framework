@@ -55,6 +55,8 @@ class LangFactory
     }
 
     /**
+     * The language is detected only when the adapter is first created and stays fixed
+     * for the cached instance; it changes with `Lang::setLang()`.
      * @throws LangException|ConfigException|DiException|ReflectionException|BaseException
      */
     public function resolve(?string $adapter = null): Lang
@@ -71,9 +73,8 @@ class LangFactory
             throw LangException::misconfiguredDefaultAdapterConfig();
         }
 
-        $lang = $this->detectLanguage($supported, $default);
-
         if (!isset($this->instances[$adapter])) {
+            $lang = $this->detectLanguage($supported, $default);
             $adapterClass = $this->getAdapterClass($adapter);
             $this->instances[$adapter] = $this->createInstance($adapterClass, $adapter, $lang);
         }

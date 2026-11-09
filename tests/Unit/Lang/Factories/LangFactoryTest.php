@@ -160,6 +160,34 @@ class LangFactoryTest extends AppTestCase
         $this->assertEquals('en', $lang->getLang());
     }
 
+    public function testLangFactoryReturnsCachedInstanceWithoutDetectingLanguage(): void
+    {
+        $this->testRequest('http://127.0.0.1/api/rest?lang=es');
+
+        $first = LangFactory::get();
+
+        config()->set('lang.default_locale', null);
+
+        $this->testRequest('http://127.0.0.1/api/rest');
+
+        $this->assertSame($first, LangFactory::get());
+    }
+
+    public function testLangFactoryKeepsFirstLanguageWhenQueryParameterChanges(): void
+    {
+        $this->testRequest('http://127.0.0.1/api/rest?lang=es');
+
+        $first = LangFactory::get();
+
+        $this->testRequest('http://127.0.0.1/api/rest?lang=en');
+
+        $second = LangFactory::get();
+
+        $this->assertSame($first, $second);
+
+        $this->assertEquals('es', $second->getLang());
+    }
+
     public function testLangFactoryThrowsErrorIfNoDefaultLangFound(): void
     {
         config()->set('lang', [
