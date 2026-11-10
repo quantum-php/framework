@@ -91,7 +91,7 @@ final class RouteBuilder
      * @param string|null $action
      * @throws RouteException
      */
-    public function add(string $path, string $methods, $handler, string $action = null): self
+    public function add(string $path, string $methods, $handler, ?string $action = null): self
     {
         $methodList = array_filter(
             array_map(trim(...), explode('|', $methods)),
@@ -107,7 +107,7 @@ final class RouteBuilder
      * @param string|null $action
      * @throws RouteException
      */
-    public function get(string $path, $handler, string $action = null): self
+    public function get(string $path, $handler, ?string $action = null): self
     {
         return $this->addRoute(['GET'], $path, $handler, $action);
     }
@@ -118,7 +118,7 @@ final class RouteBuilder
      * @param string|null $action
      * @throws RouteException
      */
-    public function post(string $path, $handler, string $action = null): self
+    public function post(string $path, $handler, ?string $action = null): self
     {
         return $this->addRoute(['POST'], $path, $handler, $action);
     }
@@ -129,9 +129,20 @@ final class RouteBuilder
      * @param string|null $action
      * @throws RouteException
      */
-    public function put(string $path, $handler, string $action = null): self
+    public function put(string $path, $handler, ?string $action = null): self
     {
         return $this->addRoute(['PUT'], $path, $handler, $action);
+    }
+
+    /**
+     * Define a PATCH route.
+     * @param callable|string $handler
+     * @param string|null $action
+     * @throws RouteException
+     */
+    public function patch(string $path, $handler, ?string $action = null): self
+    {
+        return $this->addRoute(['PATCH'], $path, $handler, $action);
     }
 
     /**
@@ -139,7 +150,7 @@ final class RouteBuilder
      * @param callable|string $handler
      * @throws RouteException
      */
-    public function delete(string $path, $handler, string $action = null): self
+    public function delete(string $path, $handler, ?string $action = null): self
     {
         return $this->addRoute(['DELETE'], $path, $handler, $action);
     }
