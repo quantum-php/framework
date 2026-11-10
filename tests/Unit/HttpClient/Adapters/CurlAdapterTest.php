@@ -3,7 +3,7 @@
 namespace Quantum\Tests\Unit\HttpClient\Adapters;
 
 use Quantum\HttpClient\Adapters\CurlAdapter;
-use Quantum\HttpClient\ResponseHeaders;
+use Quantum\HttpClient\ResponseParser;
 use Quantum\Tests\Unit\AppTestCase;
 use CurlHandle;
 use Mockery;
@@ -56,6 +56,14 @@ class CurlAdapterTest extends AppTestCase
         $this->assertSame($data, $adapter->buildPostData($data));
     }
 
+    public function testCurlAdapterPreservesNestedCurlFilePostData(): void
+    {
+        $adapter = new CurlAdapter();
+        $data = ['files' => ['avatar' => new \CURLFile(__FILE__)]];
+
+        $this->assertSame($data, $adapter->buildPostData($data));
+    }
+
     public function testCurlAdapterGeneratesNativeRequestIds(): void
     {
         $adapter1 = new CurlAdapter();
@@ -69,29 +77,6 @@ class CurlAdapterTest extends AppTestCase
         $adapter = new CurlAdapter();
 
         $this->assertInstanceOf(CurlHandle::class, $adapter->getHandle());
-    }
-
-    public function testCurlAdapterParsesNativeResponseHeaders(): void
-    {
-        $adapter = new CurlAdapter();
-
-        $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', [
-            "HTTP/1.1 100 Continue\r\n\r\nHTTP/1.1 200 OK\r\nContent-Type: application/json\r\nMalformed Header\r\nX-Test: one\r\nX-Test: two\r\n\r\n",
-        ]);
-
-        $this->assertInstanceOf(ResponseHeaders::class, $headers);
-        $this->assertSame('HTTP/1.1 200 OK', $headers['status-line']);
-        $this->assertSame('application/json', $headers['content-type']);
-        $this->assertSame('one,two', $headers['x-test']);
-    }
-
-    public function testCurlAdapterReturnsEmptyHeadersWhenNoHttpHeaderBlockExists(): void
-    {
-        $adapter = new CurlAdapter();
-
-        $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', ['']);
-
-        $this->assertCount(0, $headers);
     }
 
     public function testCurlAdapterParsesNativeCookieHeader(): void
@@ -113,78 +98,6 @@ class CurlAdapterTest extends AppTestCase
         $this->assertSame(['sid' => ''], $adapter->getResponseCookies());
     }
 
-    public function testCurlAdapterParsesJsonResponse(): void
-    {
-        $adapter = new CurlAdapter();
-        $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', [
-            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n",
-        ]);
-        $this->setPrivateProperty($adapter, 'responseHeaders', $headers);
-
-        $response = $this->invokePrivateMethod($adapter, 'parseResponse', ['{"ok":true}']);
-
-        $this->assertTrue($response->ok);
-    }
-
-    public function testCurlAdapterParsesXmlResponse(): void
-    {
-        $adapter = new CurlAdapter();
-        $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', [
-            "HTTP/1.1 200 OK\r\nContent-Type: application/xml\r\n\r\n",
-        ]);
-        $this->setPrivateProperty($adapter, 'responseHeaders', $headers);
-
-        $response = $this->invokePrivateMethod($adapter, 'parseResponse', ['<root><ok>yes</ok></root>']);
-
-        $this->assertSame('yes', (string) $response->ok);
-    }
-
-    public function testCurlAdapterReturnsRawResponseWhenXmlParsingFails(): void
-    {
-        $adapter = new CurlAdapter();
-        $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', [
-            "HTTP/1.1 200 OK\r\nContent-Type: application/xml\r\n\r\n",
-        ]);
-        $this->setPrivateProperty($adapter, 'responseHeaders', $headers);
-
-        $previousUseInternalErrors = libxml_use_internal_errors(false);
-
-        try {
-            $response = $this->invokePrivateMethod($adapter, 'parseResponse', ['<root>']);
-
-            $this->assertSame('<root>', $response);
-            $this->assertFalse(libxml_use_internal_errors());
-        } finally {
-            libxml_use_internal_errors($previousUseInternalErrors);
-        }
-    }
-
-    public function testCurlAdapterDecodesGzipResponse(): void
-    {
-        $adapter = new CurlAdapter();
-        $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', [
-            "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n\r\n",
-        ]);
-        $this->setPrivateProperty($adapter, 'responseHeaders', $headers);
-
-        $response = $this->invokePrivateMethod($adapter, 'parseResponse', [gzencode('compressed response')]);
-
-        $this->assertSame('compressed response', $response);
-    }
-
-    public function testCurlAdapterParsesGzippedJsonResponse(): void
-    {
-        $adapter = new CurlAdapter();
-        $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', [
-            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Encoding: GZip\r\n\r\n",
-        ]);
-        $this->setPrivateProperty($adapter, 'responseHeaders', $headers);
-
-        $response = $this->invokePrivateMethod($adapter, 'parseResponse', [gzencode('{"ok":true}')]);
-
-        $this->assertTrue($response->ok);
-    }
-
     public function testCurlAdapterPassesZeroInfoOptionToNativeCurl(): void
     {
         $adapter = new CurlAdapter();
@@ -192,21 +105,105 @@ class CurlAdapterTest extends AppTestCase
         $this->assertFalse($adapter->getInfo(0));
     }
 
-    public function testCurlAdapterStoresNativeHttpErrorState(): void
+    public function testCurlAdapterResolvesClientErrorState(): void
     {
         $adapter = new CurlAdapter();
-        $headers = $this->invokePrivateMethod($adapter, 'parseResponseHeaders', [
-            "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\n",
-        ]);
 
-        $this->setPrivateProperty($adapter, 'responseHeaders', $headers);
-        $this->setPrivateProperty($adapter, 'error', true);
-        $this->setPrivateProperty($adapter, 'errorCode', 404);
-        $this->setPrivateProperty($adapter, 'errorMessage', $headers['Status-Line']);
+        $this->setPrivateProperty(
+            $adapter,
+            'responseHeaders',
+            (new ResponseParser())->parseHeaders("HTTP/1.1 404 Not Found\r\n\r\n")
+        );
+
+        $this->invokePrivateMethod($adapter, 'applyErrorState', [0, '', 404]);
 
         $this->assertTrue($adapter->isError());
         $this->assertSame(404, $adapter->getErrorCode());
         $this->assertSame('HTTP/1.1 404 Not Found', $adapter->getErrorMessage());
+    }
+
+    public function testCurlAdapterResolvesServerErrorState(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $this->setPrivateProperty(
+            $adapter,
+            'responseHeaders',
+            (new ResponseParser())->parseHeaders("HTTP/1.1 500 Internal Server Error\r\n\r\n")
+        );
+
+        $this->invokePrivateMethod($adapter, 'applyErrorState', [0, '', 500]);
+
+        $this->assertTrue($adapter->isError());
+        $this->assertSame(500, $adapter->getErrorCode());
+        $this->assertSame('HTTP/1.1 500 Internal Server Error', $adapter->getErrorMessage());
+    }
+
+    public function testCurlAdapterUsesEmptyMessageWhenErrorResponseHasNoStatusLine(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $this->invokePrivateMethod($adapter, 'applyErrorState', [0, '', 503]);
+
+        $this->assertTrue($adapter->isError());
+        $this->assertSame(503, $adapter->getErrorCode());
+        $this->assertSame('', $adapter->getErrorMessage());
+    }
+
+    public function testCurlAdapterClearsErrorStateWhenResponseSucceeds(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $this->invokePrivateMethod($adapter, 'applyErrorState', [0, '', 500]);
+        $this->invokePrivateMethod($adapter, 'applyErrorState', [0, '', 200]);
+
+        $this->assertFalse($adapter->isError());
+        $this->assertSame(0, $adapter->getErrorCode());
+        $this->assertNull($adapter->getErrorMessage());
+    }
+
+    public function testCurlAdapterPrefersCurlErrorOverHttpStatus(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $this->invokePrivateMethod($adapter, 'applyErrorState', [CURLE_COULDNT_RESOLVE_HOST, 'Could not resolve host: example.test', 404]);
+
+        $this->assertTrue($adapter->isError());
+        $this->assertSame(CURLE_COULDNT_RESOLVE_HOST, $adapter->getErrorCode());
+        $this->assertSame(
+            curl_strerror(CURLE_COULDNT_RESOLVE_HOST) . ': Could not resolve host: example.test',
+            $adapter->getErrorMessage()
+        );
+    }
+
+    public function testCurlAdapterUsesCurlErrorTextWhenCurlGivesNoMessage(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $this->invokePrivateMethod($adapter, 'applyErrorState', [CURLE_COULDNT_CONNECT, '', 0]);
+
+        $this->assertTrue($adapter->isError());
+        $this->assertSame(CURLE_COULDNT_CONNECT, $adapter->getErrorCode());
+        $this->assertSame(curl_strerror(CURLE_COULDNT_CONNECT), $adapter->getErrorMessage());
+    }
+
+    public function testCurlAdapterStoresNativeCurlErrorState(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $adapter
+            ->setUrl($this->fileUrl(PROJECT_ROOT . DS . 'missing-curl-fixture.txt'))
+            ->start();
+
+        $this->assertTrue($adapter->isError());
+        $this->assertSame(CURLE_FILE_COULDNT_READ_FILE, $adapter->getErrorCode());
+
+        $errorText = (string) curl_strerror(CURLE_FILE_COULDNT_READ_FILE);
+        $errorDetail = curl_error($adapter->getHandle());
+
+        $expectedMessage = $errorDetail !== '' ? $errorText . ': ' . $errorDetail : $errorText;
+
+        $this->assertSame($expectedMessage, $adapter->getErrorMessage());
     }
 
     public function testCurlAdapterKeepsNativeErrorMessageNullOnSuccess(): void
