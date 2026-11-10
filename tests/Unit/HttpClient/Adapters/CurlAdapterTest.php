@@ -209,6 +209,19 @@ class CurlAdapterTest extends AppTestCase
         $this->assertSame('HTTP/1.1 404 Not Found', $adapter->getErrorMessage());
     }
 
+    public function testCurlAdapterStoresNativeCurlErrorState(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $adapter
+            ->setUrl($this->fileUrl(PROJECT_ROOT . DS . 'missing-curl-fixture.txt'))
+            ->start();
+
+        $this->assertTrue($adapter->isError());
+        $this->assertSame(CURLE_FILE_COULDNT_READ_FILE, $adapter->getErrorCode());
+        $this->assertNotEmpty($adapter->getErrorMessage());
+    }
+
     public function testCurlAdapterKeepsNativeErrorMessageNullOnSuccess(): void
     {
         $adapter = new CurlAdapter();
