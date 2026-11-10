@@ -13,10 +13,9 @@ namespace Quantum\HttpClient\Adapters;
 use Quantum\HttpClient\Contracts\CurlAdapterInterface;
 use Quantum\HttpClient\Traits\AdapterTrait;
 use Quantum\HttpClient\ResponseHeaders;
-use JsonSerializable;
+use Quantum\HttpClient\PostDataBuilder;
 use RuntimeException;
 use CurlHandle;
-use CURLFile;
 
 /**
  * Class CurlAdapter
@@ -50,6 +49,8 @@ class CurlAdapter implements CurlAdapterInterface
 
     private ResponseHeaders $responseHeaders;
 
+    private PostDataBuilder $postDataBuilder;
+
     /**
      * @var array<string, mixed>
      */
@@ -73,6 +74,7 @@ class CurlAdapter implements CurlAdapterInterface
 
         $this->handle = $handle;
         $this->responseHeaders = new ResponseHeaders();
+        $this->postDataBuilder = new PostDataBuilder();
         $this->applyOption(CURLOPT_RETURNTRANSFER, true);
         $this->applyOption(CURLOPT_HEADER, false);
         $this->applyOption(CURLOPT_HEADERFUNCTION, function ($handle, string $header): int {
@@ -157,23 +159,7 @@ class CurlAdapter implements CurlAdapterInterface
      */
     public function buildPostData($data)
     {
-        if (
-            $this->hasJsonContentType() &&
-            (
-                is_array($data) ||
-                $data instanceof JsonSerializable
-            )
-        ) {
-            return json_encode($data) ?: '';
-        }
-
-        if (is_array($data)) {
-            return $this->hasMultipartContentType() || $this->hasCurlFile($data)
-                ? $data
-                : http_build_query($data);
-        }
-
-        return $data;
+        return $this->postDataBuilder->build($data, $this->headers);
     }
 
     private function applyHeaders(): void
@@ -185,46 +171,6 @@ class CurlAdapter implements CurlAdapterInterface
         }
 
         $this->applyOption(CURLOPT_HTTPHEADER, $headers);
-    }
-
-    private function hasJsonContentType(): bool
-    {
-        foreach ($this->headers as $key => $value) {
-            if (strtolower((string) $key) === 'content-type') {
-                return preg_match('/^application\/(?:[a-z.-]+\+)?json\b/i', (string) $value) === 1;
-            }
-        }
-
-        return false;
-    }
-
-    private function hasMultipartContentType(): bool
-    {
-        foreach ($this->headers as $key => $value) {
-            if (strtolower((string) $key) === 'content-type') {
-                return stripos((string) $value, 'multipart/form-data') !== false;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @param array<mixed> $data
-     */
-    private function hasCurlFile(array $data): bool
-    {
-        foreach ($data as $value) {
-            if ($value instanceof CURLFile) {
-                return true;
-            }
-
-            if (is_array($value) && $this->hasCurlFile($value)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public function start(): void
