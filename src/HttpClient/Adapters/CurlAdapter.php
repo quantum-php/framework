@@ -13,10 +13,10 @@ namespace Quantum\HttpClient\Adapters;
 use Quantum\HttpClient\Contracts\CurlAdapterInterface;
 use Quantum\HttpClient\Traits\AdapterTrait;
 use Quantum\HttpClient\ResponseHeaders;
-use JsonSerializable;
+use Quantum\HttpClient\PostDataBuilder;
+use Quantum\HttpClient\ResponseParser;
 use RuntimeException;
 use CurlHandle;
-use CURLFile;
 
 /**
  * Class CurlAdapter
@@ -50,6 +50,10 @@ class CurlAdapter implements CurlAdapterInterface
 
     private ResponseHeaders $responseHeaders;
 
+    private PostDataBuilder $postDataBuilder;
+
+    private ResponseParser $responseParser;
+
     /**
      * @var array<string, mixed>
      */
@@ -73,6 +77,18 @@ class CurlAdapter implements CurlAdapterInterface
 
         $this->handle = $handle;
         $this->responseHeaders = new ResponseHeaders();
+        $this->postDataBuilder = new PostDataBuilder();
+        $this->responseParser = new ResponseParser();
+        $this->applyDefaultOptions();
+    }
+
+    public function __destruct()
+    {
+        curl_close($this->handle);
+    }
+
+    private function applyDefaultOptions(): void
+    {
         $this->applyOption(CURLOPT_RETURNTRANSFER, true);
         $this->applyOption(CURLOPT_HEADER, false);
         $this->applyOption(CURLOPT_HEADERFUNCTION, function ($handle, string $header): int {
@@ -81,11 +97,6 @@ class CurlAdapter implements CurlAdapterInterface
 
             return strlen($header);
         });
-    }
-
-    public function __destruct()
-    {
-        curl_close($this->handle);
     }
 
     /**
@@ -157,23 +168,7 @@ class CurlAdapter implements CurlAdapterInterface
      */
     public function buildPostData($data)
     {
-        if (
-            $this->hasJsonContentType() &&
-            (
-                is_array($data) ||
-                $data instanceof JsonSerializable
-            )
-        ) {
-            return json_encode($data) ?: '';
-        }
-
-        if (is_array($data)) {
-            return $this->hasMultipartContentType() || $this->hasCurlFile($data)
-                ? $data
-                : http_build_query($data);
-        }
-
-        return $data;
+        return $this->postDataBuilder->build($data, $this->headers);
     }
 
     private function applyHeaders(): void
@@ -185,46 +180,6 @@ class CurlAdapter implements CurlAdapterInterface
         }
 
         $this->applyOption(CURLOPT_HTTPHEADER, $headers);
-    }
-
-    private function hasJsonContentType(): bool
-    {
-        foreach ($this->headers as $key => $value) {
-            if (strtolower((string) $key) === 'content-type') {
-                return preg_match('/^application\/(?:[a-z.-]+\+)?json\b/i', (string) $value) === 1;
-            }
-        }
-
-        return false;
-    }
-
-    private function hasMultipartContentType(): bool
-    {
-        foreach ($this->headers as $key => $value) {
-            if (strtolower((string) $key) === 'content-type') {
-                return stripos((string) $value, 'multipart/form-data') !== false;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @param array<mixed> $data
-     */
-    private function hasCurlFile(array $data): bool
-    {
-        foreach ($data as $value) {
-            if ($value instanceof CURLFile) {
-                return true;
-            }
-
-            if (is_array($value) && $this->hasCurlFile($value)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public function start(): void
@@ -245,18 +200,13 @@ class CurlAdapter implements CurlAdapterInterface
         $curlErrorMessage = curl_error($this->handle);
         $httpStatusCode = (int) $this->getInfo(CURLINFO_HTTP_CODE);
 
-        $this->responseHeaders = $this->parseResponseHeaders($this->rawResponseHeaders);
-        $this->response = $this->parseResponse(is_string($rawResponse) ? $rawResponse : '');
+        $this->responseHeaders = $this->responseParser->parseHeaders($this->rawResponseHeaders);
+        $this->response = $this->responseParser->parseBody(
+            is_string($rawResponse) ? $rawResponse : '',
+            $this->responseHeaders
+        );
 
-        $this->error = $curlErrorCode !== 0 || in_array((int) floor($httpStatusCode / 100), [4, 5], true);
-        $this->errorCode = $this->error ? ($curlErrorCode !== 0 ? $curlErrorCode : $httpStatusCode) : 0;
-        $this->errorMessage = $this->error
-            ? (
-                $curlErrorCode !== 0
-                    ? trim(curl_strerror($curlErrorCode) . ($curlErrorMessage !== '' ? ': ' . $curlErrorMessage : ''))
-                    : ($this->responseHeaders['Status-Line'] ?? '')
-            )
-            : null;
+        $this->applyErrorState($curlErrorCode, $curlErrorMessage, $httpStatusCode);
     }
 
     /**
@@ -335,84 +285,41 @@ class CurlAdapter implements CurlAdapterInterface
         $this->errorMessage = null;
     }
 
+    private function applyErrorState(int $curlErrorCode, string $curlErrorMessage, int $httpStatusCode): void
+    {
+        if ($curlErrorCode !== 0) {
+            $message = (string) curl_strerror($curlErrorCode);
+
+            if ($curlErrorMessage !== '') {
+                $message .= ': ' . $curlErrorMessage;
+            }
+
+            $this->error = true;
+            $this->errorCode = $curlErrorCode;
+            $this->errorMessage = trim($message);
+
+            return;
+        }
+
+        if (in_array((int) floor($httpStatusCode / 100), [4, 5], true)) {
+            $this->error = true;
+            $this->errorCode = $httpStatusCode;
+            $this->errorMessage = $this->responseHeaders['Status-Line'] ?? '';
+
+            return;
+        }
+
+        $this->error = false;
+        $this->errorCode = 0;
+        $this->errorMessage = null;
+    }
+
     private function parseCookieHeader(string $header): void
     {
-        if (preg_match('/^Set-Cookie:\s*([^=]+)=([^;]*)/i', $header, $cookie) === 1) {
-            $this->responseCookies[$cookie[1]] = rawurldecode(trim($cookie[2], " \n\r\t\0\x0B"));
+        $cookie = $this->responseParser->parseCookie($header);
+
+        if ($cookie !== null) {
+            $this->responseCookies[$cookie['name']] = $cookie['value'];
         }
-    }
-
-    private function parseResponseHeaders(string $rawHeaders): ResponseHeaders
-    {
-        $headerBlocks = explode("\r\n\r\n", trim($rawHeaders));
-        $responseHeader = '';
-
-        for ($i = count($headerBlocks) - 1; $i >= 0; $i--) {
-            if (isset($headerBlocks[$i]) && stripos($headerBlocks[$i], 'HTTP/') === 0) {
-                $responseHeader = $headerBlocks[$i];
-                break;
-            }
-        }
-
-        $headers = new ResponseHeaders();
-        $rawLines = preg_split('/\r\n/', $responseHeader, -1, PREG_SPLIT_NO_EMPTY);
-
-        if ($rawLines === false || $rawLines === []) {
-            return $headers;
-        }
-
-        $headers['Status-Line'] = $rawLines[0];
-
-        for ($i = 1, $count = count($rawLines); $i < $count; $i++) {
-            if (!str_contains($rawLines[$i], ':')) {
-                continue;
-            }
-
-            [$key, $value] = array_pad(explode(':', $rawLines[$i], 2), 2, '');
-            $key = trim($key);
-            $value = trim($value);
-
-            if (isset($headers[$key])) {
-                $headers[$key] .= ',' . $value;
-            } else {
-                $headers[$key] = $value;
-            }
-        }
-
-        return $headers;
-    }
-
-    /**
-     * @return mixed
-     */
-    private function parseResponse(string $rawResponse)
-    {
-        $response = $rawResponse;
-        $contentType = $this->responseHeaders['Content-Type'] ?? null;
-        $contentEncoding = $this->responseHeaders['Content-Encoding'] ?? null;
-
-        if (is_string($contentEncoding) && strtolower($contentEncoding) === 'gzip') {
-            $decoded = gzdecode($rawResponse);
-            $response = $decoded !== false ? $decoded : $response;
-        }
-
-        if (is_string($contentType) && preg_match('/\bjson\b/i', $contentType) === 1) {
-            $decoded = json_decode($response);
-            return json_last_error() === JSON_ERROR_NONE ? $decoded : $response;
-        }
-
-        if (is_string($contentType) && preg_match('/\bxml\b/i', $contentType) === 1) {
-            $previousUseInternalErrors = libxml_use_internal_errors(true);
-
-            try {
-                $xml = simplexml_load_string($response);
-            } finally {
-                libxml_use_internal_errors($previousUseInternalErrors);
-            }
-
-            return $xml !== false ? $xml : $response;
-        }
-
-        return $response;
     }
 }
