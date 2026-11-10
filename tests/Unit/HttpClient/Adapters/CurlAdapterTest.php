@@ -56,6 +56,14 @@ class CurlAdapterTest extends AppTestCase
         $this->assertSame($data, $adapter->buildPostData($data));
     }
 
+    public function testCurlAdapterPreservesNestedCurlFilePostData(): void
+    {
+        $adapter = new CurlAdapter();
+        $data = ['files' => ['avatar' => new \CURLFile(__FILE__)]];
+
+        $this->assertSame($data, $adapter->buildPostData($data));
+    }
+
     public function testCurlAdapterGeneratesNativeRequestIds(): void
     {
         $adapter1 = new CurlAdapter();
