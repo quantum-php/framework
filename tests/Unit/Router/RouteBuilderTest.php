@@ -25,6 +25,77 @@ class RouteBuilderTest extends AppTestCase
         $this->assertSame(1, $routes->count());
     }
 
+    public function testRouteBuilderPutRegistersPutRoute(): void
+    {
+        $builder = new RouteBuilder();
+
+        $routes = $builder->build([
+            'Api' => function (RouteBuilder $route): void {
+                $route->put('users', 'UserController', 'replace');
+            },
+        ], []);
+
+        $route = $routes->all()[0];
+
+        $this->assertSame(['PUT'], $route->getMethods());
+
+        $this->assertSame('replace', $route->getAction());
+    }
+
+    public function testRouteBuilderDeleteRegistersDeleteRoute(): void
+    {
+        $builder = new RouteBuilder();
+
+        $routes = $builder->build([
+            'Api' => function (RouteBuilder $route): void {
+                $route->delete('users', 'UserController', 'destroy');
+            },
+        ], []);
+
+        $route = $routes->all()[0];
+
+        $this->assertSame(['DELETE'], $route->getMethods());
+
+        $this->assertSame('destroy', $route->getAction());
+    }
+
+    public function testRouteBuilderPatchRegistersPatchRouteWithControllerAction(): void
+    {
+        $builder = new RouteBuilder();
+
+        $routes = $builder->build([
+            'Api' => function (RouteBuilder $route): void {
+                $route->patch('users', 'UserController', 'update');
+            },
+        ], []);
+
+        $route = $routes->all()[0];
+
+        $this->assertSame(['PATCH'], $route->getMethods());
+
+        $this->assertStringEndsWith('UserController', (string) $route->getController());
+
+        $this->assertSame('update', $route->getAction());
+    }
+
+    public function testRouteBuilderPatchRegistersPatchRouteWithClosure(): void
+    {
+        $builder = new RouteBuilder();
+
+        $routes = $builder->build([
+            'Api' => function (RouteBuilder $route): void {
+                $route->patch('users', function (): void {
+                });
+            },
+        ], []);
+
+        $route = $routes->all()[0];
+
+        $this->assertSame(['PATCH'], $route->getMethods());
+
+        $this->assertTrue($route->isClosure());
+    }
+
     public function testRouteBuilderBuildCollectsRoutesFromMultipleModules(): void
     {
         $builder = new RouteBuilder();

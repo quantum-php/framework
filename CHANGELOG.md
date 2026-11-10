@@ -6,6 +6,9 @@ The format is based on Keep a Changelog.
 
 ## [Unreleased]
 
+### Added
+- Added `RouteBuilder::patch()`, a route helper for the `PATCH` method next to `get()`, `post()`, `put()` and `delete()`. Routes declared with `add($path, 'PATCH', ...)` keep working (#653)
+
 ### Changed
 - `LocalFileSystemAdapter::glob()` declares its return type, `array|false`, which Rector 2.8.4 requires. A class that extends the adapter and overrides `glob()` without a return type must declare it too. `LocalFilesystemAdapterInterface` is unchanged (#656)
 
