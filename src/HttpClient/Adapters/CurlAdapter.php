@@ -79,6 +79,16 @@ class CurlAdapter implements CurlAdapterInterface
         $this->responseHeaders = new ResponseHeaders();
         $this->postDataBuilder = new PostDataBuilder();
         $this->responseParser = new ResponseParser();
+        $this->applyDefaultOptions();
+    }
+
+    public function __destruct()
+    {
+        curl_close($this->handle);
+    }
+
+    private function applyDefaultOptions(): void
+    {
         $this->applyOption(CURLOPT_RETURNTRANSFER, true);
         $this->applyOption(CURLOPT_HEADER, false);
         $this->applyOption(CURLOPT_HEADERFUNCTION, function ($handle, string $header): int {
@@ -87,11 +97,6 @@ class CurlAdapter implements CurlAdapterInterface
 
             return strlen($header);
         });
-    }
-
-    public function __destruct()
-    {
-        curl_close($this->handle);
     }
 
     /**
