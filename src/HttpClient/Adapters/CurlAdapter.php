@@ -206,15 +206,7 @@ class CurlAdapter implements CurlAdapterInterface
             $this->responseHeaders
         );
 
-        $this->error = $curlErrorCode !== 0 || in_array((int) floor($httpStatusCode / 100), [4, 5], true);
-        $this->errorCode = $this->error ? ($curlErrorCode !== 0 ? $curlErrorCode : $httpStatusCode) : 0;
-        $this->errorMessage = $this->error
-            ? (
-                $curlErrorCode !== 0
-                    ? trim(curl_strerror($curlErrorCode) . ($curlErrorMessage !== '' ? ': ' . $curlErrorMessage : ''))
-                    : ($this->responseHeaders['Status-Line'] ?? '')
-            )
-            : null;
+        $this->applyErrorState($curlErrorCode, $curlErrorMessage, $httpStatusCode);
     }
 
     /**
@@ -288,6 +280,35 @@ class CurlAdapter implements CurlAdapterInterface
         $this->response = null;
         $this->responseHeaders = new ResponseHeaders();
         $this->responseCookies = [];
+        $this->error = false;
+        $this->errorCode = 0;
+        $this->errorMessage = null;
+    }
+
+    private function applyErrorState(int $curlErrorCode, string $curlErrorMessage, int $httpStatusCode): void
+    {
+        if ($curlErrorCode !== 0) {
+            $message = (string) curl_strerror($curlErrorCode);
+
+            if ($curlErrorMessage !== '') {
+                $message .= ': ' . $curlErrorMessage;
+            }
+
+            $this->error = true;
+            $this->errorCode = $curlErrorCode;
+            $this->errorMessage = trim($message);
+
+            return;
+        }
+
+        if (in_array((int) floor($httpStatusCode / 100), [4, 5], true)) {
+            $this->error = true;
+            $this->errorCode = $httpStatusCode;
+            $this->errorMessage = $this->responseHeaders['Status-Line'] ?? '';
+
+            return;
+        }
+
         $this->error = false;
         $this->errorCode = 0;
         $this->errorMessage = null;

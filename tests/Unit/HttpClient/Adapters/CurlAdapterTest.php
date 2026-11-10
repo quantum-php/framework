@@ -97,21 +97,86 @@ class CurlAdapterTest extends AppTestCase
         $this->assertFalse($adapter->getInfo(0));
     }
 
-    public function testCurlAdapterStoresNativeHttpErrorState(): void
+    public function testCurlAdapterResolvesClientErrorState(): void
     {
         $adapter = new CurlAdapter();
-        $headers = (new ResponseParser())->parseHeaders(
-            "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\n"
+
+        $this->setPrivateProperty(
+            $adapter,
+            'responseHeaders',
+            (new ResponseParser())->parseHeaders("HTTP/1.1 404 Not Found\r\n\r\n")
         );
 
-        $this->setPrivateProperty($adapter, 'responseHeaders', $headers);
-        $this->setPrivateProperty($adapter, 'error', true);
-        $this->setPrivateProperty($adapter, 'errorCode', 404);
-        $this->setPrivateProperty($adapter, 'errorMessage', $headers['Status-Line']);
+        $this->invokePrivateMethod($adapter, 'applyErrorState', [0, '', 404]);
 
         $this->assertTrue($adapter->isError());
         $this->assertSame(404, $adapter->getErrorCode());
         $this->assertSame('HTTP/1.1 404 Not Found', $adapter->getErrorMessage());
+    }
+
+    public function testCurlAdapterResolvesServerErrorState(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $this->setPrivateProperty(
+            $adapter,
+            'responseHeaders',
+            (new ResponseParser())->parseHeaders("HTTP/1.1 500 Internal Server Error\r\n\r\n")
+        );
+
+        $this->invokePrivateMethod($adapter, 'applyErrorState', [0, '', 500]);
+
+        $this->assertTrue($adapter->isError());
+        $this->assertSame(500, $adapter->getErrorCode());
+        $this->assertSame('HTTP/1.1 500 Internal Server Error', $adapter->getErrorMessage());
+    }
+
+    public function testCurlAdapterUsesEmptyMessageWhenErrorResponseHasNoStatusLine(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $this->invokePrivateMethod($adapter, 'applyErrorState', [0, '', 503]);
+
+        $this->assertTrue($adapter->isError());
+        $this->assertSame(503, $adapter->getErrorCode());
+        $this->assertSame('', $adapter->getErrorMessage());
+    }
+
+    public function testCurlAdapterClearsErrorStateWhenResponseSucceeds(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $this->invokePrivateMethod($adapter, 'applyErrorState', [0, '', 500]);
+        $this->invokePrivateMethod($adapter, 'applyErrorState', [0, '', 200]);
+
+        $this->assertFalse($adapter->isError());
+        $this->assertSame(0, $adapter->getErrorCode());
+        $this->assertNull($adapter->getErrorMessage());
+    }
+
+    public function testCurlAdapterPrefersCurlErrorOverHttpStatus(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $this->invokePrivateMethod($adapter, 'applyErrorState', [CURLE_COULDNT_RESOLVE_HOST, 'Could not resolve host: example.test', 404]);
+
+        $this->assertTrue($adapter->isError());
+        $this->assertSame(CURLE_COULDNT_RESOLVE_HOST, $adapter->getErrorCode());
+        $this->assertSame(
+            curl_strerror(CURLE_COULDNT_RESOLVE_HOST) . ': Could not resolve host: example.test',
+            $adapter->getErrorMessage()
+        );
+    }
+
+    public function testCurlAdapterUsesCurlErrorTextWhenCurlGivesNoMessage(): void
+    {
+        $adapter = new CurlAdapter();
+
+        $this->invokePrivateMethod($adapter, 'applyErrorState', [CURLE_COULDNT_CONNECT, '', 0]);
+
+        $this->assertTrue($adapter->isError());
+        $this->assertSame(CURLE_COULDNT_CONNECT, $adapter->getErrorCode());
+        $this->assertSame(curl_strerror(CURLE_COULDNT_CONNECT), $adapter->getErrorMessage());
     }
 
     public function testCurlAdapterStoresNativeCurlErrorState(): void
