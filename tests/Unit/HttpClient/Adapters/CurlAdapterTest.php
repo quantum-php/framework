@@ -189,7 +189,13 @@ class CurlAdapterTest extends AppTestCase
 
         $this->assertTrue($adapter->isError());
         $this->assertSame(CURLE_FILE_COULDNT_READ_FILE, $adapter->getErrorCode());
-        $this->assertNotEmpty($adapter->getErrorMessage());
+
+        $errorText = (string) curl_strerror(CURLE_FILE_COULDNT_READ_FILE);
+        $errorDetail = curl_error($adapter->getHandle());
+
+        $expectedMessage = $errorDetail !== '' ? $errorText . ': ' . $errorDetail : $errorText;
+
+        $this->assertSame($expectedMessage, $adapter->getErrorMessage());
     }
 
     public function testCurlAdapterKeepsNativeErrorMessageNullOnSuccess(): void
