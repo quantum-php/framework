@@ -2,6 +2,7 @@
 
 namespace Quantum\Tests\Unit\Environment;
 
+use Quantum\Environment\Contracts\EnvironmentInterface;
 use Quantum\Environment\Exceptions\EnvException;
 use Quantum\Environment\Environment;
 use Quantum\Tests\Unit\AppTestCase;
@@ -17,6 +18,11 @@ class EnvironmentTest extends AppTestCase
         parent::setUp();
 
         $this->env = environment();
+    }
+
+    public function testEnvironmentImplementsEnvironmentInterface(): void
+    {
+        $this->assertInstanceOf(EnvironmentInterface::class, $this->env);
     }
 
     public function testEnvironmentGetAppEnv(): void
