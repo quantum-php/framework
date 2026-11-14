@@ -86,7 +86,7 @@ class LoggerFactory
     private function createInstance(string $adapterClass, string $adapter): Logger
     {
         if ($adapter === LoggerType::MESSAGE) {
-            return new Logger(new MessageAdapter((int) config()->get('logging.message.limit', 1000)));
+            return new Logger(new MessageAdapter(config()->getInt('logging.message.limit', 1000)));
         }
 
         $adapterInstance = new $adapterClass(config()->get('logging.' . $adapter));

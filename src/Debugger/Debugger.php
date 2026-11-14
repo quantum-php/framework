@@ -104,7 +104,7 @@ class Debugger
      */
     public function isEnabled(): bool
     {
-        return filter_var(config()->get('app.debug'), FILTER_VALIDATE_BOOLEAN);
+        return config()->getBool('app.debug');
     }
 
     public function initStore(): void

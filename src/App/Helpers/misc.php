@@ -73,7 +73,7 @@ function slugify(string $text): string
  */
 function is_debug_mode(): bool
 {
-    return filter_var(config()->get('app.debug'), FILTER_VALIDATE_BOOLEAN);
+    return config()->getBool('app.debug');
 }
 
 /**

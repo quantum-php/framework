@@ -236,6 +236,83 @@ class ConfigTest extends AppTestCase
         $this->assertNull($this->config->get('app.test'));
     }
 
+    public function testGetBoolReadsTrueValues(): void
+    {
+        foreach ([true, 1, '1', 'true', 'TRUE', 'on', 'yes'] as $value) {
+            $this->config->set('flag', $value);
+
+            $this->assertTrue($this->config->getBool('flag'), var_export($value, true));
+        }
+    }
+
+    public function testGetBoolReadsFalseValues(): void
+    {
+        foreach ([false, 0, '0', 'false', 'off', 'no', '', 'abc', []] as $value) {
+            $this->config->set('flag', $value);
+
+            $this->assertFalse($this->config->getBool('flag', true), var_export($value, true));
+        }
+    }
+
+    public function testGetBoolReturnsDefaultForMissingOrNullKey(): void
+    {
+        $this->assertFalse($this->config->getBool('missing'));
+        $this->assertTrue($this->config->getBool('missing', true));
+
+        $this->config->set('flag', null);
+
+        $this->assertTrue($this->config->getBool('flag', true));
+    }
+
+    public function testGetBoolReadsNestedKey(): void
+    {
+        $this->config->set('other', 'value');
+        $this->config->set('app.debug', 'true');
+
+        $this->assertTrue($this->config->getBool('app.debug'));
+    }
+
+    public function testGetIntReadsWholeNumbers(): void
+    {
+        foreach ([[587, 587], ['587', 587], ['-3', -3], ['0', 0], [0, 0]] as [$value, $expected]) {
+            $this->config->set('number', $value);
+
+            $this->assertSame($expected, $this->config->getInt('number'), var_export($value, true));
+        }
+    }
+
+    public function testGetIntReturnsDefaultForMissingOrNullKey(): void
+    {
+        $this->assertSame(0, $this->config->getInt('missing'));
+        $this->assertSame(1000, $this->config->getInt('missing', 1000));
+
+        $this->config->set('number', null);
+
+        $this->assertSame(1000, $this->config->getInt('number', 1000));
+    }
+
+    public function testGetIntThrowsForTextThatIsNotAWholeNumber(): void
+    {
+        foreach (['abc', '1.5', '', '12abc', 1.5, []] as $value) {
+            $this->config->set('number', $value);
+
+            try {
+                $this->config->getInt('number');
+                $this->fail('No exception for ' . var_export($value, true));
+            } catch (ConfigException $e) {
+                $this->assertStringContainsString('`number`', $e->getMessage());
+                $this->assertStringContainsString('not a whole number', $e->getMessage());
+            }
+        }
+    }
+
+    public function testGetRawValueIsNotAffectedByTypedReaders(): void
+    {
+        $this->config->set('number', '587');
+
+        $this->assertSame('587', $this->config->get('number'));
+    }
+
     public function testConfigFlush(): void
     {
         $this->config->import(new Setup('config', 'app'));

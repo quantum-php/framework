@@ -59,7 +59,7 @@ class AuthController extends BaseController
             try {
                 $code = auth()->signin($request->get('email'), $request->get('password'), !!$request->get('remember'));
 
-                if (filter_var(config()->get('auth.two_fa'), FILTER_VALIDATE_BOOLEAN)) {
+                if (config()->getBool('auth.two_fa')) {
                     return redirect(base_url(true) . '/' . current_lang() . '/verify/' . $code);
                 } else {
                     return redirect(base_url(true) . '/' . current_lang());

@@ -155,7 +155,7 @@ class LangFactory
      */
     private function getLangFromUrlSegment(array $supported): ?string
     {
-        $segmentIndex = (int) config()->get('lang.url_segment');
+        $segmentIndex = config()->getInt('lang.url_segment');
 
         if (!in_array(request()->getRoutePrefix(), [null, '', '0'], true) && $segmentIndex === 1) {
             $segmentIndex++;

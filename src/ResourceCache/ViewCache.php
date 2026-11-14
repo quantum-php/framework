@@ -44,7 +44,7 @@ class ViewCache
      */
     public function __construct()
     {
-        $this->isEnabled = filter_var(config()->get('resource_cache'), FILTER_VALIDATE_BOOLEAN);
+        $this->isEnabled = config()->getBool('resource_cache');
 
         $this->fs = FileSystemFactory::get();
     }
@@ -60,9 +60,9 @@ class ViewCache
 
         $this->cacheDir = $this->getCacheDir();
 
-        $this->ttl = (int) config()->get('view_cache.ttl', $this->ttl);
+        $this->ttl = config()->getInt('view_cache.ttl', $this->ttl);
 
-        $this->minification = filter_var(config()->get('view_cache.minify', $this->minification), FILTER_VALIDATE_BOOLEAN);
+        $this->minification = config()->getBool('view_cache.minify', $this->minification);
 
         if (!$this->fs->isDirectory($this->cacheDir)) {
             mkdir($this->cacheDir, 0777, true);
