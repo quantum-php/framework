@@ -3,6 +3,7 @@
 namespace Quantum\Tests\Unit\Lang\Factories;
 
 use Quantum\Lang\Adapters\GoogleTranslateAdapter;
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Lang\Exceptions\LangException;
 use Quantum\Lang\Factories\LangFactory;
 use Quantum\Lang\Adapters\DeepLAdapter;
@@ -235,6 +236,24 @@ class LangFactoryTest extends AppTestCase
 
         $this->expectException(LangException::class);
         $this->expectExceptionMessage('Misconfigured lang default adapter config.');
+
+        LangFactory::get();
+    }
+
+    public function testLangFactoryThrowsForUrlSegmentThatIsNotAWholeNumber(): void
+    {
+        config()->set('lang', [
+            'default' => 'file',
+            'default_locale' => 'en',
+            'file' => [],
+            'supported' => ['en', 'es'],
+            'url_segment' => 'abc',
+        ]);
+
+        $this->testRequest('http://127.0.0.1/es/api/rest');
+
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('The config key `lang.url_segment` has the value `abc`, which is not a whole number.');
 
         LangFactory::get();
     }

@@ -223,7 +223,7 @@ trait MailerTrait
     public function send(): bool
     {
         // Cut here, as every send reaches this point, also after the previous one threw
-        $limit = (int) config()->get('mailer.transport_log_limit', 1000);
+        $limit = config()->getInt('mailer.transport_log_limit', 1000);
 
         if ($limit > 0 && count($this->transportLog) > $limit) {
             $this->transportLog = array_slice($this->transportLog, -$limit);
@@ -231,7 +231,7 @@ trait MailerTrait
 
         $this->prepare();
 
-        $sent = filter_var(config()->get('mailer.mail_trap'), FILTER_VALIDATE_BOOLEAN) ? $this->saveEmail() : $this->sendEmail();
+        $sent = config()->getBool('mailer.mail_trap') ? $this->saveEmail() : $this->sendEmail();
 
         $this->resetFields();
 

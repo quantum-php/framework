@@ -26,4 +26,12 @@ class ConfigException extends BaseException
             E_WARNING
         );
     }
+
+    public static function invalidValue(string $key, string $value): self
+    {
+        return new self(
+            _message(ExceptionMessages::INVALID_WHOLE_NUMBER, [$key, $value]),
+            E_ERROR
+        );
+    }
 }
