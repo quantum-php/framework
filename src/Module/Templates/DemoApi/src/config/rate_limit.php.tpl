@@ -26,7 +26,7 @@ return [
      */
     'redis' => [
         'host' => env('REDIS_HOST', '127.0.0.1'),
-        'port' => env('REDIS_PORT', 6379),
+        'port' => env_int('REDIS_PORT', 6379),
         'ttl' => 60,
         'prefix' => 'api-rate-limit:',
     ],
