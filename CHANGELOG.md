@@ -8,6 +8,7 @@ The format is based on Keep a Changelog.
 
 ### Added
 - Added `RouteBuilder::patch()`, a route helper for the `PATCH` method next to `get()`, `post()`, `put()` and `delete()`. Routes declared with `add($path, 'PATCH', ...)` keep working (#653)
+- Added `getBool()` and `getInt()` to `Environment` and `EnvironmentInterface`, and the `env_bool()` and `env_int()` helpers next to `env()`, to read the text values of `.env` as a boolean or an integer. `getBool()` reads `true`, `1`, `on` and `yes` as `true` and `false`, `0`, an empty value, `off`, `no` and any other text as `false`, ignoring case. `getInt()` throws the new `EnvException::invalidValue()` for text that is not a whole number. `getValue()` and `env()` still return the raw value (#615)
 
 ### Changed
 - `LocalFileSystemAdapter::glob()` declares its return type, `array|false`, which Rector 2.8.4 requires. A class that extends the adapter and overrides `glob()` without a return type must declare it too. `LocalFilesystemAdapterInterface` is unchanged (#656)

@@ -53,6 +53,18 @@ interface EnvironmentInterface
     public function getValue(string $key, mixed $default = null): mixed;
 
     /**
+     * Gets the environment variable value as a boolean
+     * @throws EnvException
+     */
+    public function getBool(string $key, bool $default = false): bool;
+
+    /**
+     * Gets the environment variable value as an integer
+     * @throws EnvException
+     */
+    public function getInt(string $key, int $default = 0): int;
+
+    /**
      * Checks if there is a such key
      */
     public function hasKey(string $key): bool;

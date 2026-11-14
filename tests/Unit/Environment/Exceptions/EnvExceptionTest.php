@@ -24,4 +24,13 @@ class EnvExceptionTest extends AppTestCase
         $this->assertSame('Environment not loaded. Call `load()` method first.', $exception->getMessage());
         $this->assertSame(E_ERROR, $exception->getCode());
     }
+
+    public function testInvalidValue(): void
+    {
+        $exception = EnvException::invalidValue('MAIL_PORT', 'abc');
+
+        $this->assertInstanceOf(EnvException::class, $exception);
+        $this->assertSame('The environment variable `MAIL_PORT` has the value `abc`, which is not a whole number.', $exception->getMessage());
+        $this->assertSame(E_ERROR, $exception->getCode());
+    }
 }

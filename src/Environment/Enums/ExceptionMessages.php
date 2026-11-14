@@ -21,4 +21,6 @@ final class ExceptionMessages extends BaseExceptionMessages
     public const IMMUTABLE_ENVIRONMENT = 'The environment is immutable. Modifications are not allowed.';
 
     public const ENVIRONMENT_NOT_LOADED = 'Environment not loaded. Call `load()` method first.';
+
+    public const INVALID_WHOLE_NUMBER = 'The environment variable `{%1}` has the value `{%2}`, which is not a whole number.';
 }
