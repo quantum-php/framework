@@ -5,7 +5,7 @@ return [
 
     'session' => [
         'service' => Quantum\Tests\_root\modules\Test\Services\AuthService::class,
-        'remember_lifetime' => env('REMEMBER_LIFETIME', 2592000),
+        'remember_lifetime' => env_int('REMEMBER_LIFETIME', 2592000),
     ],
 
     'jwt' => [
@@ -20,6 +20,6 @@ return [
         ],
     ],
 
-    'two_fa' => env('TWO_FA', true),
+    'two_fa' => env_bool('TWO_FA', true),
     'otp_expires' => 2,
 ];
