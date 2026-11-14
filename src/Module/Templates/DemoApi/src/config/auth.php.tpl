@@ -10,7 +10,7 @@ return [
 
     'session' => [
         'service' => {{MODULE_NAMESPACE}}\Services\AuthService::class,
-        'remember_lifetime' => env('REMEMBER_LIFETIME', 2592000),
+        'remember_lifetime' => env_int('REMEMBER_LIFETIME', 2592000),
     ],
 
     'jwt' => [
@@ -32,7 +32,7 @@ return [
      *
      * Enables or disables 2-factor authentication
      */
-    'two_fa' => env('TWO_FA', true),
+    'two_fa' => env_bool('TWO_FA', true),
 
     /**
      * ---------------------------------------------------------
