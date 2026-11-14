@@ -30,13 +30,22 @@ class Setup
     protected string $exceptionMessage;
 
     /**
+     * @param bool|null $hierarchical Deprecated, will be removed in 3.2.0
      * @throws DiException|ReflectionException
      */
-    public function __construct(?string $pathPrefix = null, ?string $fileName = null, bool $hierarchical = true, ?string $module = null, ?string $exceptionMessage = null)
+    public function __construct(?string $pathPrefix = null, ?string $fileName = null, ?bool $hierarchical = null, ?string $module = null, ?string $exceptionMessage = null)
     {
+        if ($hierarchical !== null) {
+            trigger_error(
+                'The $hierarchical argument of ' . __METHOD__ . '() is deprecated and will be removed in 3.2.0; '
+                . 'the fallback to the shared config will always be on. To pass a module, use the module: named argument.',
+                E_USER_DEPRECATED
+            );
+        }
+
         $this->pathPrefix = $pathPrefix;
         $this->fileName = $fileName;
-        $this->hierarchical = $hierarchical;
+        $this->hierarchical = $hierarchical ?? true;
         $this->module = $module ?: request()->getCurrentModule();
         $this->exceptionMessage = $exceptionMessage ?: 'File `' . $pathPrefix . DS . $fileName . '` not found!';
     }
@@ -111,15 +120,22 @@ class Setup
 
     /**
      * Set the hierarchy
+     * @deprecated Will be removed in 3.2.0; the fallback to the shared config will always be on
      */
     public function setHierarchy(bool $hierarchy): Setup
     {
+        trigger_error(
+            __METHOD__ . '() is deprecated and will be removed in 3.2.0; the fallback to the shared config will always be on.',
+            E_USER_DEPRECATED
+        );
+
         $this->hierarchical = $hierarchy;
         return $this;
     }
 
     /**
      * Gets the hierarchy
+     * @deprecated Will be removed in 3.2.0; the fallback to the shared config will always be on
      */
     public function getHierarchy(): bool
     {

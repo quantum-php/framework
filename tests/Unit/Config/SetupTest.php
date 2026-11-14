@@ -76,6 +76,50 @@ class SetupTest extends AppTestCase
         $this->assertTrue($this->setup->getHierarchy());
     }
 
+    public function testSetupRaisesNoDeprecationByDefault(): void
+    {
+        $messages = $this->collectDeprecations(function (): void {
+            new Setup('config', 'app');
+            new Setup('config', 'app', module: 'Test');
+        });
+
+        $this->assertSame([], $messages);
+    }
+
+    public function testSetupRaisesDeprecationWhenHierarchicalArgumentIsPassed(): void
+    {
+        $messages = $this->collectDeprecations(function (): void {
+            new Setup('config', 'app', false);
+        });
+
+        $this->assertCount(1, $messages);
+        $this->assertStringContainsString('$hierarchical argument', $messages[0]);
+        $this->assertStringContainsString('3.2.0', $messages[0]);
+    }
+
+    public function testSetupKeepsHierarchicalValueWhenArgumentIsPassed(): void
+    {
+        $setup = null;
+
+        $this->collectDeprecations(function () use (&$setup): void {
+            $setup = new Setup('config', 'app', false);
+        });
+
+        $this->assertFalse($setup->getHierarchy());
+    }
+
+    public function testSetHierarchyRaisesDeprecation(): void
+    {
+        $messages = $this->collectDeprecations(function (): void {
+            $this->setup->setHierarchy(false);
+        });
+
+        $this->assertCount(1, $messages);
+        $this->assertStringContainsString('setHierarchy()', $messages[0]);
+        $this->assertStringContainsString('3.2.0', $messages[0]);
+        $this->assertFalse($this->setup->getHierarchy());
+    }
+
     public function testSetGetModule(): void
     {
         $this->setup->setModule('admin');
@@ -90,4 +134,24 @@ class SetupTest extends AppTestCase
         $this->assertEquals('Action not allowed', $this->setup->getExceptionMessage());
     }
 
+    /**
+     * @return array<int, string>
+     */
+    private function collectDeprecations(callable $callback): array
+    {
+        $messages = [];
+
+        set_error_handler(function (int $errno, string $errstr) use (&$messages): bool {
+            $messages[] = $errstr;
+            return true;
+        }, E_USER_DEPRECATED);
+
+        try {
+            $callback();
+        } finally {
+            restore_error_handler();
+        }
+
+        return $messages;
+    }
 }
