@@ -2,6 +2,7 @@
 
 namespace Quantum\Tests\Unit\Environment;
 
+use Quantum\Environment\Contracts\EnvironmentInterface;
 use Quantum\Environment\Exceptions\EnvException;
 use Quantum\Environment\Environment;
 use Quantum\Tests\Unit\AppTestCase;
@@ -17,6 +18,11 @@ class EnvironmentTest extends AppTestCase
         parent::setUp();
 
         $this->env = environment();
+    }
+
+    public function testEnvironmentImplementsEnvironmentInterface(): void
+    {
+        $this->assertInstanceOf(EnvironmentInterface::class, $this->env);
     }
 
     public function testEnvironmentGetAppEnv(): void
@@ -146,5 +152,46 @@ class EnvironmentTest extends AppTestCase
         $this->assertEquals('Something_else', $this->env->getValue('SOMETHING'));
 
         $this->fs->put($envFilePath, $originalContent);
+    }
+
+    public function testEnvironmentGetValueThrowsWhenNotLoaded(): void
+    {
+        $this->expectException(EnvException::class);
+        $this->expectExceptionMessage('Environment not loaded');
+
+        (new Environment())->getValue('APP_KEY');
+    }
+
+    public function testEnvironmentUpdateRowThrowsWhenImmutable(): void
+    {
+        $this->expectException(EnvException::class);
+        $this->expectExceptionMessage('The environment is immutable');
+
+        (new Environment())->updateRow('SOMETHING', 'Something');
+    }
+
+    public function testEnvironmentUpdateRowThrowsWhenNotLoaded(): void
+    {
+        $this->expectException(EnvException::class);
+        $this->expectExceptionMessage('Environment not loaded');
+
+        (new Environment())->setMutable(true)->updateRow('SOMETHING', 'Something');
+    }
+
+    public function testEnvironmentUpdateRowThrowsWhenEnvFileCannotBeRead(): void
+    {
+        $this->setPrivateProperty($this->env, 'appEnv', 'missing');
+
+        set_error_handler(static fn (): bool => true, E_WARNING);
+
+        try {
+            $this->expectException(EnvException::class);
+            $this->expectExceptionMessage('.env.missing');
+
+            $this->env->updateRow('APP_KEY', 'Something');
+        } finally {
+            restore_error_handler();
+            $this->setPrivateProperty($this->env, 'appEnv', 'testing');
+        }
     }
 }
