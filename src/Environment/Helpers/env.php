@@ -35,3 +35,21 @@ function env(string $var, $default = null): mixed
 {
     return environment()->getValue($var, $default);
 }
+
+/**
+ * Gets the value of an environment variable as a boolean
+ * @throws EnvException|DiException|\ReflectionException
+ */
+function env_bool(string $var, bool $default = false): bool
+{
+    return environment()->getBool($var, $default);
+}
+
+/**
+ * Gets the value of an environment variable as an integer
+ * @throws EnvException|DiException|\ReflectionException
+ */
+function env_int(string $var, int $default = 0): int
+{
+    return environment()->getInt($var, $default);
+}

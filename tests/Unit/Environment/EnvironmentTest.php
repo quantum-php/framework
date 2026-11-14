@@ -92,6 +92,99 @@ class EnvironmentTest extends AppTestCase
         $this->assertEquals('XYZ1234567890ABCDEFG123456789HIGKLMNOPQRSTUVWXYZ0123456789abcdefgh', $this->env->getValue('APP_KEY'));
     }
 
+    public function testEnvironmentGetBool(): void
+    {
+        $this->setEnvValues([
+            'FLAG_TRUE' => 'true',
+            'FLAG_UPPER' => 'TRUE',
+            'FLAG_ONE' => '1',
+            'FLAG_ON' => 'on',
+            'FLAG_YES' => 'yes',
+            'FLAG_FALSE' => 'false',
+            'FLAG_ZERO' => '0',
+            'FLAG_EMPTY' => '',
+            'FLAG_OFF' => 'off',
+            'FLAG_NO' => 'no',
+            'FLAG_UNKNOWN' => 'maybe',
+        ]);
+
+        foreach (['FLAG_TRUE', 'FLAG_UPPER', 'FLAG_ONE', 'FLAG_ON', 'FLAG_YES'] as $key) {
+            $this->assertTrue($this->env->getBool($key), $key);
+        }
+
+        foreach (['FLAG_FALSE', 'FLAG_ZERO', 'FLAG_EMPTY', 'FLAG_OFF', 'FLAG_NO', 'FLAG_UNKNOWN'] as $key) {
+            $this->assertFalse($this->env->getBool($key, true), $key);
+        }
+    }
+
+    public function testEnvironmentGetBoolUsesDefaultForMissingKey(): void
+    {
+        $this->assertFalse($this->env->getBool('NON_EXISTING_KEY'));
+        $this->assertTrue($this->env->getBool('NON_EXISTING_KEY', true));
+    }
+
+    public function testEnvironmentGetBoolReadsTheTestEnvFile(): void
+    {
+        $this->assertTrue($this->env->getBool('DEBUG'));
+    }
+
+    public function testEnvironmentGetInt(): void
+    {
+        $this->setEnvValues(['MAIL_PORT' => '587', 'NEGATIVE' => '-5', 'ZERO' => '0']);
+
+        $this->assertSame(587, $this->env->getInt('MAIL_PORT'));
+        $this->assertSame(-5, $this->env->getInt('NEGATIVE'));
+        $this->assertSame(0, $this->env->getInt('ZERO', 9));
+    }
+
+    public function testEnvironmentGetIntUsesDefaultForMissingKey(): void
+    {
+        $this->assertSame(0, $this->env->getInt('NON_EXISTING_KEY'));
+        $this->assertSame(25, $this->env->getInt('NON_EXISTING_KEY', 25));
+    }
+
+    /**
+     * @dataProvider invalidIntProvider
+     */
+    public function testEnvironmentGetIntThrowsForInvalidNumber(string $value): void
+    {
+        $this->setEnvValues(['MAIL_PORT' => $value]);
+
+        $this->expectException(EnvException::class);
+        $this->expectExceptionMessage('The environment variable `MAIL_PORT` has the value `' . $value . '`, which is not a whole number.');
+
+        $this->env->getInt('MAIL_PORT');
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function invalidIntProvider(): array
+    {
+        return [
+            'text' => ['abc'],
+            'decimal' => ['1.5'],
+            'empty' => [''],
+        ];
+    }
+
+    public function testEnvironmentGetBoolAndGetIntThrowWhenNotLoaded(): void
+    {
+        $environment = new Environment();
+
+        try {
+            $environment->getBool('DEBUG');
+            $this->fail('Expected EnvException');
+        } catch (EnvException $e) {
+            $this->assertStringContainsString('Environment not loaded', $e->getMessage());
+        }
+
+        $this->expectException(EnvException::class);
+        $this->expectExceptionMessage('Environment not loaded');
+
+        $environment->getInt('MAIL_PORT');
+    }
+
     public function testEnvironmentHasKey(): void
     {
         $this->assertTrue($this->env->hasKey('APP_KEY'));
@@ -193,5 +286,15 @@ class EnvironmentTest extends AppTestCase
             restore_error_handler();
             $this->setPrivateProperty($this->env, 'appEnv', 'testing');
         }
+    }
+
+    /**
+     * @param array<string, string> $values
+     */
+    private function setEnvValues(array $values): void
+    {
+        $content = $this->getPrivateProperty($this->env, 'envContent');
+
+        $this->setPrivateProperty($this->env, 'envContent', array_merge($content, $values));
     }
 }

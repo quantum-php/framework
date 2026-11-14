@@ -34,4 +34,12 @@ class EnvException extends BaseException
             E_ERROR
         );
     }
+
+    public static function invalidValue(string $key, string $value): self
+    {
+        return new self(
+            _message(ExceptionMessages::INVALID_WHOLE_NUMBER, [$key, $value]),
+            E_ERROR
+        );
+    }
 }
