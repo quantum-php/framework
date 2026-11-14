@@ -12,6 +12,7 @@ namespace Quantum\Config;
 
 use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Config\Contracts\ConfigInterface;
+use Quantum\Config\Traits\TypedValuesTrait;
 use Dflydev\DotAccessData\Data;
 use Quantum\App\App;
 
@@ -21,6 +22,8 @@ use Quantum\App\App;
  */
 class Config implements ConfigInterface
 {
+    use TypedValuesTrait;
+
     private ?Data $configs = null;
 
     /**

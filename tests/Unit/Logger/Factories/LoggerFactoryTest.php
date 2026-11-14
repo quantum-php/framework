@@ -3,6 +3,7 @@
 namespace Quantum\Tests\Unit\Logger\Factories;
 
 use Quantum\Logger\Contracts\ReportableInterface;
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Logger\Exceptions\LoggerException;
 use Quantum\Logger\Adapters\MessageAdapter;
 use Quantum\Logger\Factories\LoggerFactory;
@@ -82,6 +83,17 @@ class LoggerFactoryTest extends AppTestCase
         $logger->info('Third');
 
         $this->assertSame([['info' => 'Second'], ['info' => 'Third']], $logger->getAdapter()->getMessages());
+    }
+
+    public function testLoggerFactoryThrowsForMessageLimitThatIsNotAWholeNumber(): void
+    {
+        config()->set('logging.message.limit', 'abc');
+        config()->set('app.debug', true);
+
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('The config key `logging.message.limit` has the value `abc`, which is not a whole number.');
+
+        LoggerFactory::get();
     }
 
     public function testLoggerFactoryUsesTheDefaultMessageLimitWithoutTheKey(): void
