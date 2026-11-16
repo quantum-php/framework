@@ -76,7 +76,7 @@ class PostController extends BaseController
         if ($post->isEmpty()) {
             return response()->json([
                 'status' => 'error',
-                'message' => t('common.post_not_found')
+                'message' => t('posts.post_not_found')
             ], StatusCode::NOT_FOUND);
         }
 

@@ -67,7 +67,7 @@ class PostManagementController extends BaseController
 
         return response()->json([
             'status' => 'success',
-            'message' => t('common.created_successfully'),
+            'message' => t('actions.created_successfully'),
             'data' => current($this->postService->transformData([$post]))
         ]);
     }
@@ -99,7 +99,7 @@ class PostManagementController extends BaseController
 
         return response()->json([
             'status' => 'success',
-            'message' => t('common.updated_successfully'),
+            'message' => t('actions.updated_successfully'),
             'data' => current($this->postService->transformData([$post]))
         ]);
     }
@@ -119,7 +119,7 @@ class PostManagementController extends BaseController
 
         return response()->json([
             'status' => 'success',
-            'message' => t('common.deleted_successfully')
+            'message' => t('actions.deleted_successfully')
         ]);
     }
 
@@ -145,7 +145,7 @@ class PostManagementController extends BaseController
 
         return response()->json([
             'status' => 'success',
-            'message' => t('common.deleted_successfully')
+            'message' => t('actions.deleted_successfully')
         ]);
     }
 }

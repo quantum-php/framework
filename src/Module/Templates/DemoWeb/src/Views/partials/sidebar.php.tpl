@@ -4,12 +4,12 @@
     <?php endif; ?>
     <li>
         <a href="<?php echo base_url(true) . '/' . current_lang() ?>">
-            <i class="material-icons left">home</i><?php _t('common.home') ?>
+            <i class="material-icons left">home</i><?php _t('pages.home') ?>
         </a>
     </li>
     <li>
         <a href="<?php echo base_url(true) . '/' . current_lang() ?>/posts">
-            <i class="material-icons left">assignment</i><?php _t('common.posts') ?>
+            <i class="material-icons left">assignment</i><?php _t('posts.posts') ?>
         </a>
     </li>
     <?php if (auth()->check()) : ?>
@@ -29,16 +29,16 @@
             <ul id="sidenav-dropdown1" class="dropdown-content">
                 <li>
                     <a href="<?php echo base_url(true) . '/' . current_lang() ?>/account-settings">
-                        <?php _t('common.account_settings') ?>
+                        <?php _t('account.account_settings') ?>
                     </a>
                 </li>
                 <li>
                     <a href="<?php echo base_url(true) . '/' . current_lang() ?>/my-posts">
-                        <?php _t('common.my_posts') ?>
+                        <?php _t('posts.my_posts') ?>
                     </a>
                 </li>
                 <li>
-                    <a href="<?php echo base_url(true) . '/' . current_lang() ?>/signout"><?php _t('common.signout'); ?></a>
+                    <a href="<?php echo base_url(true) . '/' . current_lang() ?>/signout"><?php _t('auth.signout'); ?></a>
                 </li>
             </ul>
         </li>
@@ -47,7 +47,7 @@
             <li>
                 <a href="<?php echo base_url(true) . '/' . current_lang() ?>/signup">
                     <i class="material-icons left">person_add</i>
-                    <?php _t('common.signup') ?>
+                    <?php _t('auth.signup') ?>
                 </a>
             </li>
         <?php endif; ?>
@@ -55,7 +55,7 @@
             <li>
                 <a href="<?php echo base_url(true) . '/' . current_lang() ?>/signin">
                     <i class="material-icons left">exit_to_app</i>
-                    <?php _t('common.signin') ?>
+                    <?php _t('auth.signin') ?>
                 </a>
             </li>
         <?php endif; ?>

@@ -88,7 +88,7 @@ class AuthController extends BaseController
 
         return response()->json([
             'status' => self::STATUS_SUCCESS,
-            'message' => t('common.successfully_signed_up')
+            'message' => t('auth.successfully_signed_up')
         ]);
     }
 
@@ -101,7 +101,7 @@ class AuthController extends BaseController
 
         return response()->json([
             'status' => self::STATUS_SUCCESS,
-            'message' => t('common.account_activated')
+            'message' => t('auth.account_activated')
         ]);
     }
 
@@ -114,7 +114,7 @@ class AuthController extends BaseController
 
         return response()->json([
             'status' => self::STATUS_SUCCESS,
-            'message' => t('common.check_email')
+            'message' => t('auth.check_email')
         ]);
     }
 

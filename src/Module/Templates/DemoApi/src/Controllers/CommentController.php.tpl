@@ -37,7 +37,7 @@ class CommentController extends BaseController
 
         return response()->json([
             'status' => 'success',
-            'message' => t('common.created_successfully'),
+            'message' => t('actions.created_successfully'),
             'data' => $comment
         ]);
     }
@@ -51,7 +51,7 @@ class CommentController extends BaseController
 
         return response()->json([
             'status' => 'success',
-            'message' => t('common.deleted_successfully'),
+            'message' => t('actions.deleted_successfully'),
         ]);
     }
 }

@@ -17,9 +17,9 @@ class AboutTemplateTest extends TestCase
 
     public function testStarTextsAreTranslated(): void
     {
-        $this->assertStringContainsString("_t('common.star.message')", $this->template);
-        $this->assertStringContainsString("_t('common.star.button')", $this->template);
-        $this->assertStringContainsString("_t('common.star.badge_alt')", $this->template);
+        $this->assertStringContainsString("_t('pages.star.message')", $this->template);
+        $this->assertStringContainsString("_t('pages.star.button')", $this->template);
+        $this->assertStringContainsString("_t('pages.star.badge_alt')", $this->template);
     }
 
     public function testAboutPageHasNoHardCodedStarText(): void
@@ -48,15 +48,15 @@ class AboutTemplateTest extends TestCase
     public function testAboutPageShowsTheStarCountBadge(): void
     {
         $this->assertMatchesRegularExpression(
-            '#<img [^>]*src="https://img\.shields\.io/github/stars/quantum-php/framework[^"]*"[^>]*alt="<\?php _t\(\'common\.star\.badge_alt\'\); \?>"[^>]*>#',
+            '#<img [^>]*src="https://img\.shields\.io/github/stars/quantum-php/framework[^"]*"[^>]*alt="<\?php _t\(\'pages\.star\.badge_alt\'\); \?>"[^>]*>#',
             $this->template
         );
     }
 
     public function testStarMessageComesBeforeTheCliCommands(): void
     {
-        $star = strpos($this->template, "_t('common.star.message')");
-        $commands = strpos($this->template, 'common.cli_commands');
+        $star = strpos($this->template, "_t('pages.star.message')");
+        $commands = strpos($this->template, 'pages.cli_commands');
 
         $this->assertNotFalse($star);
         $this->assertNotFalse($commands);

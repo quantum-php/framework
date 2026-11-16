@@ -12,7 +12,7 @@
     <p>
         <?php echo date('m/d/Y H:i', strtotime($post['date'])) ?? '' ?> <br>
     </p>
-    <a href="<?php echo base_url(true) . '/' . current_lang() . '/my-posts/amend/' . $post['uuid'] ?>?ref=my-posts" class="secondary-content edit-my-post" title="<?php _t('common.edit') ?>" style="right: 50px;">
+    <a href="<?php echo base_url(true) . '/' . current_lang() . '/my-posts/amend/' . $post['uuid'] ?>?ref=my-posts" class="secondary-content edit-my-post" title="<?php _t('actions.edit') ?>" style="right: 50px;">
         <i class="material-icons dp48">edit</i>
     </a>
     <a href="#modal-confirm" class="secondary-content modal-trigger" data-url="<?php echo base_url(true) . '/' . current_lang() ?>/my-posts/delete/<?php echo $post['uuid'] ?>">

@@ -59,7 +59,7 @@ class PostController extends BaseController
         $paginatedPosts = $this->postService->getPosts($perPage, $currentPage, $search);
 
         $this->view->setParams([
-            'title' => t('common.posts') . ' | ' . config()->get('app.name'),
+            'title' => t('posts.posts') . ' | ' . config()->get('app.name'),
             'posts' => $this->postService->transformData($paginatedPosts->data()->all()),
             'pagination' => $paginatedPosts,
             'referer' => nav_ref_encode(request()->getQuery())

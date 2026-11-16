@@ -70,7 +70,7 @@ class AuthController extends BaseController
             }
         } else {
             $this->view->setParams([
-                'title' => t('common.signin') . ' | ' . config()->get('app.name'),
+                'title' => t('auth.signin') . ' | ' . config()->get('app.name'),
             ]);
 
             return response()->html($this->view->render(self::VIEW_SIGNIN));
@@ -96,12 +96,12 @@ class AuthController extends BaseController
 
             auth()->signup($userDto->toArray());
 
-            session()->setFlash('success', t('common.check_email_signup'));
+            session()->setFlash('success', t('auth.check_email_signup'));
             return redirect(base_url(true) . '/' . current_lang() . '/signup');
         } else {
             $this->view->setParams([
 //                'captcha' => captcha(),
-                'title' => t('common.signup') . ' | ' . config()->get('app.name'),
+                'title' => t('auth.signup') . ' | ' . config()->get('app.name'),
             ]);
 
             return response()->html($this->view->render(self::VIEW_SIGNUP));
@@ -124,11 +124,11 @@ class AuthController extends BaseController
     {
         if ($request->isMethod('post')) {
             auth()->forget($request->get('email'));
-            session()->setFlash('success', t('common.check_email'));
+            session()->setFlash('success', t('auth.check_email'));
             return redirect(base_url(true) . '/' . current_lang() . '/forget');
         } else {
             $this->view->setParams([
-                'title' => t('common.forget_password') . ' | ' . config()->get('app.name'),
+                'title' => t('auth.forget_password') . ' | ' . config()->get('app.name'),
             ]);
 
             return response()->html($this->view->render(self::VIEW_FORGET));
@@ -168,7 +168,7 @@ class AuthController extends BaseController
             }
         } else {
             $this->view->setParams([
-                'title' => t('common.two_fa') . ' | ' . config()->get('app.name'),
+                'title' => t('auth.two_fa') . ' | ' . config()->get('app.name'),
                 'code' => route_param('code')
             ]);
 

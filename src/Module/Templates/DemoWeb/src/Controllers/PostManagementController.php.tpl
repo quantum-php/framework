@@ -43,7 +43,7 @@ class PostManagementController extends BaseController
         $myPosts = $this->postService->getMyPosts(auth()->user()->uuid);
 
         $this->view->setParams([
-            'title' => t('common.my_posts') . ' | ' . config()->get('app.name'),
+            'title' => t('posts.my_posts') . ' | ' . config()->get('app.name'),
             'posts' => $this->postService->transformData($myPosts->all())
         ]);
 
@@ -58,7 +58,7 @@ class PostManagementController extends BaseController
         $ref = $request->get('ref', 'posts');
 
         $this->view->setParams([
-            'title' => t('common.new_post') . ' | ' . config()->get('app.name'),
+            'title' => t('posts.new_post') . ' | ' . config()->get('app.name'),
             'referer' => $ref
         ]);
 

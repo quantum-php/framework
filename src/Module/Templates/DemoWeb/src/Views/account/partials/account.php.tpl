@@ -16,7 +16,7 @@
             <input type="hidden" name="csrf-token" value="<?php echo csrf_token() ?>"/>
             <input type="hidden" name="uuid" value="<?php echo auth()->user()->uuid ?>"/>
             <button class="btn btn-large waves-effect waves-light" type="submit">
-                <?php _t('common.save') ?>
+                <?php _t('actions.save') ?>
             </button>
         </div>
     </form>
