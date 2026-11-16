@@ -41,7 +41,7 @@ class PageController extends BaseController
     public function about(): Response
     {
         $this->view->setParams([
-            'title' => t('common.about') . ' | ' . config()->get('app.name'),
+            'title' => t('pages.about') . ' | ' . config()->get('app.name'),
         ]);
 
         $commands = service(CommandService::class)->getAllCommands();

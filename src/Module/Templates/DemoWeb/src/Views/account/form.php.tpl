@@ -1,6 +1,6 @@
 <div class="main-wrapper">
     <div class="polaroid">
-        <h1 class="center-align teal-text"><?php _t('common.account_settings'); ?></h1>    
+        <h1 class="center-align teal-text"><?php _t('account.account_settings'); ?></h1>    
 
         <?php if (session()->has('error')) : ?>
             <?php echo partial('partials/messages/error') ?>
@@ -15,7 +15,7 @@
                 <ul class="tabs account-tabs z-depth-1 teal accent-4">
                     <li class="tab col s3">
                         <a href="#account_profile" class="active">
-                            <h6 class="white-text"><?php _t('common.profile'); ?></h6>
+                            <h6 class="white-text"><?php _t('account.profile'); ?></h6>
                         </a>
                     </li>
                     <li class="tab col s3">

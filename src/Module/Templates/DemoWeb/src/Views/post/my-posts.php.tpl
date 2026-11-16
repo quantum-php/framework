@@ -1,5 +1,5 @@
 <div class="main-wrapper posts-container">
-    <h1 class="center-align teal-text"><?php _t('common.my_posts') ?></h1>
+    <h1 class="center-align teal-text"><?php _t('posts.my_posts') ?></h1>
     <div class="row container">
         <?php if (count($posts)): ?>
             <ul class="collection">
@@ -9,10 +9,10 @@
             </ul>
         </div>
     <?php else: ?>
-        <h4 class="center-align grey-text"><?php _t('common.no_posts') ?>... <?php _t('common.try_creating') ?></h4>
+        <h4 class="center-align grey-text"><?php _t('posts.no_posts') ?>... <?php _t('posts.try_creating') ?></h4>
     <?php endif; ?>
 
-    <?php echo partial('post/partials/modal', ['item' => t('common.post')]) ?>
+    <?php echo partial('post/partials/modal', ['item' => t('posts.post')]) ?>
 
     <?php if (auth()->check()): ?>
         <div class="fixed-action-btn">

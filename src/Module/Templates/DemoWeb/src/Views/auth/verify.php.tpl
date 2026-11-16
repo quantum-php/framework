@@ -2,7 +2,7 @@
     <div class="container">
         <div class="row">
             <div class=" col s12 l8 offset-l2 center-align white-text">
-                <h1><?php _t('common.two_fa'); ?></h1>
+                <h1><?php _t('auth.two_fa'); ?></h1>
 
                 <?php if (session()->has('error')): ?>
                     <?php echo partial('partials/messages/error') ?>
@@ -22,7 +22,7 @@
                                     <input type="hidden" name="code" value="<?php echo $code; ?>"/>
                                     <a style="color: white; font-size: 14px"
                                        href="<?php echo base_url(true) . '/' . current_lang() . '/resend/' . $code ?>">
-                                           <?php _t('common.resend_otp') ?>
+                                           <?php _t('auth.resend_otp') ?>
                                     </a>
                                 </div>
 
@@ -32,7 +32,7 @@
                                 <div>
                                     <input type="hidden" name="csrf-token" value="<?php echo csrf_token() ?>"/>
                                     <button class="btn btn-large waves-effect waves-light" type="submit">
-                                        <?php _t('common.send') ?>
+                                        <?php _t('actions.send') ?>
                                     </button>
                                 </div>
                             </div>

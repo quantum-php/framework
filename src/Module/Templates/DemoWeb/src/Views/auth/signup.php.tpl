@@ -2,7 +2,7 @@
     <div class="container">
         <div class="row">
             <div class=" col s12 l8 offset-l2 center-align white-text">
-                <h1><?php _t('common.signup'); ?></h1>
+                <h1><?php _t('auth.signup'); ?></h1>
 
                 <?php if (session()->has('error')) : ?>
                     <?php echo partial('partials/messages/error') ?>
@@ -46,13 +46,13 @@
                             </div>
                             <div class="row">
                                 <div class="col s12 right-align">
-                                    <a href="<?php echo base_url(true) . '/' . current_lang() ?>/signin" class="white-text"><?php _t('common.signin') ?></a>
+                                    <a href="<?php echo base_url(true) . '/' . current_lang() ?>/signin" class="white-text"><?php _t('auth.signin') ?></a>
                                 </div>
                             </div>
                             <div>
                                 <input type="hidden" name="csrf-token" value="<?php echo csrf_token() ?>" />
                                 <button class="btn btn-large waves-effect waves-light" type="submit">
-                                    <?php _t('common.send') ?>
+                                    <?php _t('actions.send') ?>
                                 </button>
                             </div>
                         </form>
