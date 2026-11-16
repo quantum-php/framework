@@ -12,7 +12,7 @@
             <?php endif; ?>
             <li>
                 <a href="<?php echo base_url(true) . '/' . current_lang() ?>/posts" class="white-text">
-                    <?php _t('common.posts') ?>
+                    <?php _t('posts.posts') ?>
                 </a>
             </li>
             <?php if (auth()->check()) : ?>
@@ -33,16 +33,16 @@
                     <ul id="dropdown1" class="dropdown-content">
                         <li>
                             <a href="<?php echo base_url(true) . '/' . current_lang() ?>/account-settings">
-                                <?php _t('common.account_settings') ?>
+                                <?php _t('account.account_settings') ?>
                             </a>
                         </li>
                         <li>
                             <a href="<?php echo base_url(true) . '/' . current_lang() ?>/my-posts">
-                                <?php _t('common.my_posts') ?>
+                                <?php _t('posts.my_posts') ?>
                             </a>
                         </li>
                         <li>
-                            <a href="<?php echo base_url(true) . '/' . current_lang() ?>/signout"><?php _t('common.signout'); ?></a>
+                            <a href="<?php echo base_url(true) . '/' . current_lang() ?>/signout"><?php _t('auth.signout'); ?></a>
                         </li>
                     </ul>
                 </li>
@@ -50,14 +50,14 @@
                 <li>
                     <?php if (route_name() != 'signup') : ?>
                         <a href="<?php echo base_url(true) . '/' . current_lang() ?>/signup" class="white-text">
-                            <?php _t('common.signup') ?>
+                            <?php _t('auth.signup') ?>
                         </a>
                     <?php endif; ?>
                 </li>
                 <li>
                     <?php if (route_name() != 'signin') : ?>
                         <a href="<?php echo base_url(true) . '/' . current_lang() ?>/signin" class="white-text">
-                            <?php _t('common.signin') ?>
+                            <?php _t('auth.signin') ?>
                         </a>
                     <?php endif; ?>
                 </li>

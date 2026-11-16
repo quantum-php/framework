@@ -3,7 +3,7 @@
         <?php echo partial('post/partials/back') ?>
         <div class="row">
             <div class="col s12">
-                <h1 class="center-align teal-text"><?php isset($post) ? _t('common.update_post') : _t('common.new_post') ?></h1>
+                <h1 class="center-align teal-text"><?php isset($post) ? _t('posts.update_post') : _t('posts.new_post') ?></h1>
 
                 <?php if (session()->has('error')) : ?>
                     <?php echo partial('partials/messages/error') ?>
@@ -38,7 +38,7 @@
                                     <a class="waves-effect waves-light btn modal-trigger image_delete"
                                     data-url="<?php echo base_url(true) . '/' . current_lang() . '/my-posts/delete-image/' . $post['uuid'] ?>"
                                     href="#modal-confirm"
-                                    title="<?php _t('common.delete') ?>">
+                                    title="<?php _t('actions.delete') ?>">
                                         <i class="material-icons">close</i>
                                     </a>
                                     <img src="<?php echo base_url() . '/uploads/' . auth()->user()->uuid . '/' . $post['image'] ?>" class="update_page_img">
@@ -48,10 +48,10 @@
                             <div class="center-align">
                                 <input type="hidden" name="csrf-token" value="<?php echo csrf_token() ?>" />
                                 <button class="btn btn-large waves-effect waves-light submit-btn" type="submit">
-                                    <?php _t('common.save') ?>
+                                    <?php _t('actions.save') ?>
                                 </button>
                                 <a href="<?php echo base_url(true) . '/' . current_lang() ?>/my-posts" class="btn btn-large waves-effect waves-teal btn-flat white-text">
-                                    <?php _t('common.cancel') ?>
+                                    <?php _t('actions.cancel') ?>
                                 </a>
                             </div>
                         </form>

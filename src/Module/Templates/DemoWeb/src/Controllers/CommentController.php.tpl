@@ -36,7 +36,7 @@ class CommentController extends BaseController
 
         $this->commentService->addComment($commentDto);
 
-        session()->setFlash('success', t('common.comment_added'));
+        session()->setFlash('success', t('comments.added'));
         return back();
     }
 
@@ -47,7 +47,7 @@ class CommentController extends BaseController
     {
         $this->commentService->deleteComment($uuid);
 
-        session()->setFlash('success', t('common.comment_deleted'));
+        session()->setFlash('success', t('comments.deleted'));
         return back();
     }
 }

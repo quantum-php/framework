@@ -1,5 +1,5 @@
 <div class="main-wrapper">
-    <h1 class="center-align teal-text"><?php _t('common.posts') ?></h1>
+    <h1 class="center-align teal-text"><?php _t('posts.posts') ?></h1>
     <div class="row post_container">
         <?php if (count($posts)): ?>
             <?php foreach ($posts as $post): ?>
@@ -8,7 +8,7 @@
         <?php endif; ?>
     </div>
     <?php if (empty($posts)): ?>
-        <h4 class="center-align"><?php _t('common.no_posts') ?>... <?php _t('common.try_creating') ?></h4>
+        <h4 class="center-align"><?php _t('posts.no_posts') ?>... <?php _t('posts.try_creating') ?></h4>
     <?php endif; ?>
 
     <?php if (!empty($pagination)): ?>
@@ -16,5 +16,5 @@
 	        <?php echo $pagination->getPagination(false, 5) ?>
         </div>
     <?php endif; ?>
-    <?php echo partial('post/partials/modal', ['item' => t('common.post')]) ?>
+    <?php echo partial('post/partials/modal', ['item' => t('posts.post')]) ?>
 </div>
