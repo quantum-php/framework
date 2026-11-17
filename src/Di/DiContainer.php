@@ -149,11 +149,11 @@ class DiContainer
     /**
      * Autowire callable parameters
      * @param array<mixed> $args
-     * @param array<string, mixed> $named Values bound by parameter name, before the positional $args
+     * @param array<string, mixed> $frameworkParams Values bound by parameter name, before the positional $args
      * @return array<int, mixed>
      * @throws DiException|ReflectionException
      */
-    public function autowire(callable $entry, array $args = [], array $named = []): array
+    public function autowire(callable $entry, array $args = [], array $frameworkParams = []): array
     {
         if ($entry instanceof Closure) {
             $reflection = new ReflectionFunction($entry);
@@ -164,7 +164,7 @@ class DiContainer
             throw DiException::invalidCallable();
         }
 
-        return $this->resolveParameters($reflection->getParameters(), $args, $named);
+        return $this->resolveParameters($reflection->getParameters(), $args, $frameworkParams);
     }
 
     public function reset(): void
@@ -228,16 +228,16 @@ class DiContainer
      * Resolve parameter list
      * @param array<ReflectionParameter> $parameters
      * @param array<mixed> $args
-     * @param array<string, mixed> $named
+     * @param array<string, mixed> $frameworkParams
      * @return array<mixed>
      * @throws DiException|ReflectionException
      */
-    private function resolveParameters(array $parameters, array &$args = [], array $named = []): array
+    private function resolveParameters(array $parameters, array &$args = [], array $frameworkParams = []): array
     {
         $resolved = [];
 
         foreach ($parameters as $param) {
-            $resolved[] = $this->resolveParameter($param, $args, $named);
+            $resolved[] = $this->resolveParameter($param, $args, $frameworkParams);
         }
 
         return $resolved;
@@ -246,11 +246,11 @@ class DiContainer
     /**
      * Resolve single parameter
      * @param array<mixed> $args
-     * @param array<string, mixed> $named
+     * @param array<string, mixed> $frameworkParams
      * @return array|mixed|object|null
      * @throws DiException|ReflectionException
      */
-    private function resolveParameter(ReflectionParameter $param, array &$args = [], array $named = [])
+    private function resolveParameter(ReflectionParameter $param, array &$args = [], array $frameworkParams = [])
     {
         $type = null;
 
@@ -268,8 +268,8 @@ class DiContainer
             return $this->create($type);
         }
 
-        if (array_key_exists($param->getName(), $named)) {
-            return $named[$param->getName()];
+        if (array_key_exists($param->getName(), $frameworkParams)) {
+            return $frameworkParams[$param->getName()];
         }
 
         if ($type === 'array') {

@@ -29,7 +29,7 @@ use ReflectionException;
  * @method static void set(string $abstract, object $instance, bool $override = true)
  * @method static mixed get(string $dependency, array<mixed> $args = [])
  * @method static mixed create(string $dependency, array<mixed> $args = [])
- * @method static array<int, mixed> autowire(callable $entry, array<mixed> $args = [], array<string, mixed> $named = [])
+ * @method static array<int, mixed> autowire(callable $entry, array<mixed> $args = [], array<string, mixed> $frameworkParams = [])
  * @method static void resetContainer()
  */
 class Di
