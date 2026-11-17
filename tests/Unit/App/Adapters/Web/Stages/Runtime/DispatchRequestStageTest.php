@@ -43,16 +43,19 @@ namespace Quantum\Tests\Unit\App\Adapters\Web\Stages\Runtime {
     use Quantum\Tests\_root\modules\Test\Middlewares\DispatchStageMwPassThrough;
     use Quantum\Tests\_root\modules\Test\Middlewares\DispatchStageMwRecorder;
     use Quantum\App\Adapters\Web\Stages\Runtime\DispatchRequestStage;
+    use Quantum\App\Adapters\Web\Stages\Runtime\PrepareRequestStage;
     use Quantum\App\Adapters\Web\Stages\Runtime\ResolveRouteStage;
     use Quantum\Router\Exceptions\RouteException;
     use Quantum\Di\Exceptions\DiException;
     use Quantum\Tests\Unit\AppTestCase;
     use Quantum\ResourceCache\ViewCache;
     use Quantum\App\Adapters\Web\WebContext;
+    use Quantum\Router\PatternCompiler;
     use Quantum\Router\MatchedRoute;
     use Quantum\App\Enums\AppType;
     use Quantum\Di\DiContainer;
     use Quantum\App\AppContext;
+    use Quantum\Http\Response;
     use Quantum\Http\Request;
     use Quantum\Http\Enums\StatusCode;
     use Quantum\Router\Route;
@@ -194,6 +197,170 @@ namespace Quantum\Tests\Unit\App\Adapters\Web\Stages\Runtime {
             (new DispatchRequestStage())->process(new WebContext(new AppContext(PROJECT_ROOT, $container, AppType::WEB)));
 
             $this->assertSame($request, DispatchStageMwRecorder::$request);
+        }
+
+        public function testDispatchRequestStageKeepsTheLanguageSegmentOutOfTheActionArguments(): void
+        {
+            $controller = $this->recordingController();
+
+            $this->prepareLanguageRoute('/es/post/abc', new Route(['GET'], '/[:alpha:2]?/post/[uuid=:any]', get_class($controller), 'post'));
+
+            (new DispatchRequestStage())->process($this->webContext);
+
+            $this->assertSame(['abc'], $controller::$received);
+        }
+
+        public function testDispatchRequestStageStillPassesTheDeprecatedLangArgument(): void
+        {
+            $controller = $this->recordingController();
+
+            $this->prepareLanguageRoute('/es/post/abc', new Route(['GET'], '/[:alpha:2]?/post/[uuid=:any]', get_class($controller), 'postWithLang'));
+
+            (new DispatchRequestStage())->process($this->webContext);
+
+            $this->assertSame(['es', 'abc'], $controller::$received);
+        }
+
+        public function testDispatchRequestStageFindsTheLanguageSegmentUnderAModulePrefix(): void
+        {
+            $controller = $this->recordingController();
+
+            $route = (new Route(['GET'], '/api/[:alpha:2]?/post/[uuid=:any]', get_class($controller), 'post'))->prefix('api');
+
+            $this->prepareLanguageRoute('/api/es/post/abc', $route);
+
+            (new DispatchRequestStage())->process($this->webContext);
+
+            $this->assertSame(['abc'], $controller::$received);
+        }
+
+        public function testDispatchRequestStageLeavesARouteWithoutALanguageSegmentUnchanged(): void
+        {
+            $controller = $this->recordingController();
+
+            $this->prepareLanguageRoute('/post/abc', new Route(['GET'], '/post/[uuid=:any]', get_class($controller), 'post'));
+
+            (new DispatchRequestStage())->process($this->webContext);
+
+            $this->assertSame(['abc'], $controller::$received);
+        }
+
+        public function testDispatchRequestStageLeavesANamedLangParamUnchanged(): void
+        {
+            $controller = $this->recordingController();
+
+            $this->prepareLanguageRoute('/es/post/abc', new Route(['GET'], '/[lang=:alpha:2]?/post/[uuid=:any]', get_class($controller), 'postWithLang'));
+
+            (new DispatchRequestStage())->process($this->webContext);
+
+            $this->assertSame(['es', 'abc'], $controller::$received);
+        }
+
+        public function testDispatchRequestStageLeavesALiteralSegmentAtTheLanguagePositionUnchanged(): void
+        {
+            $controller = $this->recordingController();
+
+            $route = new Route(['GET'], '/post/[uuid=:any]/something/[:alpha:2]?', get_class($controller), 'postThenLang');
+
+            $this->prepareLanguageRoute('/post/abc/something/es', $route);
+
+            config()->set('lang.url_segment', 3);
+
+            (new DispatchRequestStage())->process($this->webContext);
+
+            $this->assertSame(['abc', 'es'], $controller::$received);
+        }
+
+        public function testDispatchRequestStageDispatchesAsBeforeWhenTheLanguageSegmentSettingIsInvalid(): void
+        {
+            $controller = $this->recordingController();
+
+            $this->prepareLanguageRoute('/es/post/abc', new Route(['GET'], '/[:alpha:2]?/post/[uuid=:any]', get_class($controller), 'postWithLang'));
+
+            config()->set('lang.url_segment', 'abc');
+
+            (new DispatchRequestStage())->process($this->webContext);
+
+            $this->assertSame(['es', 'abc'], $controller::$received);
+        }
+
+        public function testDispatchRequestStageDoesNotReadTheLanguageSettingForACachedView(): void
+        {
+            $this->prepareRequest('/test/am/tests');
+
+            $uri = request()->getUri();
+            $viewsDir = base_dir() . DS . 'cache' . DS . 'views';
+            $moduleDir = $viewsDir . DS . 'test';
+            $viewsDirExisted = is_dir($viewsDir);
+            $moduleDirExisted = is_dir($moduleDir);
+
+            $viewCache = $this->webContext->getViewCache();
+            $viewCache->setup();
+            $viewCache->enableCaching(true);
+            $viewCache->set($uri, '<p>cached page</p>');
+
+            config()->set('lang.url_segment', 'abc');
+
+            try {
+                (new DispatchRequestStage())->process($this->webContext);
+
+                $this->assertSame('<p>cached page</p>', $this->webContext->getResponse()->getContent());
+            } finally {
+                $viewCache->delete($uri);
+                $viewCache->enableCaching(false);
+
+                if (!$moduleDirExisted && is_dir($moduleDir)) {
+                    rmdir($moduleDir);
+                }
+
+                if (!$viewsDirExisted && is_dir($viewsDir)) {
+                    rmdir($viewsDir);
+                }
+            }
+        }
+
+        private function prepareLanguageRoute(string $uri, Route $route): void
+        {
+            request()->create('GET', $uri);
+
+            $compiler = new PatternCompiler();
+            $compiler->match($route, $uri);
+
+            request()->setMatchedRoute(new MatchedRoute($route, $compiler->getParams()));
+
+            (new PrepareRequestStage())->process($this->webContext);
+        }
+
+        private function recordingController(): object
+        {
+            $controller = new class () {
+                public static array $received = [];
+
+                public function post(string $uuid, Response $response): Response
+                {
+                    self::$received = [$uuid];
+
+                    return $response;
+                }
+
+                public function postWithLang(?string $lang, string $uuid, Response $response): Response
+                {
+                    self::$received = [$lang, $uuid];
+
+                    return $response;
+                }
+
+                public function postThenLang(string $uuid, ?string $lang, Response $response): Response
+                {
+                    self::$received = [$uuid, $lang];
+
+                    return $response;
+                }
+            };
+
+            $controller::$received = [];
+
+            return $controller;
         }
 
         private function prepareRequest(string $uri): void

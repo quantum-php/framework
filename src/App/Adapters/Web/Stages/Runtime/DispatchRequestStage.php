@@ -11,15 +11,18 @@ declare(strict_types=1);
 namespace Quantum\App\Adapters\Web\Stages\Runtime;
 
 use Quantum\Middleware\Exceptions\MiddlewareException;
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\App\Contracts\StageInterface;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Middleware\MiddlewareManager;
 use Quantum\App\Adapters\Web\WebContext;
 use Quantum\Di\Exceptions\DiException;
 use Quantum\Router\RouteDispatcher;
+use Quantum\Router\MatchedRoute;
 use Quantum\App\AppContext;
 use Quantum\Http\Response;
 use Quantum\Http\Request;
+use ReflectionException;
 use RuntimeException;
 
 /**
@@ -39,7 +42,7 @@ class DispatchRequestStage implements StageInterface
 
     /**
      * @param WebContext $context
-     * @throws MiddlewareException|BaseException|DiException
+     * @throws MiddlewareException|BaseException|DiException|ReflectionException
      */
     public function process(AppContext $context): void
     {
@@ -51,9 +54,38 @@ class DispatchRequestStage implements StageInterface
 
         $viewCache = $context->getViewCache();
 
-        $terminal = fn (Request $request): Response => $viewCache->getCachedResponse($request->getUri() ?? '')
-            ?? (new RouteDispatcher())->dispatch($matchedRoute, $request);
+        $terminal = function (Request $request) use ($viewCache, $matchedRoute): Response {
+            $cached = $viewCache->getCachedResponse($request->getUri() ?? '');
+
+            if ($cached !== null) {
+                return $cached;
+            }
+
+            // The language segment is framework-owned: it is not passed to the action as a positional argument.
+            // The language is read with current_lang(); an action argument named $lang still receives the segment,
+            // deprecated, until 3.2.0.
+            $languageParam = $this->languageSegmentParam($matchedRoute);
+
+            return (new RouteDispatcher())->dispatch($matchedRoute, $request, $languageParam !== null ? [$languageParam => 'lang'] : []);
+        };
 
         $context->setResponse((new MiddlewareManager($matchedRoute))->applyMiddlewares($context->getRequest(), $terminal));
+    }
+
+    /**
+     * Gets the route param that holds the language URL segment (`lang.url_segment`), for example `_segment0`,
+     * or null when the route has no param at that position. An invalid `lang.url_segment` also gives null, so the
+     * route is dispatched as before; LangFactory still reports it when it reads the URL segment.
+     * @throws DiException|ReflectionException
+     */
+    private function languageSegmentParam(MatchedRoute $matchedRoute): ?string
+    {
+        try {
+            $param = '_segment' . (lang_url_segment() - 1);
+        } catch (ConfigException) {
+            return null;
+        }
+
+        return array_key_exists($param, $matchedRoute->getParams()) ? $param : null;
     }
 }
