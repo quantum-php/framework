@@ -21,6 +21,22 @@ function current_lang(): ?string
 }
 
 /**
+ * Gets the index of the URL segment that holds the language: `lang.url_segment`,
+ * moved one segment to the right when the matched route has a module prefix
+ * @throws ConfigException|DiException|ReflectionException
+ */
+function lang_url_segment(): int
+{
+    $segmentIndex = config()->getInt('lang.url_segment');
+
+    if (!in_array(request()->getRoutePrefix(), [null, '', '0'], true) && $segmentIndex === 1) {
+        $segmentIndex++;
+    }
+
+    return $segmentIndex;
+}
+
+/**
  * Gets translation
  * @param array<int|string, mixed>|string|null $params
  * @throws LangException|ConfigException|DiException|ReflectionException

@@ -9,6 +9,8 @@ use Quantum\Lang\Factories\LangFactory;
 use Quantum\Lang\Adapters\DeepLAdapter;
 use Quantum\Lang\Adapters\FileAdapter;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Router\MatchedRoute;
+use Quantum\Router\Route;
 use Quantum\Lang\Lang;
 use Quantum\Di\Di;
 
@@ -256,6 +258,18 @@ class LangFactoryTest extends AppTestCase
         $this->expectExceptionMessage('The config key `lang.url_segment` has the value `abc`, which is not a whole number.');
 
         LangFactory::get();
+    }
+
+    public function testLangFactoryDetectedFromRouteParameterUnderModulePrefix(): void
+    {
+        request()->create('GET', '/api/es/posts');
+
+        request()->setMatchedRoute(new MatchedRoute(
+            (new Route(['GET'], '/api/[:alpha:2]?/posts', 'PostController', 'posts'))->prefix('api'),
+            []
+        ));
+
+        $this->assertEquals('es', LangFactory::get()->getLang());
     }
 
     private function resetLangFactory(): void

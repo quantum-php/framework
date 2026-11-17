@@ -3,8 +3,10 @@
 namespace Quantum\Tests\Unit\Lang\Helpers;
 
 use Quantum\Lang\Factories\LangFactory;
-use Quantum\Lang\Lang;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Router\MatchedRoute;
+use Quantum\Router\Route;
+use Quantum\Lang\Lang;
 
 class LangHelperFunctionsTest extends AppTestCase
 {
@@ -24,6 +26,41 @@ class LangHelperFunctionsTest extends AppTestCase
         $this->lang->setLang('am');
 
         $this->assertEquals('am', current_lang());
+    }
+
+    public function testLangHelperLangUrlSegmentIsTheConfiguredSegment(): void
+    {
+        config()->set('lang.url_segment', 1);
+
+        $this->assertSame(1, lang_url_segment());
+
+        config()->set('lang.url_segment', 3);
+
+        $this->assertSame(3, lang_url_segment());
+    }
+
+    public function testLangHelperLangUrlSegmentMovesPastTheModulePrefixWhenTheSettingIsOne(): void
+    {
+        request()->setMatchedRoute(new MatchedRoute(
+            (new Route(['GET'], '/api/[:alpha:2]?/posts', 'PostController', 'posts'))->prefix('api'),
+            []
+        ));
+
+        config()->set('lang.url_segment', 1);
+
+        $this->assertSame(2, lang_url_segment());
+    }
+
+    public function testLangHelperLangUrlSegmentIsNotMovedWhenTheSettingIsNotOne(): void
+    {
+        request()->setMatchedRoute(new MatchedRoute(
+            (new Route(['GET'], '/api/x/[:alpha:2]?/posts', 'PostController', 'posts'))->prefix('api'),
+            []
+        ));
+
+        config()->set('lang.url_segment', 3);
+
+        $this->assertSame(3, lang_url_segment());
     }
 
     public function testLangHelperT(): void
