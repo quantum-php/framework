@@ -71,7 +71,7 @@ class PostController extends BaseController
     /**
      * Action - get single post
      */
-    public function post(Request $request, ?string $lang, string $postUuid): Response
+    public function post(Request $request, string $postUuid): Response
     {
         $ref = $request->get('ref', 'posts');
 

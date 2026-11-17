@@ -90,7 +90,7 @@ class PostManagementController extends BaseController
     /**
      * Action - display form for amend the post
      */
-    public function amendForm(Request $request, ?string $lang, string $postUuid): Response
+    public function amendForm(Request $request, string $postUuid): Response
     {
         $ref = $request->get('ref', 'posts');
 
@@ -108,7 +108,7 @@ class PostManagementController extends BaseController
     /**
      * Action - amend post
      */
-    public function amend(Request $request, ?string $lang, string $postUuid): Response
+    public function amend(Request $request, string $postUuid): Response
     {
         $post = $this->postService->getPost($postUuid);
 
@@ -136,7 +136,7 @@ class PostManagementController extends BaseController
     /**
      * Action - delete post
      */
-    public function delete(?string $lang, string $postUuid): Response
+    public function delete(string $postUuid): Response
     {
         $post = $this->postService->getPost($postUuid);
 
@@ -152,7 +152,7 @@ class PostManagementController extends BaseController
     /**
      * Action - delete image of the post
      */
-    public function deleteImage(?string $lang, string $postUuid): Response
+    public function deleteImage(string $postUuid): Response
     {
         $post = $this->postService->getPost($postUuid);
 

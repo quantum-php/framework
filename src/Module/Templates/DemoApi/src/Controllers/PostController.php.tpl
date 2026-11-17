@@ -69,7 +69,7 @@ class PostController extends BaseController
     /**
      * Action - get single post
      */
-    public function post(?string $lang, string $postUuid): Response
+    public function post(string $postUuid): Response
     {
         $post = $this->postService->getPost($postUuid);
 

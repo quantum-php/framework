@@ -69,7 +69,7 @@ abstract class OpenApiCommentController extends OpenApiController
             new OA\Response(response: 500, description: 'Internal Server Error'),
         ]
     )]
-    abstract public function create(Request $request, ?string $lang, string $uuid);
+    abstract public function create(Request $request, string $uuid);
 
     /**
      * Delete comment action
@@ -101,5 +101,5 @@ abstract class OpenApiCommentController extends OpenApiController
             new OA\Response(response: 500, description: 'Internal Server Error'),
         ]
     )]
-    abstract public function delete(?string $lang, string $uuid);
+    abstract public function delete(string $uuid);
 }
