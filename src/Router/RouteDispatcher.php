@@ -28,12 +28,14 @@ final class RouteDispatcher
 {
     /**
      * Dispatch a matched route.
+     * @param array<string, string> $frameworkParamNames Route params owned by the framework, as param key => name:
+     * they are kept out of the positional arguments and passed only to a parameter with that name
      * @throws ReflectionException|CsrfException|DiException|RouteException
      */
-    public function dispatch(MatchedRoute $matched, Request $request): Response
+    public function dispatch(MatchedRoute $matched, Request $request, array $frameworkParamNames = []): Response
     {
         $route = $matched->getRoute();
-        $params = $matched->getParams();
+        [$params, $frameworkParams] = $this->splitParams($matched->getParams(), $frameworkParamNames);
 
         if ($route->isClosure()) {
             $closure = $route->getClosure();
@@ -43,7 +45,7 @@ final class RouteDispatcher
             }
 
             return $this->requireResponse(
-                $this->invoke($closure, $params),
+                $this->invoke($closure, $params, $frameworkParams),
                 'closure route'
             );
         }
@@ -53,16 +55,36 @@ final class RouteDispatcher
 
         $this->verifyCsrf($controller, $request);
 
-        $this->callHook($controller, '__before', $params);
+        $this->callHook($controller, '__before', $params, $frameworkParams);
 
         $response = $this->requireResponse(
-            $this->invoke($callable, $params),
+            $this->invoke($callable, $params, $frameworkParams),
             $route->getController() . '::' . $route->getAction()
         );
 
-        $this->callHook($controller, '__after', $params);
+        $this->callHook($controller, '__after', $params, $frameworkParams);
 
         return $response;
+    }
+
+    /**
+     * Take the framework-owned params out of the route params and key them by their name.
+     * @param array<string, mixed> $params
+     * @param array<string, string> $frameworkParamNames
+     * @return array{0: array<string, mixed>, 1: array<string, mixed>}
+     */
+    private function splitParams(array $params, array $frameworkParamNames): array
+    {
+        $frameworkParams = [];
+
+        foreach ($frameworkParamNames as $key => $name) {
+            if (array_key_exists($key, $params)) {
+                $frameworkParams[$name] = $params[$key];
+                unset($params[$key]);
+            }
+        }
+
+        return [$params, $frameworkParams];
     }
 
     /**
@@ -92,10 +114,11 @@ final class RouteDispatcher
      * Invoke a callable with parameters resolved via DI autowiring.
      * @param Closure|array{0: object, 1: string} $callable
      * @param array<string, mixed> $params
+     * @param array<string, mixed> $frameworkParams
      * @return mixed
      * @throws DiException
      */
-    private function invoke(Closure|array $callable, array $params)
+    private function invoke(Closure|array $callable, array $params, array $frameworkParams = [])
     {
         if (!is_callable($callable)) {
             throw DiException::invalidCallable();
@@ -103,7 +126,7 @@ final class RouteDispatcher
 
         $closure = Closure::fromCallable($callable);
 
-        return $closure(...Di::autowire($closure, $params));
+        return $closure(...Di::autowire($closure, $params, $frameworkParams));
     }
 
     /**
@@ -123,12 +146,13 @@ final class RouteDispatcher
     /**
      * Invoke a controller lifecycle hook if it exists.
      * @param array<string, mixed> $params
+     * @param array<string, mixed> $frameworkParams
      * @throws DiException|ReflectionException
      */
-    private function callHook(object $controller, string $hook, array $params): void
+    private function callHook(object $controller, string $hook, array $params, array $frameworkParams = []): void
     {
         if (method_exists($controller, $hook)) {
-            $this->invoke([$controller, $hook], $params);
+            $this->invoke([$controller, $hook], $params, $frameworkParams);
         }
     }
 

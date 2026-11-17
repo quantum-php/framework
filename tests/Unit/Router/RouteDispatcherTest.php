@@ -203,6 +203,139 @@ class RouteDispatcherTest extends AppTestCase
         $dispatcher->dispatch($matched, $request);
     }
 
+    public function testDispatchKeepsFrameworkParamOutOfPositionalArguments(): void
+    {
+        $controllerClass = new class () {
+            public static ?string $received = null;
+
+            public function post(string $uuid, Response $response): Response
+            {
+                self::$received = $uuid;
+
+                return $response;
+            }
+        };
+
+        $route = new Route(['GET'], '[:alpha:2]?/post/[uuid=:any]', get_class($controllerClass), 'post');
+        $matched = new MatchedRoute($route, ['_segment0' => 'es', 'uuid' => 'abc']);
+
+        (new RouteDispatcher())->dispatch($matched, Mockery::mock(Request::class), ['_segment0' => 'lang']);
+
+        $this->assertSame('abc', $controllerClass::$received);
+    }
+
+    public function testDispatchPassesFrameworkParamByName(): void
+    {
+        $controllerClass = new class () {
+            public static array $received = [];
+
+            public function post(?string $lang, string $uuid, Response $response): Response
+            {
+                self::$received = [$lang, $uuid];
+
+                return $response;
+            }
+        };
+
+        $route = new Route(['GET'], '[:alpha:2]?/post/[uuid=:any]', get_class($controllerClass), 'post');
+        $matched = new MatchedRoute($route, ['_segment0' => 'es', 'uuid' => 'abc']);
+
+        (new RouteDispatcher())->dispatch($matched, Mockery::mock(Request::class), ['_segment0' => 'lang']);
+
+        $this->assertSame(['es', 'abc'], $controllerClass::$received);
+    }
+
+    public function testDispatchWithoutFrameworkParamsBindsAllParamsPositionally(): void
+    {
+        $controllerClass = new class () {
+            public static array $received = [];
+
+            public function post(?string $lang, string $uuid, Response $response): Response
+            {
+                self::$received = [$lang, $uuid];
+
+                return $response;
+            }
+        };
+
+        $route = new Route(['GET'], '[:alpha:2]?/post/[uuid=:any]', get_class($controllerClass), 'post');
+        $matched = new MatchedRoute($route, ['_segment0' => 'es', 'uuid' => 'abc']);
+
+        (new RouteDispatcher())->dispatch($matched, Mockery::mock(Request::class));
+
+        $this->assertSame(['es', 'abc'], $controllerClass::$received);
+    }
+
+    public function testDispatchIgnoresFrameworkParamTheRouteDoesNotHave(): void
+    {
+        $controllerClass = new class () {
+            public static ?string $received = null;
+
+            public function post(string $uuid, Response $response): Response
+            {
+                self::$received = $uuid;
+
+                return $response;
+            }
+        };
+
+        $route = new Route(['GET'], 'post/[uuid=:any]', get_class($controllerClass), 'post');
+        $matched = new MatchedRoute($route, ['uuid' => 'abc']);
+
+        (new RouteDispatcher())->dispatch($matched, Mockery::mock(Request::class), ['_segment0' => 'lang']);
+
+        $this->assertSame('abc', $controllerClass::$received);
+    }
+
+    public function testDispatchKeepsFrameworkParamOutOfHookArguments(): void
+    {
+        $controllerClass = new class () {
+            public static array $calls = [];
+
+            public function __before(string $uuid): void
+            {
+                self::$calls[] = 'before:' . $uuid;
+            }
+
+            public function post(string $uuid, Response $response): Response
+            {
+                self::$calls[] = 'action:' . $uuid;
+
+                return $response;
+            }
+
+            public function __after(string $uuid, ?string $lang): void
+            {
+                self::$calls[] = 'after:' . $uuid . ':' . $lang;
+            }
+        };
+
+        $route = new Route(['GET'], '[:alpha:2]?/post/[uuid=:any]', get_class($controllerClass), 'post');
+        $matched = new MatchedRoute($route, ['_segment0' => 'es', 'uuid' => 'abc']);
+
+        (new RouteDispatcher())->dispatch($matched, Mockery::mock(Request::class), ['_segment0' => 'lang']);
+
+        $this->assertSame(['before:abc', 'action:abc', 'after:abc:es'], $controllerClass::$calls);
+    }
+
+    public function testDispatchKeepsFrameworkParamOutOfClosureArguments(): void
+    {
+        $received = [];
+
+        $closure = function (string $id, Response $response, ?string $lang = null) use (&$received): Response {
+            $received = [$id, $lang];
+
+            return $response;
+        };
+
+        $route = new Route(['GET'], '[:alpha:2]?/item/[id=:num]', null, null, $closure);
+        $matched = new MatchedRoute($route, ['_segment0' => 'es', 'id' => '7']);
+
+        (new RouteDispatcher())->dispatch($matched, Mockery::mock(Request::class), ['_segment0' => 'lang']);
+
+        $this->assertSame(['7', 'es'], $received);
+    }
+
     public function testDispatchFailsWhenCsrfIsEnabledAndTokenIsMissing(): void
     {
         $this->expectException(CsrfException::class);
