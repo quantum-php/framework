@@ -149,10 +149,11 @@ class DiContainer
     /**
      * Autowire callable parameters
      * @param array<mixed> $args
+     * @param array<string, mixed> $named Values bound by parameter name, before the positional $args
      * @return array<int, mixed>
      * @throws DiException|ReflectionException
      */
-    public function autowire(callable $entry, array $args = []): array
+    public function autowire(callable $entry, array $args = [], array $named = []): array
     {
         if ($entry instanceof Closure) {
             $reflection = new ReflectionFunction($entry);
@@ -163,7 +164,7 @@ class DiContainer
             throw DiException::invalidCallable();
         }
 
-        return $this->resolveParameters($reflection->getParameters(), $args);
+        return $this->resolveParameters($reflection->getParameters(), $args, $named);
     }
 
     public function reset(): void
@@ -227,15 +228,16 @@ class DiContainer
      * Resolve parameter list
      * @param array<ReflectionParameter> $parameters
      * @param array<mixed> $args
+     * @param array<string, mixed> $named
      * @return array<mixed>
      * @throws DiException|ReflectionException
      */
-    private function resolveParameters(array $parameters, array &$args = []): array
+    private function resolveParameters(array $parameters, array &$args = [], array $named = []): array
     {
         $resolved = [];
 
         foreach ($parameters as $param) {
-            $resolved[] = $this->resolveParameter($param, $args);
+            $resolved[] = $this->resolveParameter($param, $args, $named);
         }
 
         return $resolved;
@@ -244,10 +246,11 @@ class DiContainer
     /**
      * Resolve single parameter
      * @param array<mixed> $args
+     * @param array<string, mixed> $named
      * @return array|mixed|object|null
      * @throws DiException|ReflectionException
      */
-    private function resolveParameter(ReflectionParameter $param, array &$args = [])
+    private function resolveParameter(ReflectionParameter $param, array &$args = [], array $named = [])
     {
         $type = null;
 
@@ -263,6 +266,10 @@ class DiContainer
         if ($type !== null && $this->instantiable($type)) {
             /** @var class-string $type */
             return $this->create($type);
+        }
+
+        if (array_key_exists($param->getName(), $named)) {
+            return $named[$param->getName()];
         }
 
         if ($type === 'array') {

@@ -280,6 +280,58 @@ class DiContainerTest extends AppTestCase
         $this->assertInstanceOf(DummyService::class, $params[0]);
     }
 
+    public function testAutowireBindsNamedValueByParameterName(): void
+    {
+        $callback = function (?string $lang, string $uuid): void {
+        };
+
+        $params = $this->container->autowire($callback, ['abc'], ['lang' => 'en']);
+
+        $this->assertSame(['en', 'abc'], $params);
+    }
+
+    public function testAutowireNamedValueDoesNotDependOnParameterPosition(): void
+    {
+        $callback = function (string $uuid, ?string $lang): void {
+        };
+
+        $params = $this->container->autowire($callback, ['abc'], ['lang' => 'es']);
+
+        $this->assertSame(['abc', 'es'], $params);
+    }
+
+    public function testAutowireWithoutNamedValuesBindsPositionally(): void
+    {
+        $callback = function (?string $lang, string $uuid): void {
+        };
+
+        $params = $this->container->autowire($callback, ['en', 'abc']);
+
+        $this->assertSame(['en', 'abc'], $params);
+    }
+
+    public function testAutowireIgnoresNamedValueWhenNoParameterHasTheName(): void
+    {
+        $callback = function (string $uuid): void {
+        };
+
+        $params = $this->container->autowire($callback, ['abc'], ['lang' => 'en']);
+
+        $this->assertSame(['abc'], $params);
+    }
+
+    public function testAutowireNamedValueDoesNotReplaceClassTypedParameter(): void
+    {
+        $this->container->register(Request::class);
+
+        $callback = function (Request $request): void {
+        };
+
+        $params = $this->container->autowire($callback, [], ['request' => 'text']);
+
+        $this->assertInstanceOf(Request::class, $params[0]);
+    }
+
     public function testResetClearsAll(): void
     {
         $this->container->register(DummyService::class);
