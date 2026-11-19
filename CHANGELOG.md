@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog.
 
-## [Unreleased]
+## [3.1.2] - 2026-11-19
 
 ### Added
 - Added `RouteBuilder::patch()`, a route helper for the `PATCH` method next to `get()`, `post()`, `put()` and `delete()`. Routes declared with `add($path, 'PATCH', ...)` keep working (#653)
