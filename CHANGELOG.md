@@ -23,6 +23,7 @@ The format is based on Keep a Changelog.
 - The hierarchy flag of `Quantum\Config\Setup` is deprecated and will be removed in 3.2.0, when the fallback from a module's config file to `shared/config` will always be on: the `$hierarchical` constructor argument, `setHierarchy()` and `getHierarchy()`. Passing the argument or calling `setHierarchy()` raises `E_USER_DEPRECATED`; `getHierarchy()` is marked `@deprecated` only, because `Config` still calls it. The constructor argument is now `?bool` with `null` as the default, which means `true`; behavior is unchanged. To pass a module without the argument, use `new Setup($pathPrefix, $fileName, module: $module)` (#618)
 
 ### Fixed
+- `cacheable()` on a route or a group works again: it had no effect since 3.0.0. When the request is prepared, the route's setting overrides the global `resource_cache` switch for that route, so `cacheable(true)` caches the page when `resource_cache` is off and `cacheable(false)` does not cache it when `resource_cache` is on, and its TTL, when given, replaces `view_cache.ttl`. Routes without `cacheable()` follow `resource_cache` as before (#681)
 - `LangFactory::resolve()` returns the cached adapter before it detects the language, so `_t()` and `current_lang()` no longer repeat the query-parameter, URL-segment and `Accept-Language` checks on every call, and no longer throw `LangException::misconfiguredDefaultConfig()` when an adapter is already cached. No public signature changes (#654)
 
 ## [3.1.1] - 2026-11-03

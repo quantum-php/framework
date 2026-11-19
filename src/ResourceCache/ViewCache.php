@@ -44,7 +44,7 @@ class ViewCache
      */
     public function __construct()
     {
-        $this->isEnabled = config()->getBool('resource_cache');
+        $this->isEnabled = request()->getRouteCacheSettings()['enabled'] ?? config()->getBool('resource_cache');
 
         $this->fs = FileSystemFactory::get();
     }
@@ -60,7 +60,7 @@ class ViewCache
 
         $this->cacheDir = $this->getCacheDir();
 
-        $this->ttl = config()->getInt('view_cache.ttl', $this->ttl);
+        $this->ttl = request()->getRouteCacheSettings()['ttl'] ?? config()->getInt('view_cache.ttl', $this->ttl);
 
         $this->minification = config()->getBool('view_cache.minify', $this->minification);
 
