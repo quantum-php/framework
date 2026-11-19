@@ -117,7 +117,7 @@ All contributions must also pass **PHPStan** (static analysis), **PHP-CS-Fixer**
 
 ## Code Guidelines
 
-- PHP 8.0+ compatibility is required.  
+- PHP 8.2+ compatibility is required.  
 - Keep class responsibilities clear — avoid bloated classes.  
 - Follow the existing directory structure
 - Always document public methods.  

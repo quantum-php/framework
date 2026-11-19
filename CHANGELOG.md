@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog.
 
+## [Unreleased]
+
+### Changed
+- **BREAKING:** PHP 8.2 or newer is required: `composer.json` requires `php` `^8.2`, and CI tests PHP 8.2, 8.3 and 8.4. Applications on PHP 8.1 stay on 3.1.x. `Pipeline`, `MatchedRoute` and `RouteFinder` are `readonly` classes now; they are `final`, so nothing changes for applications (#687)
+
 ## [3.1.2] - 2026-11-19
 
 ### Added
