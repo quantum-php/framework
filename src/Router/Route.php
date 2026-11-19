@@ -60,7 +60,7 @@ final class Route
     protected ?string $prefix = null;
 
     /**
-     * @var array<string, mixed>|null
+     * @var array{enabled: bool, ttl: int|null}|null
      */
     protected ?array $cache = null;
 
@@ -136,7 +136,7 @@ final class Route
 
     /**
      * Return caching configuration for this route.
-     * @return array<string, mixed>|null
+     * @return array{enabled: bool, ttl: int|null}|null
      */
     public function getCache(): ?array
     {

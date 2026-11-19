@@ -177,4 +177,59 @@ HEREDOC;
         );
     }
 
+    public function testViewCacheFollowsResourceCacheForRouteWithoutCacheSetting(): void
+    {
+        config()->set('resource_cache', true);
+
+        $this->matchRoute();
+
+        $this->assertTrue((new ViewCache())->isEnabled());
+    }
+
+    public function testViewCacheIsEnabledForCacheableRoute(): void
+    {
+        $this->matchRoute(true);
+
+        $this->assertTrue((new ViewCache())->isEnabled());
+    }
+
+    public function testViewCacheIsDisabledForRouteNotCacheable(): void
+    {
+        config()->set('resource_cache', true);
+
+        $this->matchRoute(false);
+
+        $this->assertFalse((new ViewCache())->isEnabled());
+    }
+
+    public function testViewCacheUsesTheTtlOfCacheableRoute(): void
+    {
+        $this->matchRoute(true, 60);
+
+        $viewCache = new ViewCache();
+        $viewCache->setup();
+
+        $this->assertSame(60, $this->getPrivateProperty($viewCache, 'ttl'));
+    }
+
+    public function testViewCacheUsesTheConfigTtlWhenRouteHasNone(): void
+    {
+        $this->matchRoute(true);
+
+        $viewCache = new ViewCache();
+        $viewCache->setup();
+
+        $this->assertSame(300, $this->getPrivateProperty($viewCache, 'ttl'));
+    }
+
+    private function matchRoute(?bool $cacheEnabled = null, ?int $ttl = null): void
+    {
+        $route = new Route(['GET'], '/current-route', 'TestController', 'tests');
+
+        if ($cacheEnabled !== null) {
+            $route->cache($cacheEnabled, $ttl);
+        }
+
+        request()->setMatchedRoute(new MatchedRoute($route, []));
+    }
 }

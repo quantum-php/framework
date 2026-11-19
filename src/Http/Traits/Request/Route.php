@@ -91,7 +91,7 @@ trait Route
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @return array{enabled: bool, ttl: int|null}|null
      */
     public function getRouteCacheSettings(): ?array
     {
