@@ -33,7 +33,7 @@
         "ext-bcmath": "*",
         "j4mie/paris": "^1.5",
         "firebase/php-jwt": "^7.0",
-        "gumlet/php-image-resize": "^2.0",
+        "gumlet/php-image-resize": "^3.0",
         "symfony/var-dumper": "^6.4",
         "symfony/var-exporter": "^6.4",
         "symfony/console": "^6.4",
