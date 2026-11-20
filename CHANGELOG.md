@@ -10,6 +10,7 @@ The format is based on Keep a Changelog.
 - **BREAKING:** PHP 8.2 or newer is required: `composer.json` requires `php` `^8.2`, and CI tests PHP 8.2, 8.3 and 8.4. Applications on PHP 8.1 stay on 3.1.x. `Pipeline`, `MatchedRoute` and `RouteFinder` are `readonly` classes now; they are `final`, so nothing changes for applications (#687)
 - `composer.json` requires `psr/log` `^3.0` (it allowed `^2.0`), `firebase/php-jwt` `^7.0` (it allowed `^6.0`) and, for development, `mockery/mockery` `^1.6`. An application whose own `composer.json` pins `psr/log` 2 or `firebase/php-jwt` 6 must allow the newer major (#687)
 - **BREAKING:** `gumlet/php-image-resize` is updated to 3.0. `UploadedFile::modify()` works as before, numbers given as text included. The library's methods are typed now, so an application that calls `Gumlet\ImageResize` itself with values of the wrong type gets a `TypeError`. Installing the framework now requires the `gd` PHP extension, which the library always used (#687)
+- `vaibhavpandeyvpz/phemail`, which `MailTrap` uses to read saved emails, is updated to 2.0. Its API is unchanged, and `MailTrap` behaves as before (#687)
 
 ## [3.1.2] - 2026-11-19
 
