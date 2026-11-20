@@ -198,4 +198,15 @@ class FileAdapterTest extends AppTestCase
 
         $this->assertFalse($this->fileCache->has('test2'));
     }
+
+    public function testFileAdapterMultipleMethodsAcceptNumericKeys(): void
+    {
+        $this->assertTrue($this->fileCache->setMultiple(['1' => 'Value one', '2' => 'Value two']));
+
+        $this->assertSame([1 => 'Value one', 2 => 'Value two'], $this->fileCache->getMultiple([1, 2]));
+
+        $this->assertTrue($this->fileCache->deleteMultiple([1, 2]));
+
+        $this->assertFalse($this->fileCache->has('1'));
+    }
 }

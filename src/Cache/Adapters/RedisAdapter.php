@@ -69,7 +69,7 @@ class RedisAdapter implements CacheInterface
         $result = [];
 
         foreach ($keys as $key) {
-            $result[$key] = $this->get($key, $default);
+            $result[$key] = $this->get((string) $key, $default);
         }
 
         return $result;
@@ -116,7 +116,7 @@ class RedisAdapter implements CacheInterface
         $results = [];
 
         foreach ($values as $key => $value) {
-            $results[] = $this->set($key, $value, $ttl);
+            $results[] = $this->set((string) $key, $value, $ttl);
         }
 
         return !in_array(false, $results, true);
@@ -139,7 +139,7 @@ class RedisAdapter implements CacheInterface
         $results = [];
 
         foreach ($keys as $key) {
-            $results[] = $this->delete($key);
+            $results[] = $this->delete((string) $key);
         }
 
         return !in_array(false, $results, true);

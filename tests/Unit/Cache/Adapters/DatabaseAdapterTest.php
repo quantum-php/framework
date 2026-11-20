@@ -221,4 +221,15 @@ class DatabaseAdapterTest extends AppTestCase
 
         $this->assertFalse($this->databaseCache->has('test2'));
     }
+
+    public function testDatabaseAdapterMultipleMethodsAcceptNumericKeys(): void
+    {
+        $this->assertTrue($this->databaseCache->setMultiple(['1' => 'Value one', '2' => 'Value two']));
+
+        $this->assertSame([1 => 'Value one', 2 => 'Value two'], $this->databaseCache->getMultiple([1, 2]));
+
+        $this->assertTrue($this->databaseCache->deleteMultiple([1, 2]));
+
+        $this->assertFalse($this->databaseCache->has('1'));
+    }
 }
