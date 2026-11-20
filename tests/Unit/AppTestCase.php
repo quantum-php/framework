@@ -29,7 +29,7 @@ abstract class AppTestCase extends TestCase
 
     public function setUp(): void
     {
-        AppFactory::create(AppType::WEB, PROJECT_ROOT);
+        AppFactory::create(AppType::WEB, $this->appBaseDir());
 
         environment()->setMutable(true);
 
@@ -60,9 +60,17 @@ abstract class AppTestCase extends TestCase
         restore_exception_handler();
     }
 
+    /**
+     * The folder of the test app the tests boot on
+     */
+    protected function appBaseDir(): string
+    {
+        return PROJECT_ROOT;
+    }
+
     protected function createContext(string $type = AppType::WEB): AppContext
     {
-        $context = new AppContext(PROJECT_ROOT, new DiContainer(), $type);
+        $context = new AppContext($this->appBaseDir(), new DiContainer(), $type);
         App::setContext($context);
 
         return $context;

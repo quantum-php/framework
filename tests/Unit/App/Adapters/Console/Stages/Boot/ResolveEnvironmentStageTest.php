@@ -5,12 +5,21 @@ namespace Quantum\Tests\Unit\App\Adapters\Console\Stages\Boot;
 use Quantum\Tests\Unit\App\Adapters\Console\Stages\ConsoleStageTestCase;
 use Quantum\App\Adapters\Console\Stages\Boot\ResolveEnvironmentStage;
 use Quantum\Environment\Exceptions\EnvException;
+use Quantum\Tests\Helpers\UsesTemporaryAppRoot;
 use Dotenv\Exception\InvalidFileException;
 use Symfony\Component\Console\Application;
 use Quantum\Console\CliCommand;
 
 class ResolveEnvironmentStageTest extends ConsoleStageTestCase
 {
+    use UsesTemporaryAppRoot;
+
+    public function tearDown(): void
+    {
+        parent::tearDown();
+        $this->removeTemporaryAppRoot();
+    }
+
     public function testResolveEnvironmentStageDoesNothingWhenTheEnvFileLoads(): void
     {
         $context = $this->createConsoleContext(['command' => 'needs:env'], $this->createApplication());
@@ -110,6 +119,14 @@ class ResolveEnvironmentStageTest extends ConsoleStageTestCase
         ];
     }
 
+    public function testHidingTheEnvironmentFileLeavesTheSharedTestAppUntouched(): void
+    {
+        $this->withoutEnvironmentFile(function (): void {
+            $this->assertFileDoesNotExist(base_dir() . DS . '.env.testing');
+            $this->assertFileExists(PROJECT_ROOT . DS . '.env.testing');
+        });
+    }
+
     /**
      * An application with a CliCommand that requires the environment and one that does not
      */
@@ -141,7 +158,7 @@ class ResolveEnvironmentStageTest extends ConsoleStageTestCase
      */
     private function withoutEnvironmentFile(callable $test): void
     {
-        $file = PROJECT_ROOT . DS . '.env.testing';
+        $file = $this->appBaseDir() . DS . '.env.testing';
         $hidden = $file . '.hidden';
 
         $this->assertTrue(rename($file, $hidden));
@@ -158,7 +175,7 @@ class ResolveEnvironmentStageTest extends ConsoleStageTestCase
      */
     private function withEnvironmentFileContent(string $content, callable $test): void
     {
-        $file = PROJECT_ROOT . DS . '.env.testing';
+        $file = $this->appBaseDir() . DS . '.env.testing';
         $backup = $file . '.backup';
 
         $this->assertTrue(rename($file, $backup));
