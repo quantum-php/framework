@@ -74,16 +74,16 @@ abstract class AppTestCase extends TestCase
      * Removes the error and exception handlers that Quantum\Tracer\ErrorHandler registered,
      * one pair per boot, and stops at the first handler that is not Quantum's
      */
-    protected function removeFrameworkErrorHandlers(): void
+    public static function removeFrameworkErrorHandlers(): void
     {
-        while ($this->isFrameworkHandler(set_error_handler(static fn (): bool => false))) {
+        while (self::isFrameworkHandler(set_error_handler(static fn (): bool => false))) {
             restore_error_handler();
             restore_error_handler();
         }
 
         restore_error_handler();
 
-        while ($this->isFrameworkHandler(set_exception_handler(static function (): void {
+        while (self::isFrameworkHandler(set_exception_handler(static function (): void {
         }))) {
             restore_exception_handler();
             restore_exception_handler();
@@ -92,7 +92,7 @@ abstract class AppTestCase extends TestCase
         restore_exception_handler();
     }
 
-    private function isFrameworkHandler(mixed $handler): bool
+    private static function isFrameworkHandler(mixed $handler): bool
     {
         return $handler instanceof Closure && (new ReflectionFunction($handler))->getClosureThis() instanceof ErrorHandler;
     }
