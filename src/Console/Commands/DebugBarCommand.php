@@ -55,7 +55,9 @@ class DebugBarCommand extends CliCommand
 
         $publicDebugBarFolderPath = assets_dir() . DS . 'DebugBar' . DS . 'Resources';
 
-        if ($fs->exists($publicDebugBarFolderPath . DS . 'dist' . DS . 'debugbar.min.js')) {
+        $distPath = $publicDebugBarFolderPath . DS . 'dist';
+
+        if ($fs->exists($distPath . DS . 'debugbar.min.js') && $fs->exists($distPath . DS . 'debugbar.min.css')) {
             $this->error('The debug ber already installed');
             return;
         }

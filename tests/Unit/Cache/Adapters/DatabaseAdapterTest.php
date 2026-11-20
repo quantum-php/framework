@@ -7,6 +7,7 @@ use Quantum\Cache\Adapters\DatabaseAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Config\Setup;
 use DateInterval;
+use TypeError;
 
 class DatabaseAdapterTest extends AppTestCase
 {
@@ -233,5 +234,17 @@ class DatabaseAdapterTest extends AppTestCase
         $this->assertTrue($this->databaseCache->deleteMultiple([1, 2]));
 
         $this->assertFalse($this->databaseCache->has('1'));
+    }
+    public function testDatabaseAdapterDeleteMultipleRejectsKeysThatAreNotStringsOrIntegers(): void
+    {
+        $this->databaseCache->set('1', 'Value one');
+
+        try {
+            $this->databaseCache->deleteMultiple([true]);
+            $this->fail('A boolean key was accepted');
+        } catch (TypeError) {
+        }
+
+        $this->assertTrue($this->databaseCache->has('1'));
     }
 }

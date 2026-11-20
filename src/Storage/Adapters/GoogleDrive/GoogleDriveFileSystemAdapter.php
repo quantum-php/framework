@@ -204,7 +204,7 @@ class GoogleDriveFileSystemAdapter implements FilesystemAdapterInterface
         try {
             $meta = (array) $this->googleDriveApp->getFileInfo($filename);
 
-            return ($meta['kind'] ?? null) === GoogleDriveApp::DRIVE_FILE_KIND && ($meta['mimeType'] ?? null) != GoogleDriveApp::FOLDER_MIMETYPE;
+            return ($meta['kind'] ?? null) === GoogleDriveApp::DRIVE_FILE_KIND && isset($meta['mimeType']) && $meta['mimeType'] != GoogleDriveApp::FOLDER_MIMETYPE;
         } catch (Exception) {
             return false;
         }

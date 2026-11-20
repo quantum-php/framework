@@ -84,7 +84,7 @@ class FileAdapter implements CacheInterface
         $result = [];
 
         foreach ($keys as $key) {
-            $result[$key] = $this->get((string) $key, $default);
+            $result[$key] = $this->get(is_int($key) ? (string) $key : $key, $default);
         }
 
         return $result;
@@ -134,7 +134,7 @@ class FileAdapter implements CacheInterface
         $results = [];
 
         foreach ($values as $key => $value) {
-            $results[] = $this->set((string) $key, $value, $ttl);
+            $results[] = $this->set(is_int($key) ? (string) $key : $key, $value, $ttl);
         }
 
         return !in_array(false, $results, true);
@@ -163,7 +163,7 @@ class FileAdapter implements CacheInterface
         $results = [];
 
         foreach ($keys as $key) {
-            $results[] = $this->delete((string) $key);
+            $results[] = $this->delete(is_int($key) ? (string) $key : $key);
         }
 
         return !in_array(false, $results, true);

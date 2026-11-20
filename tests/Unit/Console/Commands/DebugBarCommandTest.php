@@ -28,6 +28,7 @@ class DebugBarCommandTest extends AppTestCase
         mkdir($this->sourceDir . DS . 'dist', 0777, true);
         file_put_contents($this->sourceDir . DS . 'debugbar.css', '/* 3.x */');
         file_put_contents($this->sourceDir . DS . 'dist' . DS . 'debugbar.min.js', '/* 3.x */');
+        file_put_contents($this->sourceDir . DS . 'dist' . DS . 'debugbar.min.css', '/* 3.x */');
 
         $this->setPrivateProperty($this->command, 'vendorDebugBarFolderPath', $this->sourceDir);
     }
@@ -53,11 +54,25 @@ class DebugBarCommandTest extends AppTestCase
 
         mkdir($distPath, 0777, true);
         file_put_contents($distPath . DS . 'debugbar.min.js', '/* installed */');
+        file_put_contents($distPath . DS . 'debugbar.min.css', '/* installed */');
 
         $this->tester->execute([]);
 
         $this->assertStringContainsString('already installed', $this->tester->getDisplay());
         $this->assertStringEqualsFile($distPath . DS . 'debugbar.min.js', '/* installed */');
+    }
+
+    public function testExecPublishesAgainWhenOnlyPartOfTheBundleIsInstalled(): void
+    {
+        $distPath = assets_dir() . DS . 'DebugBar' . DS . 'Resources' . DS . 'dist';
+
+        mkdir($distPath, 0777, true);
+        file_put_contents($distPath . DS . 'debugbar.min.js', '/* interrupted */');
+
+        $this->tester->execute([]);
+
+        $this->assertStringContainsString('successfully published', $this->tester->getDisplay());
+        $this->assertFileExists($distPath . DS . 'debugbar.min.css');
     }
 
     public function testExecPublishesOverTheFilesOfDebugBar2(): void

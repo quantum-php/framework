@@ -5,6 +5,7 @@ namespace Quantum\Tests\Unit\Cache\Adapters;
 use Quantum\Cache\Adapters\FileAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use DateInterval;
+use TypeError;
 
 class FileAdapterTest extends AppTestCase
 {
@@ -210,5 +211,17 @@ class FileAdapterTest extends AppTestCase
         $this->assertTrue($this->fileCache->deleteMultiple([1, 2]));
 
         $this->assertFalse($this->fileCache->has('1'));
+    }
+    public function testFileAdapterDeleteMultipleRejectsKeysThatAreNotStringsOrIntegers(): void
+    {
+        $this->fileCache->set('1', 'Value one');
+
+        try {
+            $this->fileCache->deleteMultiple([true]);
+            $this->fail('A boolean key was accepted');
+        } catch (TypeError) {
+        }
+
+        $this->assertTrue($this->fileCache->has('1'));
     }
 }
