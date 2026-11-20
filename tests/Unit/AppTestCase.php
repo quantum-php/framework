@@ -5,6 +5,7 @@ namespace Quantum\Tests\Unit;
 use Quantum\Storage\Factories\FileSystemFactory;
 use Quantum\App\Factories\AppFactory;
 use Quantum\Router\MatchedRoute;
+use Quantum\Tracer\ErrorHandler;
 use Quantum\Storage\FileSystem;
 use PHPUnit\Framework\TestCase;
 use Quantum\Debugger\Debugger;
@@ -14,11 +15,13 @@ use Quantum\App\AppContext;
 use Quantum\Config\Config;
 use Quantum\Router\Route;
 use Quantum\Http\Response;
+use ReflectionFunction;
 use ReflectionClass;
 use ReflectionMethod;
 use Quantum\App\App;
 use Quantum\Di\Di;
 use ReflectionProperty;
+use Closure;
 
 abstract class AppTestCase extends TestCase
 {
@@ -56,8 +59,42 @@ abstract class AppTestCase extends TestCase
 
         $this->clearAppContext();
 
+        $this->removeFrameworkErrorHandlers();
+    }
+
+    /**
+     * Runs after every passing test, also in classes whose tearDown() does not call this one
+     */
+    protected function assertPostConditions(): void
+    {
+        $this->removeFrameworkErrorHandlers();
+    }
+
+    /**
+     * Removes the error and exception handlers that Quantum\Tracer\ErrorHandler registered,
+     * one pair per boot, and stops at the first handler that is not Quantum's
+     */
+    protected function removeFrameworkErrorHandlers(): void
+    {
+        while ($this->isFrameworkHandler(set_error_handler(static fn (): bool => false))) {
+            restore_error_handler();
+            restore_error_handler();
+        }
+
         restore_error_handler();
+
+        while ($this->isFrameworkHandler(set_exception_handler(static function (): void {
+        }))) {
+            restore_exception_handler();
+            restore_exception_handler();
+        }
+
         restore_exception_handler();
+    }
+
+    private function isFrameworkHandler(mixed $handler): bool
+    {
+        return $handler instanceof Closure && (new ReflectionFunction($handler))->getClosureThis() instanceof ErrorHandler;
     }
 
     /**
