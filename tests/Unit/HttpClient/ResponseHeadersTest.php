@@ -2,6 +2,7 @@
 
 namespace Quantum\Tests\Unit\HttpClient;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Quantum\HttpClient\ResponseHeaders;
 use Quantum\Tests\Unit\AppTestCase;
 use ReflectionMethod;
@@ -35,9 +36,7 @@ class ResponseHeadersTest extends AppTestCase
         $this->assertNull($headers['Content-Type']);
     }
 
-    /**
-     * @dataProvider interfaceMethodProvider
-     */
+    #[DataProvider('interfaceMethodProvider')]
     public function testResponseHeadersDeclaresTheReturnTypeOfItsInterfaceMethods(string $method): void
     {
         $this->assertTrue((new ReflectionMethod(ResponseHeaders::class, $method))->hasReturnType());

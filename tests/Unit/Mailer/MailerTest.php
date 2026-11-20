@@ -3,6 +3,7 @@
 namespace Quantum\Tests\Unit\Mailer;
 
 use Quantum\Mailer\Adapters\SendinblueAdapter;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Quantum\Mailer\Adapters\MandrillAdapter;
 use Quantum\Mailer\Adapters\SendgridAdapter;
 use Quantum\Mailer\Adapters\MailgunAdapter;
@@ -55,9 +56,7 @@ class MailerTest extends AppTestCase
         $mailer->callingInvalidMethod();
     }
 
-    /**
-     * @dataProvider httpAdapterProvider
-     */
+    #[DataProvider('httpAdapterProvider')]
     public function testHttpAdapterGetTransportErrorsReturnsArray(string $adapterClass, array $params): void
     {
         $adapter = new $adapterClass($params);

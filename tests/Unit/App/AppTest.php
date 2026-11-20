@@ -2,6 +2,7 @@
 
 namespace Quantum\Tests\Unit\App;
 
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use Quantum\App\Adapters\Console\ConsoleAppAdapter;
 use Quantum\App\Exceptions\AppException;
 use Quantum\App\Adapters\Web\WebAppAdapter;
@@ -9,10 +10,7 @@ use Quantum\App\Contracts\AppInterface;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\App\App;
 
-/**
- * @runInSeparateProcess
- * @preserveGlobalState disabled
- */
+#[PreserveGlobalState(false)]
 class AppTest extends AppTestCase
 {
     public function setUp(): void

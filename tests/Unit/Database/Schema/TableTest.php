@@ -2,6 +2,9 @@
 
 namespace Quantum\Tests\Unit\Database\Schema;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Quantum\Database\Enums\TableAction;
 use Quantum\Database\Schemas\Column;
 use Quantum\Database\Schemas\Table;
@@ -11,10 +14,8 @@ use PHPUnit\Framework\TestCase;
 use TypeError;
 use Mockery;
 
-/**
- * @runTestsInSeparateProcesses
- * @preserveGlobalState disabled
- */
+#[RunTestsInSeparateProcesses]
+#[PreserveGlobalState(false)]
 class TableTest extends TestCase
 {
     public function setUp(): void
@@ -177,9 +178,7 @@ class TableTest extends TestCase
         $this->assertEquals($expectedSql, $table->getSql());
     }
 
-    /**
-     * @dataProvider indexTypeProvider
-     */
+    #[DataProvider('indexTypeProvider')]
     public function testAddIndexOfEveryKey(Key $key, string $expectedSql): void
     {
         $table = new Table('test');

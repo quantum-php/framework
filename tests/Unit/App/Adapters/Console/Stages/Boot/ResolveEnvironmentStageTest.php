@@ -6,6 +6,7 @@ use Quantum\Tests\Unit\App\Adapters\Console\Stages\ConsoleStageTestCase;
 use Quantum\App\Adapters\Console\Stages\Boot\ResolveEnvironmentStage;
 use Quantum\Environment\Exceptions\EnvException;
 use Quantum\Tests\Helpers\UsesTemporaryAppRoot;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Dotenv\Exception\InvalidFileException;
 use Symfony\Component\Console\Application;
 use Quantum\Console\CliCommand;
@@ -29,9 +30,7 @@ class ResolveEnvironmentStageTest extends ConsoleStageTestCase
         $this->assertFalse($context->isStopped());
     }
 
-    /**
-     * @dataProvider commandsThatRunWithoutTheEnvironment
-     */
+    #[DataProvider('commandsThatRunWithoutTheEnvironment')]
     public function testResolveEnvironmentStageStopsTheBootWhenTheEnvFileIsMissing(string $commandName): void
     {
         $context = $this->createConsoleContext(['command' => $commandName], $this->createApplication());
@@ -43,9 +42,7 @@ class ResolveEnvironmentStageTest extends ConsoleStageTestCase
         $this->assertTrue($context->isStopped());
     }
 
-    /**
-     * @dataProvider commandsThatRunWithoutTheEnvironment
-     */
+    #[DataProvider('commandsThatRunWithoutTheEnvironment')]
     public function testResolveEnvironmentStageStopsTheBootWhenTheEnvFileIsMalformed(string $commandName): void
     {
         $context = $this->createConsoleContext(['command' => $commandName], $this->createApplication());
@@ -58,9 +55,9 @@ class ResolveEnvironmentStageTest extends ConsoleStageTestCase
     }
 
     /**
-     * @dataProvider inputsThatNeedTheEnvironment
      * @param array<string, string> $input
      */
+    #[DataProvider('inputsThatNeedTheEnvironment')]
     public function testResolveEnvironmentStageThrowsTheEnvExceptionWhenTheEnvFileIsMissing(array $input): void
     {
         $context = $this->createConsoleContext($input, $this->createApplication());
@@ -77,9 +74,9 @@ class ResolveEnvironmentStageTest extends ConsoleStageTestCase
     }
 
     /**
-     * @dataProvider inputsThatNeedTheEnvironment
      * @param array<string, string> $input
      */
+    #[DataProvider('inputsThatNeedTheEnvironment')]
     public function testResolveEnvironmentStageThrowsTheParseExceptionWhenTheEnvFileIsMalformed(array $input): void
     {
         $context = $this->createConsoleContext($input, $this->createApplication());

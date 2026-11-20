@@ -4,6 +4,7 @@ namespace Quantum\Tests\Unit\Environment;
 
 use Quantum\Environment\Contracts\EnvironmentInterface;
 use Quantum\Environment\Exceptions\EnvException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Quantum\Environment\Environment;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\App\AppContext;
@@ -143,9 +144,7 @@ class EnvironmentTest extends AppTestCase
         $this->assertSame(25, $this->env->getInt('NON_EXISTING_KEY', 25));
     }
 
-    /**
-     * @dataProvider invalidIntProvider
-     */
+    #[DataProvider('invalidIntProvider')]
     public function testEnvironmentGetIntThrowsForInvalidNumber(string $value): void
     {
         $this->setEnvValues(['MAIL_PORT' => $value]);
