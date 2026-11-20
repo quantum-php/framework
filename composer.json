@@ -45,7 +45,7 @@
         "rakibtg/sleekdb": "^2.13",
         "swagger-api/swagger-ui": "^5.32",
         "zircote/swagger-php": "^5.8",
-        "psr/simple-cache": "^1.0",
+        "psr/simple-cache": "^3.0",
         "vaibhavpandeyvpz/phemail": "^2.0",
         "voku/html-min": "^5.0",
         "league/commonmark": "^2.0",

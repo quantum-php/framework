@@ -10,11 +10,10 @@ declare(strict_types=1);
 
 namespace Quantum\Cache\Adapters;
 
-use Quantum\Cache\Enums\ExceptionMessages;
 use Quantum\Cache\Traits\CacheTrait;
 use Psr\SimpleCache\CacheInterface;
-use InvalidArgumentException;
 use RedisException;
+use DateInterval;
 use Throwable;
 use Redis;
 
@@ -44,7 +43,7 @@ class RedisAdapter implements CacheInterface
     /**
      * @inheritDoc
      */
-    public function get($key, $default = null)
+    public function get(string $key, mixed $default = null): mixed
     {
         if ($this->has($key)) {
             $cacheItem = $this->redis->get($this->keyHash($key));
@@ -62,19 +61,11 @@ class RedisAdapter implements CacheInterface
 
     /**
      * @inheritDoc
-     * @throws InvalidArgumentException
      * @param iterable<string> $keys
      * @return iterable<string, mixed>
      */
-    public function getMultiple($keys, $default = null)
+    public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
-        if (!is_array($keys)) {
-            throw new InvalidArgumentException(
-                _message(ExceptionMessages::ARGUMENT_NOT_ITERABLE, '$keys'),
-                E_WARNING
-            );
-        }
-
         $result = [];
 
         foreach ($keys as $key) {
@@ -87,7 +78,7 @@ class RedisAdapter implements CacheInterface
     /**
      * @inheritDoc
      */
-    public function has($key): bool
+    public function has(string $key): bool
     {
         $cacheItem = $this->redis->get($this->keyHash($key));
         return (bool) $cacheItem;
@@ -97,7 +88,7 @@ class RedisAdapter implements CacheInterface
      * @inheritDoc
      * @throws RedisException
      */
-    public function set($key, $value, $ttl = null): bool
+    public function set(string $key, mixed $value, null|int|DateInterval $ttl = null): bool
     {
         $ttl = $this->normalizeTtl($ttl);
         $key = $this->keyHash($key);
@@ -118,18 +109,10 @@ class RedisAdapter implements CacheInterface
     /**
      * @inheritDoc
      * @throws RedisException
-     * @throws InvalidArgumentException
      * @param iterable<string, mixed> $values
      */
-    public function setMultiple($values, $ttl = null): bool
+    public function setMultiple(iterable $values, null|int|DateInterval $ttl = null): bool
     {
-        if (!is_array($values)) {
-            throw new InvalidArgumentException(
-                _message(ExceptionMessages::ARGUMENT_NOT_ITERABLE, '$values'),
-                E_WARNING
-            );
-        }
-
         $results = [];
 
         foreach ($values as $key => $value) {
@@ -142,25 +125,17 @@ class RedisAdapter implements CacheInterface
     /**
      * @inheritDoc
      */
-    public function delete($key): bool
+    public function delete(string $key): bool
     {
         return (bool) $this->redis->del($this->keyHash($key));
     }
 
     /**
      * @inheritDoc
-     * @throws InvalidArgumentException
      * @param iterable<string> $keys
      */
-    public function deleteMultiple($keys): bool
+    public function deleteMultiple(iterable $keys): bool
     {
-        if (!is_array($keys)) {
-            throw new InvalidArgumentException(
-                _message(ExceptionMessages::ARGUMENT_NOT_ITERABLE, '$keys'),
-                E_WARNING
-            );
-        }
-
         $results = [];
 
         foreach ($keys as $key) {

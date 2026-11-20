@@ -200,4 +200,25 @@ class DatabaseAdapterTest extends AppTestCase
         $this->assertEquals('Long TTL', $this->databaseCache->get('long'));
     }
 
+    public function testDatabaseAdapterMultipleMethodsAcceptAnyIterable(): void
+    {
+        $this->assertTrue($this->databaseCache->setMultiple((function () {
+            yield 'test1' => 'Test value one';
+            yield 'test2' => 'Test value two';
+        })()));
+
+        $this->assertSame(
+            ['test1' => 'Test value one', 'test2' => 'Test value two'],
+            $this->databaseCache->getMultiple((function () {
+                yield 'test1';
+                yield 'test2';
+            })())
+        );
+
+        $this->assertTrue($this->databaseCache->deleteMultiple(new \ArrayIterator(['test1', 'test2'])));
+
+        $this->assertFalse($this->databaseCache->has('test1'));
+
+        $this->assertFalse($this->databaseCache->has('test2'));
+    }
 }

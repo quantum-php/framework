@@ -177,4 +177,25 @@ class FileAdapterTest extends AppTestCase
         $this->assertEquals('Long TTL', $this->fileCache->get('long'));
     }
 
+    public function testFileAdapterMultipleMethodsAcceptAnyIterable(): void
+    {
+        $this->assertTrue($this->fileCache->setMultiple((function () {
+            yield 'test1' => 'Test value one';
+            yield 'test2' => 'Test value two';
+        })()));
+
+        $this->assertSame(
+            ['test1' => 'Test value one', 'test2' => 'Test value two'],
+            $this->fileCache->getMultiple((function () {
+                yield 'test1';
+                yield 'test2';
+            })())
+        );
+
+        $this->assertTrue($this->fileCache->deleteMultiple(new \ArrayIterator(['test1', 'test2'])));
+
+        $this->assertFalse($this->fileCache->has('test1'));
+
+        $this->assertFalse($this->fileCache->has('test2'));
+    }
 }
