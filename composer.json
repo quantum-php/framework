@@ -39,7 +39,7 @@
         "symfony/console": "^7.4",
         "vlucas/phpdotenv": "^5.0",
         "dflydev/dot-access-data": "^3.0",
-        "php-debugbar/php-debugbar": "^2.2",
+        "php-debugbar/php-debugbar": "^3.8",
         "phpmailer/phpmailer": "^7.1",
         "psr/log": "^3.0",
         "rakibtg/sleekdb": "^2.13",

@@ -48,7 +48,7 @@ class DebugBarCommand extends CliCommand
     /**
      * Path to vendor debug bar resources
      */
-    private string $vendorDebugBarFolderPath = 'vendor/php-debugbar/php-debugbar/src/DebugBar/Resources';
+    private string $vendorDebugBarFolderPath = 'vendor/php-debugbar/php-debugbar/resources';
 
     /**
      * Executes the command and publishes the debug bar assets

@@ -74,4 +74,12 @@ class DebugBarCommandTest extends AppTestCase
         @rmdir($nestedSourceDir);
         @rmdir($sourceDir);
     }
+
+    public function testVendorAssetsPathPointsToTheInstalledDebugBarResources(): void
+    {
+        $vendorPath = $this->getPrivateProperty($this->command, 'vendorDebugBarFolderPath');
+
+        $this->assertFileExists(dirname(__DIR__, 4) . DS . $vendorPath . DS . 'debugbar.css');
+        $this->assertFileExists(dirname(__DIR__, 4) . DS . $vendorPath . DS . 'debugbar.js');
+    }
 }
