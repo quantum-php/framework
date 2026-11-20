@@ -118,7 +118,7 @@ class ResolveEnvironmentStageTest extends ConsoleStageTestCase
         $application = new Application();
 
         foreach (['needs:env' => true, 'no:env' => false] as $commandName => $requiresEnvironment) {
-            $application->add(new class ($commandName, $requiresEnvironment) extends CliCommand {
+            $application->addCommand(new class ($commandName, $requiresEnvironment) extends CliCommand {
                 public function __construct(string $commandName, bool $requiresEnvironment)
                 {
                     $this->name = $commandName;
