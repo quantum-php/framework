@@ -20,6 +20,7 @@ class AppTest extends AppTestCase
 
     public function tearDown(): void
     {
+        $this->removeFrameworkErrorHandlers();
         config()->flush();
         $this->clearAppContext();
     }

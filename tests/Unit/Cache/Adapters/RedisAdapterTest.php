@@ -27,6 +27,8 @@ class RedisAdapterTest extends AppTestCase
     public function tearDown(): void
     {
         $this->redis->clear();
+
+        parent::tearDown();
     }
 
     public function testRedisAdapterConnectsWithThePortAsText(): void

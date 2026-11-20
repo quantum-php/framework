@@ -63,14 +63,6 @@ abstract class AppTestCase extends TestCase
     }
 
     /**
-     * Runs after every passing test, also in classes whose tearDown() does not call this one
-     */
-    protected function assertPostConditions(): void
-    {
-        $this->removeFrameworkErrorHandlers();
-    }
-
-    /**
      * Removes the error and exception handlers that Quantum\Tracer\ErrorHandler registered,
      * one pair per boot, and stops at the first handler that is not Quantum's
      */

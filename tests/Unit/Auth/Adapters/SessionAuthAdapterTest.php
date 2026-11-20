@@ -43,6 +43,8 @@ class SessionAuthAdapterTest extends AuthTestCase
         self::$users = [];
 
         $this->sessionAuth->signout();
+
+        parent::tearDown();
     }
 
     public function testWebAdapterConstructor(): void

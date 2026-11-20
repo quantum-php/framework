@@ -28,6 +28,7 @@ class WebAppAdapterTest extends AppTestCase
 
     public function tearDown(): void
     {
+        $this->removeFrameworkErrorHandlers();
         if (Di::isRegistered(Debugger::class)) {
             Di::get(Debugger::class)->resetStore();
         }

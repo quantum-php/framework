@@ -38,6 +38,8 @@ class DatabaseAdapterTest extends AppTestCase
         $this->databaseCache->clear();
 
         SleekDbal::disconnect();
+
+        parent::tearDown();
     }
 
     public function testDatabaseAdapterSetGetDelete(): void

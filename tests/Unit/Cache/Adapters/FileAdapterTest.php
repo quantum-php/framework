@@ -26,6 +26,8 @@ class FileAdapterTest extends AppTestCase
     public function tearDown(): void
     {
         $this->fileCache->clear();
+
+        parent::tearDown();
     }
 
     public function testFileAdapterSetGetDelete(): void

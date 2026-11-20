@@ -56,6 +56,8 @@ namespace Quantum\Tests\Unit\Service\Factories {
         public function tearDown(): void
         {
             TestService::$count = 0;
+
+            parent::tearDown();
         }
 
         public function testServiceFactoryGetInstance(): void
@@ -71,11 +73,11 @@ namespace Quantum\Tests\Unit\Service\Factories {
         {
             $testServiceOne = ServiceFactory::get(TestService::class);
 
-            $this->assertEquals(0, TestService::$count);
+            $this->assertEquals(1, TestService::$count);
 
             $testServiceTwo = ServiceFactory::get(TestService::class);
 
-            $this->assertEquals(0, TestService::$count);
+            $this->assertEquals(1, TestService::$count);
 
             $this->assertSame($testServiceOne, $testServiceTwo);
         }

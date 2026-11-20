@@ -26,6 +26,8 @@ class ZipAdapterTest extends AppTestCase
         if ($this->fs->exists($this->archiveName)) {
             $this->fs->remove($this->archiveName);
         }
+
+        parent::tearDown();
     }
 
     public function testAddEmptyDirToZip(): void

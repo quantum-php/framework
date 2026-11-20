@@ -31,6 +31,8 @@ class GeneralRuleTest extends AppTestCase
     public function tearDown(): void
     {
         Database::execute('DROP TABLE IF EXISTS users');
+
+        parent::tearDown();
     }
 
     public function testRuleRequired(): void

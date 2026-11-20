@@ -32,6 +32,8 @@ class HcaptchaAdapterTest extends AppTestCase
     {
         asset()->flush();
         Mockery::close();
+
+        parent::tearDown();
     }
 
     public function testHcaptchaAdapterInstance(): void

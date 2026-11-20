@@ -33,6 +33,8 @@ class UploadStorageTest extends AppTestCase
         if (file_exists($this->targetFile)) {
             unlink($this->targetFile);
         }
+
+        parent::tearDown();
     }
 
     public function testStoreCopiesFileWhenNotUploaded(): void

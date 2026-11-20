@@ -40,6 +40,8 @@ class ViewTest extends AppTestCase
         $this->view->setLayout(null);
 
         $this->view->flushParams();
+
+        parent::tearDown();
     }
 
     public function testSetGetLayout(): void

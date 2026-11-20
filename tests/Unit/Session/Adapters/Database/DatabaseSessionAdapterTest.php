@@ -30,6 +30,8 @@ class DatabaseSessionAdapterTest extends AppTestCase
         session_write_close();
 
         ModelFactory::createDynamicModel('sessions')->deleteMany();
+
+        parent::tearDown();
     }
 
     public function testDatabaseSessionConstructor(): void

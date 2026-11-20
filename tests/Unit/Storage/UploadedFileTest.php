@@ -36,6 +36,8 @@ class UploadedFileTest extends AppTestCase
         if (file_exists(base_dir() . DS . 'foo.txt')) {
             unlink(base_dir() . DS . 'foo.txt');
         }
+
+        parent::tearDown();
     }
 
     public function testUploadedFileConstructor(): void

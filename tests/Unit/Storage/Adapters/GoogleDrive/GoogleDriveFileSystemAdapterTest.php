@@ -46,6 +46,8 @@ class GoogleDriveFileSystemAdapterTest extends AppTestCase
     public function tearDown(): void
     {
         self::$response = [];
+
+        parent::tearDown();
     }
 
     public function testGoogleDriveMakeCheckRemoveDirectory(): void

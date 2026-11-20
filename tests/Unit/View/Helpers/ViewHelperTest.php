@@ -34,6 +34,8 @@ class ViewHelperTest extends AppTestCase
     public function tearDown(): void
     {
         $this->view->setLayout(null);
+
+        parent::tearDown();
     }
 
     public function testViewReturnsInstance(): void

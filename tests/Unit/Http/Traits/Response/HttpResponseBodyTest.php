@@ -14,6 +14,8 @@ class HttpResponseBodyTest extends AppTestCase
     public function tearDown(): void
     {
         response()->flush();
+
+        parent::tearDown();
     }
 
     public function testResponseSetHasGetAllDelete(): void

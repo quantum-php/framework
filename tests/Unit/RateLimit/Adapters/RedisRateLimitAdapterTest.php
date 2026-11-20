@@ -23,6 +23,8 @@ class RedisRateLimitAdapterTest extends AppTestCase
     public function tearDown(): void
     {
         $this->adapter->reset('k2');
+
+        parent::tearDown();
     }
 
     public function testRedisAdapterConnectsWithThePortAsText(): void
