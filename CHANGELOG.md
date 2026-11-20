@@ -16,6 +16,9 @@ The format is based on Keep a Changelog.
 - **BREAKING:** `zircote/swagger-php` is updated to 7.8. It removed the static `OpenApi\Generator::scan()`, so the OpenAPI command builds the spec with `(new Generator())->generate()`; the generated `spec.json` is unchanged and still declares OpenAPI 3.0.0. The attributes in the `DefaultApi` and `DemoApi` templates work as they are. An application that calls `Generator::scan()` itself must switch to `(new Generator())->generate()` (#687)
 - `vaibhavpandeyvpz/phemail`, which `MailTrap` uses to read saved emails, is updated to 2.0. Its API is unchanged, and `MailTrap` behaves as before (#687)
 
+### Fixed
+- The storage adapters no longer raise PHP warnings where they return `false`: `LocalFileSystemAdapter::listDirectory()` returns `false` for a folder that does not exist without calling `scandir()`, `DropboxFileSystemAdapter::put()` returns `false` when the response has no `size`, and `DropboxFileSystemAdapter::isFile()` and `GoogleDriveFileSystemAdapter::isFile()` return `false` when the metadata lacks `.tag`, `kind` or `mimeType` (#687)
+
 ## [3.1.2] - 2026-11-19
 
 ### Added

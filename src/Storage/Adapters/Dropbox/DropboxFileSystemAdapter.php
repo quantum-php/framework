@@ -76,7 +76,7 @@ class DropboxFileSystemAdapter implements FilesystemAdapterInterface
                 $content
             );
 
-            return $response->size;
+            return $response->size ?? false;
 
         } catch (Exception) {
             return false;
@@ -183,7 +183,7 @@ class DropboxFileSystemAdapter implements FilesystemAdapterInterface
     {
         try {
             $meta = (array) $this->dropboxApp->rpcRequest(DropboxApp::ENDPOINT_FILE_METADATA, $this->dropboxApp->path($filename));
-            return $meta['.tag'] == 'file';
+            return ($meta['.tag'] ?? null) == 'file';
         } catch (Exception) {
             return false;
         }

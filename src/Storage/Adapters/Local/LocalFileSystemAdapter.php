@@ -149,6 +149,10 @@ class LocalFileSystemAdapter implements LocalFilesystemAdapterInterface
      */
     public function listDirectory(string $dirname): array|false
     {
+        if (!is_dir($dirname)) {
+            return false;
+        }
+
         $entries = [];
 
         try {
