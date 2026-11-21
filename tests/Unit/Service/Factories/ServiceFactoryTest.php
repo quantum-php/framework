@@ -2,8 +2,8 @@
 
 namespace Quantum\Services {
 
-    use Quantum\Service\Service;
     use Quantum\Models\TestModel;
+    use Quantum\Service\Service;
 
     class TestService extends Service
     {

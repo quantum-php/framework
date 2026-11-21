@@ -13,14 +13,14 @@ use Quantum\App\Enums\AppType;
 use Quantum\Di\DiContainer;
 use Quantum\App\AppContext;
 use Quantum\Config\Config;
-use Quantum\Router\Route;
 use Quantum\Http\Response;
+use Quantum\Router\Route;
 use ReflectionFunction;
-use ReflectionClass;
+use ReflectionProperty;
 use ReflectionMethod;
+use ReflectionClass;
 use Quantum\App\App;
 use Quantum\Di\Di;
-use ReflectionProperty;
 use Closure;
 
 abstract class AppTestCase extends TestCase

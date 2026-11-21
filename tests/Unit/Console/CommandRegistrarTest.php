@@ -6,8 +6,8 @@ use Quantum\Tests\_root\shared\Commands\TestCommand;
 use Symfony\Component\Console\Command\Command;
 use Quantum\App\Stages\Boot\LoadHelpersStage;
 use Symfony\Component\Console\Application;
-use Quantum\Environment\Environment;
 use Quantum\Console\CommandRegistrar;
+use Quantum\Environment\Environment;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Di\Di;
 

@@ -4,12 +4,12 @@ namespace Quantum\Tests\Unit\Mailer;
 
 use Quantum\Mailer\Adapters\SendinblueAdapter;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Quantum\Mailer\Exceptions\MailerException;
+use Quantum\Mailer\Contracts\MailerInterface;
 use Quantum\Mailer\Adapters\MandrillAdapter;
 use Quantum\Mailer\Adapters\SendgridAdapter;
 use Quantum\Mailer\Adapters\MailgunAdapter;
 use Quantum\Mailer\Adapters\ResendAdapter;
-use Quantum\Mailer\Exceptions\MailerException;
-use Quantum\Mailer\Contracts\MailerInterface;
 use Quantum\Mailer\Adapters\SmtpAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Mailer\Mailer;

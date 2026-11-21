@@ -3,9 +3,9 @@
 namespace Quantum\Tests\Unit\App\Factories;
 
 use Quantum\App\Adapters\Console\ConsoleAppAdapter;
+use Quantum\App\Adapters\Web\WebAppAdapter;
 use Quantum\App\Exceptions\AppException;
 use Quantum\App\Contracts\AppInterface;
-use Quantum\App\Adapters\Web\WebAppAdapter;
 use Quantum\App\Factories\AppFactory;
 use Quantum\Environment\Environment;
 use Quantum\Tests\Unit\AppTestCase;

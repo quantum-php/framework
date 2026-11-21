@@ -5,8 +5,8 @@ namespace Quantum\Tests\Unit\Storage\Uploads;
 use Quantum\Storage\Adapters\Local\LocalFileSystemAdapter;
 use Quantum\Storage\Contracts\FilesystemAdapterInterface;
 use Quantum\Storage\Uploads\UploadStorage;
-use Quantum\Storage\UploadedFile;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Storage\UploadedFile;
 use Mockery;
 
 class UploadStorageTest extends AppTestCase

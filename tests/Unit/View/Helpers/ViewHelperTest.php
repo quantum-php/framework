@@ -3,9 +3,9 @@
 namespace Quantum\Tests\Unit\View\Helpers;
 
 use Quantum\View\Factories\ViewFactory;
+use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Router\MatchedRoute;
 use Quantum\Router\Route;
-use Quantum\Tests\Unit\AppTestCase;
 use Quantum\View\View;
 
 class ViewHelperTest extends AppTestCase
