@@ -5,6 +5,7 @@ namespace Quantum\Tests\Unit;
 use Quantum\Storage\Factories\FileSystemFactory;
 use Quantum\App\Factories\AppFactory;
 use Quantum\Router\MatchedRoute;
+use Quantum\Tracer\ErrorHandler;
 use Quantum\Storage\FileSystem;
 use PHPUnit\Framework\TestCase;
 use Quantum\Debugger\Debugger;
@@ -12,13 +13,15 @@ use Quantum\App\Enums\AppType;
 use Quantum\Di\DiContainer;
 use Quantum\App\AppContext;
 use Quantum\Config\Config;
-use Quantum\Router\Route;
 use Quantum\Http\Response;
-use ReflectionClass;
+use Quantum\Router\Route;
+use ReflectionFunction;
+use ReflectionProperty;
 use ReflectionMethod;
+use ReflectionClass;
 use Quantum\App\App;
 use Quantum\Di\Di;
-use ReflectionProperty;
+use Closure;
 
 abstract class AppTestCase extends TestCase
 {
@@ -29,7 +32,7 @@ abstract class AppTestCase extends TestCase
 
     public function setUp(): void
     {
-        AppFactory::create(AppType::WEB, PROJECT_ROOT);
+        AppFactory::create(AppType::WEB, $this->appBaseDir());
 
         environment()->setMutable(true);
 
@@ -56,13 +59,47 @@ abstract class AppTestCase extends TestCase
 
         $this->clearAppContext();
 
+        $this->removeFrameworkErrorHandlers();
+    }
+
+    /**
+     * Removes the error and exception handlers that Quantum\Tracer\ErrorHandler registered,
+     * one pair per boot, and stops at the first handler that is not Quantum's
+     */
+    public static function removeFrameworkErrorHandlers(): void
+    {
+        while (self::isFrameworkHandler(set_error_handler(static fn (): bool => false))) {
+            restore_error_handler();
+            restore_error_handler();
+        }
+
         restore_error_handler();
+
+        while (self::isFrameworkHandler(set_exception_handler(static function (): void {
+        }))) {
+            restore_exception_handler();
+            restore_exception_handler();
+        }
+
         restore_exception_handler();
+    }
+
+    private static function isFrameworkHandler(mixed $handler): bool
+    {
+        return $handler instanceof Closure && (new ReflectionFunction($handler))->getClosureThis() instanceof ErrorHandler;
+    }
+
+    /**
+     * The folder of the test app the tests boot on
+     */
+    protected function appBaseDir(): string
+    {
+        return PROJECT_ROOT;
     }
 
     protected function createContext(string $type = AppType::WEB): AppContext
     {
-        $context = new AppContext(PROJECT_ROOT, new DiContainer(), $type);
+        $context = new AppContext($this->appBaseDir(), new DiContainer(), $type);
         App::setContext($context);
 
         return $context;

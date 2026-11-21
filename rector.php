@@ -13,7 +13,7 @@ return RectorConfig::configure()
         __DIR__ . '/src',
     ])
     ->withSets([
-        LevelSetList::UP_TO_PHP_81,
+        LevelSetList::UP_TO_PHP_82,
         SetList::TYPE_DECLARATION,
     ])
     ->withRules([

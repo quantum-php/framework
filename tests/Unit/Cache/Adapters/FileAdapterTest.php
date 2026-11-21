@@ -2,6 +2,8 @@
 
 namespace Quantum\Tests\Unit\Cache\Adapters;
 
+use Quantum\Cache\Exceptions\InvalidCacheKeyException;
+use Psr\SimpleCache\InvalidArgumentException;
 use Quantum\Cache\Adapters\FileAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use DateInterval;
@@ -26,6 +28,8 @@ class FileAdapterTest extends AppTestCase
     public function tearDown(): void
     {
         $this->fileCache->clear();
+
+        parent::tearDown();
     }
 
     public function testFileAdapterSetGetDelete(): void
@@ -177,4 +181,50 @@ class FileAdapterTest extends AppTestCase
         $this->assertEquals('Long TTL', $this->fileCache->get('long'));
     }
 
+    public function testFileAdapterMultipleMethodsAcceptAnyIterable(): void
+    {
+        $this->assertTrue($this->fileCache->setMultiple((function () {
+            yield 'test1' => 'Test value one';
+            yield 'test2' => 'Test value two';
+        })()));
+
+        $this->assertSame(
+            ['test1' => 'Test value one', 'test2' => 'Test value two'],
+            $this->fileCache->getMultiple((function () {
+                yield 'test1';
+                yield 'test2';
+            })())
+        );
+
+        $this->assertTrue($this->fileCache->deleteMultiple(new \ArrayIterator(['test1', 'test2'])));
+
+        $this->assertFalse($this->fileCache->has('test1'));
+
+        $this->assertFalse($this->fileCache->has('test2'));
+    }
+
+    public function testFileAdapterMultipleMethodsAcceptNumericKeys(): void
+    {
+        $this->assertTrue($this->fileCache->setMultiple(['1' => 'Value one', '2' => 'Value two']));
+
+        $this->assertSame([1 => 'Value one', 2 => 'Value two'], $this->fileCache->getMultiple([1, 2]));
+
+        $this->assertTrue($this->fileCache->deleteMultiple([1, 2]));
+
+        $this->assertFalse($this->fileCache->has('1'));
+    }
+    public function testFileAdapterDeleteMultipleRejectsKeysThatAreNotStringsOrIntegers(): void
+    {
+        $this->fileCache->set('1', 'Value one');
+
+        try {
+            $this->fileCache->deleteMultiple([true]);
+            $this->fail('A boolean key was accepted');
+        } catch (InvalidArgumentException $e) {
+            $this->assertInstanceOf(InvalidCacheKeyException::class, $e);
+            $this->assertSame('The cache key must be a string, bool given', $e->getMessage());
+        }
+
+        $this->assertTrue($this->fileCache->has('1'));
+    }
 }

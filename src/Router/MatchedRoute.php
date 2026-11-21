@@ -15,14 +15,14 @@ namespace Quantum\Router;
  * @internal Resolves an incoming request to a matched route.
  * @package Quantum\Router
  */
-final class MatchedRoute
+final readonly class MatchedRoute
 {
-    private readonly Route $route;
+    private Route $route;
 
     /**
      * @var array<string, mixed>
      */
-    private readonly array $params;
+    private array $params;
 
     /**
      * @param array<string, mixed> $params

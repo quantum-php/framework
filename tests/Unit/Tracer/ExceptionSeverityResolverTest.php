@@ -2,6 +2,7 @@
 
 namespace Quantum\Tests\Unit\Tracer;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Quantum\Tracer\ExceptionSeverityResolver;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -18,9 +19,7 @@ class ExceptionSeverityResolverTest extends TestCase
         $this->resolver = new ExceptionSeverityResolver();
     }
 
-    /**
-     * @dataProvider mappingProvider
-     */
+    #[DataProvider('mappingProvider')]
     public function testResolveMappings(\Throwable $throwable, string $expected): void
     {
         $this->assertSame($expected, $this->resolver->resolve($throwable));

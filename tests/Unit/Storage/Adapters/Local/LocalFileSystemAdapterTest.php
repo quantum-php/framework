@@ -36,6 +36,8 @@ class LocalFileSystemAdapterTest extends AppTestCase
         if ($this->fs->exists($this->filename)) {
             $this->fs->remove($this->filename);
         }
+
+        parent::tearDown();
     }
 
     public function testLocalMakeRemoveDirectory(): void

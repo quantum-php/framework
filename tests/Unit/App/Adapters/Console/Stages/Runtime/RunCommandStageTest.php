@@ -102,7 +102,7 @@ class RunCommandStageTest extends ConsoleStageTestCase
     {
         $application = new Application();
 
-        $application->add(new class ($commandName) extends CliCommand {
+        $application->addCommand(new class ($commandName) extends CliCommand {
             public function __construct(string $commandName)
             {
                 $this->name = $commandName;
@@ -123,7 +123,7 @@ class RunCommandStageTest extends ConsoleStageTestCase
     {
         $application = new Application();
 
-        $application->add(
+        $application->addCommand(
             (new Command($commandName))->setCode(function (InputInterface $input, OutputInterface $output) use ($commandName, $exitCode): int {
                 $output->writeln('hello from ' . $commandName);
 

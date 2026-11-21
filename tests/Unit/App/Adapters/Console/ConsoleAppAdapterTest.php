@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Quantum\App\Adapters\Console\ConsoleContext;
 use Quantum\Environment\Exceptions\EnvException;
 use Quantum\Tests\Helpers\NonExitingApplication;
+use Quantum\Tests\Helpers\UsesTemporaryAppRoot;
 use Symfony\Component\Console\Input\ArgvInput;
 use Quantum\App\Stages\Boot\LoadHelpersStage;
 use Symfony\Component\Console\Application;
@@ -27,6 +28,8 @@ use Mockery;
 
 class ConsoleAppAdapterTest extends AppTestCase
 {
+    use UsesTemporaryAppRoot;
+
     public function setUp(): void
     {
         // AppTestCase::setUp() boots a web app, which these tests must not have
@@ -34,8 +37,10 @@ class ConsoleAppAdapterTest extends AppTestCase
 
     public function tearDown(): void
     {
+        $this->removeFrameworkErrorHandlers();
         config()->flush();
         $this->clearAppContext();
+        $this->removeTemporaryAppRoot();
     }
 
     public function testConsoleAppAdapterStartSuccessfully(): void
@@ -89,7 +94,7 @@ class ConsoleAppAdapterTest extends AppTestCase
 
     public function testConsoleAppAdapterStartRegistersCoreCommands(): void
     {
-        $directory = PROJECT_ROOT . DS . 'vendor' . DS . 'quantum' . DS . 'framework' . DS . 'src' . DS . 'Console' . DS . 'Commands';
+        $directory = $this->appBaseDir() . DS . 'vendor' . DS . 'quantum' . DS . 'framework' . DS . 'src' . DS . 'Console' . DS . 'Commands';
 
         $this->withTemporaryCommand($directory, 'Quantum\Console\Commands', function (string $commandName): void {
             $this->assertSame(0, $this->startWithRealApplication($commandName));
@@ -99,7 +104,7 @@ class ConsoleAppAdapterTest extends AppTestCase
 
     public function testConsoleAppAdapterStartRegistersAppCommands(): void
     {
-        $directory = PROJECT_ROOT . DS . 'shared' . DS . 'Commands';
+        $directory = $this->appBaseDir() . DS . 'shared' . DS . 'Commands';
 
         $this->withTemporaryCommand($directory, 'Shared\Commands', function (string $commandName): void {
             $this->assertSame(0, $this->startWithRealApplication($commandName));
@@ -109,8 +114,8 @@ class ConsoleAppAdapterTest extends AppTestCase
 
     public function testConsoleAppAdapterStartRegistersCoreCommandsBeforeAppCommands(): void
     {
-        $coreDirectory = PROJECT_ROOT . DS . 'vendor' . DS . 'quantum' . DS . 'framework' . DS . 'src' . DS . 'Console' . DS . 'Commands';
-        $appDirectory = PROJECT_ROOT . DS . 'shared' . DS . 'Commands';
+        $coreDirectory = $this->appBaseDir() . DS . 'vendor' . DS . 'quantum' . DS . 'framework' . DS . 'src' . DS . 'Console' . DS . 'Commands';
+        $appDirectory = $this->appBaseDir() . DS . 'shared' . DS . 'Commands';
 
         $this->withTemporaryCommand($coreDirectory, 'Quantum\Console\Commands', function (string $coreCommand) use ($appDirectory): void {
             $this->withTemporaryCommand($appDirectory, 'Shared\Commands', function (string $appCommand) use ($coreCommand): void {
@@ -131,8 +136,8 @@ class ConsoleAppAdapterTest extends AppTestCase
 
     public function testConsoleAppAdapterStartLetsAppCommandOverrideCoreCommandWithSameName(): void
     {
-        $coreDirectory = PROJECT_ROOT . DS . 'vendor' . DS . 'quantum' . DS . 'framework' . DS . 'src' . DS . 'Console' . DS . 'Commands';
-        $appDirectory = PROJECT_ROOT . DS . 'shared' . DS . 'Commands';
+        $coreDirectory = $this->appBaseDir() . DS . 'vendor' . DS . 'quantum' . DS . 'framework' . DS . 'src' . DS . 'Console' . DS . 'Commands';
+        $appDirectory = $this->appBaseDir() . DS . 'shared' . DS . 'Commands';
 
         $this->withTemporaryCommand($coreDirectory, 'Quantum\Console\Commands', function (string $sharedName) use ($appDirectory): void {
             $this->withTemporaryCommand($appDirectory, 'Shared\Commands', function (string $commandName): void {
@@ -144,8 +149,8 @@ class ConsoleAppAdapterTest extends AppTestCase
 
     public function testConsoleAppAdapterStartWorksWithoutAppCommandsDirectory(): void
     {
-        $directory = PROJECT_ROOT . DS . 'shared' . DS . 'Commands';
-        $hidden = PROJECT_ROOT . DS . 'shared' . DS . 'Commands_hidden';
+        $directory = $this->appBaseDir() . DS . 'shared' . DS . 'Commands';
+        $hidden = $this->appBaseDir() . DS . 'shared' . DS . 'Commands_hidden';
 
         $this->assertTrue(rename($directory, $hidden));
 
@@ -158,7 +163,7 @@ class ConsoleAppAdapterTest extends AppTestCase
 
     public function testConsoleAppAdapterStartRegistersOnlyInstantiableCommands(): void
     {
-        $directory = PROJECT_ROOT . DS . 'shared' . DS . 'Commands';
+        $directory = $this->appBaseDir() . DS . 'shared' . DS . 'Commands';
 
         $before = $this->registeredCommandNames();
 
@@ -397,7 +402,7 @@ class ConsoleAppAdapterTest extends AppTestCase
     {
         $_SERVER['argv'] = ['qt', 'list', '--quiet'];
 
-        $this->withFileContent(PROJECT_ROOT . DS . 'shared' . DS . 'config' . DS . 'logging.php', "<?php\n\nreturn [\n", function (): void {
+        $this->withFileContent($this->appBaseDir() . DS . 'shared' . DS . 'config' . DS . 'logging.php', "<?php\n\nreturn [\n", function (): void {
             $this->expectException(ParseError::class);
 
             $this->createAdapter();
@@ -406,7 +411,7 @@ class ConsoleAppAdapterTest extends AppTestCase
 
     public function testConsoleAppAdapterBootRejectsACommandThatRequiresTheEnvironmentWhenTheEnvFileIsMissing(): void
     {
-        $this->withTemporaryCommand(PROJECT_ROOT . DS . 'vendor' . DS . 'quantum' . DS . 'framework' . DS . 'src' . DS . 'Console' . DS . 'Commands', 'Quantum\Console\Commands', function (string $commandName): void {
+        $this->withTemporaryCommand($this->appBaseDir() . DS . 'vendor' . DS . 'quantum' . DS . 'framework' . DS . 'src' . DS . 'Console' . DS . 'Commands', 'Quantum\Console\Commands', function (string $commandName): void {
             $_SERVER['argv'] = ['qt', $commandName, '--quiet'];
 
             $this->withoutEnvironmentFile(function (): void {
@@ -419,7 +424,7 @@ class ConsoleAppAdapterTest extends AppTestCase
 
     public function testConsoleAppAdapterStartRunsACoreCommandThatDoesNotRequireTheEnvironmentWhenTheEnvFileIsMissing(): void
     {
-        $this->withTemporaryCommand(PROJECT_ROOT . DS . 'vendor' . DS . 'quantum' . DS . 'framework' . DS . 'src' . DS . 'Console' . DS . 'Commands', 'Quantum\Console\Commands', function (string $commandName): void {
+        $this->withTemporaryCommand($this->appBaseDir() . DS . 'vendor' . DS . 'quantum' . DS . 'framework' . DS . 'src' . DS . 'Console' . DS . 'Commands', 'Quantum\Console\Commands', function (string $commandName): void {
             $this->withoutEnvironmentFile(function () use ($commandName): void {
                 $this->assertSame(0, $this->startWithRealApplication($commandName));
                 $this->assertSame($commandName, $GLOBALS['tmpCommandRan'] ?? null);
@@ -429,7 +434,7 @@ class ConsoleAppAdapterTest extends AppTestCase
 
     public function testConsoleAppAdapterBootRejectsAnAppCommandThatDoesNotRequireTheEnvironmentWhenTheEnvFileIsMissing(): void
     {
-        $directory = PROJECT_ROOT . DS . 'shared' . DS . 'Commands';
+        $directory = $this->appBaseDir() . DS . 'shared' . DS . 'Commands';
 
         $this->withTemporaryCommand($directory, 'Shared\Commands', function (string $commandName): void {
             $_SERVER['argv'] = ['qt', $commandName, '--quiet'];
@@ -444,7 +449,7 @@ class ConsoleAppAdapterTest extends AppTestCase
 
     public function testConsoleAppAdapterStartRunsAnAppCommandWhoseConstructorUsesTheEnvironment(): void
     {
-        $directory = PROJECT_ROOT . DS . 'shared' . DS . 'Commands';
+        $directory = $this->appBaseDir() . DS . 'shared' . DS . 'Commands';
         $className = 'TmpEnvCommand' . substr(md5(uniqid('', true)), 0, 8);
         $commandName = 'tmp:env-constructor';
 
@@ -493,7 +498,7 @@ PHP;
 
     public function testConsoleAppAdapterStartRunsACoreCommandThatDoesNotRequireTheEnvironmentWhenTheEnvFileIsMalformed(): void
     {
-        $this->withTemporaryCommand(PROJECT_ROOT . DS . 'vendor' . DS . 'quantum' . DS . 'framework' . DS . 'src' . DS . 'Console' . DS . 'Commands', 'Quantum\Console\Commands', function (string $commandName): void {
+        $this->withTemporaryCommand($this->appBaseDir() . DS . 'vendor' . DS . 'quantum' . DS . 'framework' . DS . 'src' . DS . 'Console' . DS . 'Commands', 'Quantum\Console\Commands', function (string $commandName): void {
             $this->withEnvironmentFileContent("APP_NAME=two words here\n", function () use ($commandName): void {
                 $adapter = $this->bootRealAdapter($commandName);
 
@@ -505,7 +510,7 @@ PHP;
 
     public function testConsoleAppAdapterStartRunsACommandThatDoesNotRequireTheEnvironmentWhenTheEnvFileIsEmpty(): void
     {
-        $directory = PROJECT_ROOT . DS . 'shared' . DS . 'Commands';
+        $directory = $this->appBaseDir() . DS . 'shared' . DS . 'Commands';
 
         $this->withTemporaryCommand($directory, 'Shared\Commands', function (string $commandName): void {
             $this->withEnvironmentFileContent('', function () use ($commandName): void {
@@ -519,7 +524,7 @@ PHP;
 
     public function testConsoleAppAdapterBootRejectsACommandThatRequiresTheEnvironmentWhenTheEnvFileIsMalformed(): void
     {
-        $this->withTemporaryCommand(PROJECT_ROOT . DS . 'vendor' . DS . 'quantum' . DS . 'framework' . DS . 'src' . DS . 'Console' . DS . 'Commands', 'Quantum\Console\Commands', function (string $commandName): void {
+        $this->withTemporaryCommand($this->appBaseDir() . DS . 'vendor' . DS . 'quantum' . DS . 'framework' . DS . 'src' . DS . 'Console' . DS . 'Commands', 'Quantum\Console\Commands', function (string $commandName): void {
             $this->withEnvironmentFileContent("APP_NAME=two words here\n", function () use ($commandName): void {
                 try {
                     $this->bootRealAdapter($commandName);
@@ -533,7 +538,7 @@ PHP;
 
     public function testConsoleAppAdapterBootRejectsAnAppCommandThatDoesNotRequireTheEnvironmentWhenTheEnvFileIsMalformed(): void
     {
-        $directory = PROJECT_ROOT . DS . 'shared' . DS . 'Commands';
+        $directory = $this->appBaseDir() . DS . 'shared' . DS . 'Commands';
 
         $this->withTemporaryCommand($directory, 'Shared\Commands', function (string $commandName): void {
             $this->withEnvironmentFileContent("APP_NAME=two words here\n", function () use ($commandName): void {
@@ -582,7 +587,7 @@ PHP;
 
     public function testConsoleAppAdapterStartRunsListWhenTheEnvFileIsMissingAndAnAppCommandCannotBeCreated(): void
     {
-        $directory = PROJECT_ROOT . DS . 'shared' . DS . 'Commands';
+        $directory = $this->appBaseDir() . DS . 'shared' . DS . 'Commands';
 
         $this->withBrokenCommand($directory, function (): void {
             $this->withoutEnvironmentFile(function (): void {
@@ -593,7 +598,7 @@ PHP;
 
     public function testConsoleAppAdapterBootReportsTheCommandFailureWhenAnAppCommandCannotBeCreated(): void
     {
-        $directory = PROJECT_ROOT . DS . 'shared' . DS . 'Commands';
+        $directory = $this->appBaseDir() . DS . 'shared' . DS . 'Commands';
 
         $this->withBrokenCommand($directory, function (): void {
             $this->expectException(RuntimeException::class);
@@ -619,7 +624,7 @@ PHP;
      */
     private function withBrokenAppHelper(callable $test): void
     {
-        $directory = PROJECT_ROOT . DS . 'helpers';
+        $directory = $this->appBaseDir() . DS . 'helpers';
         $createdDirectory = !is_dir($directory);
         $file = $directory . DS . 'tmp_broken_helper_' . substr(md5(uniqid('', true)), 0, 8) . '.php';
 
@@ -647,7 +652,7 @@ PHP;
      */
     private function withEnvironmentFileContent(string $content, callable $test): void
     {
-        $this->withFileContent(PROJECT_ROOT . DS . '.env.testing', $content, $test);
+        $this->withFileContent($this->appBaseDir() . DS . '.env.testing', $content, $test);
     }
 
     /**
@@ -741,7 +746,7 @@ PHP;
      */
     private function withoutEnvironmentFile(callable $test): void
     {
-        $file = PROJECT_ROOT . DS . '.env.testing';
+        $file = $this->appBaseDir() . DS . '.env.testing';
         $hidden = $file . '.hidden';
 
         $this->assertTrue(rename($file, $hidden));

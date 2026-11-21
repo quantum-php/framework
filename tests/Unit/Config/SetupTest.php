@@ -19,6 +19,8 @@ class SetupTest extends AppTestCase
     public function tearDown(): void
     {
         unset($this->setup);
+
+        parent::tearDown();
     }
 
     public function testSetupConstructor(): void

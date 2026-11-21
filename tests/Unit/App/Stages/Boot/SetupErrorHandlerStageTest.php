@@ -21,8 +21,7 @@ class SetupErrorHandlerStageTest extends AppTestCase
 
     public function tearDown(): void
     {
-        restore_error_handler();
-        restore_exception_handler();
+        $this->removeFrameworkErrorHandlers();
         config()->flush();
         $this->clearAppContext();
     }

@@ -25,6 +25,8 @@ class PharAdapterTest extends AppTestCase
             $this->fs->remove($this->archiveName);
             $this->pharArchive->removeArchive();
         }
+
+        parent::tearDown();
     }
 
     public function testAddEmptyDirToPhar(): void

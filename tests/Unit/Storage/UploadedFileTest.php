@@ -36,6 +36,8 @@ class UploadedFileTest extends AppTestCase
         if (file_exists(base_dir() . DS . 'foo.txt')) {
             unlink(base_dir() . DS . 'foo.txt');
         }
+
+        parent::tearDown();
     }
 
     public function testUploadedFileConstructor(): void
@@ -218,6 +220,19 @@ class UploadedFileTest extends AppTestCase
         $this->assertEquals(100, $img[0]);
 
         $this->assertEquals(100, $img[1]);
+    }
+
+    public function testUploadedFileModifyAcceptsNumbersGivenAsText(): void
+    {
+        $uploadedFile = new UploadedFile($this->fileMeta);
+
+        $uploadedFile->modify('resizeToWidth', ['50']);
+
+        $uploadedFile->save(base_dir());
+
+        $img = getimagesize(base_dir() . DS . $uploadedFile->getNameWithExtension());
+
+        $this->assertEquals(50, $img[0]);
     }
 
     public function testUploadedFileGetErrorCodeAndMessage(): void

@@ -50,6 +50,8 @@ class TableFactoryTest extends AppTestCase
     public function tearDown(): void
     {
         Database::execute('DROP TABLE IF EXISTS profiles');
+
+        parent::tearDown();
     }
 
     public function testCreateTable(): void

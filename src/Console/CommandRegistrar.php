@@ -32,7 +32,7 @@ class CommandRegistrar
             $instance = new $command['class']();
 
             if ($instance instanceof Command) {
-                $application->add($instance);
+                $application->addCommand($instance);
             }
         }
     }

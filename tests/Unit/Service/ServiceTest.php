@@ -11,16 +11,16 @@ namespace Quantum\Services {
 
 namespace Quantum\Tests\Unit\Service {
 
+    use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+    use PHPUnit\Framework\Attributes\PreserveGlobalState;
     use Quantum\Service\Exceptions\ServiceException;
     use Quantum\Service\Factories\ServiceFactory;
     use Quantum\Services\TestingService;
     use Quantum\Tests\Unit\AppTestCase;
     use Quantum\Service\Service;
 
-    /**
-     * @runTestsInSeparateProcesses
-     * @preserveGlobalState disabled
-     */
+    #[RunTestsInSeparateProcesses]
+    #[PreserveGlobalState(false)]
     class ServiceTest extends AppTestCase
     {
         public function setUp(): void

@@ -21,6 +21,8 @@ class ResponseTest extends AppTestCase
         response()->flush();
 
         server()->flush();
+
+        parent::tearDown();
     }
 
     public function testResponseContentType(): void

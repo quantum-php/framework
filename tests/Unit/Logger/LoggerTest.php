@@ -3,6 +3,7 @@
 namespace Quantum\Tests\Unit\Logger;
 
 use Quantum\Logger\Contracts\ReportableInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Quantum\Logger\Adapters\MessageAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Logger\Logger;
@@ -43,9 +44,7 @@ class LoggerTest extends AppTestCase
         $this->assertSame([['info' => 'Test message'], ['error' => 'Error message']], $this->adapter->getMessages());
     }
 
-    /**
-     * @dataProvider levelMethodProvider
-     */
+    #[DataProvider('levelMethodProvider')]
     public function testLoggerLevelMethodReportsTheMessageWithItsLevel(string $method, string $level): void
     {
         $this->logger->$method('Some message');

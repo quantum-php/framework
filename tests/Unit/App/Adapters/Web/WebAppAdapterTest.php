@@ -28,12 +28,34 @@ class WebAppAdapterTest extends AppTestCase
 
     public function tearDown(): void
     {
+        $this->removeFrameworkErrorHandlers();
         if (Di::isRegistered(Debugger::class)) {
             Di::get(Debugger::class)->resetStore();
         }
 
         config()->flush();
         $this->clearAppContext();
+    }
+
+    public function testRemoveFrameworkErrorHandlersRemovesTheHandlersOfEveryBoot(): void
+    {
+        (new WebAppAdapter($this->createContext()))->boot();
+
+        $this->removeFrameworkErrorHandlers();
+
+        $errorHandler = set_error_handler(static fn (): bool => false);
+        restore_error_handler();
+
+        $exceptionHandler = set_exception_handler(static function (): void {
+        });
+        restore_exception_handler();
+
+        foreach ([$errorHandler, $exceptionHandler] as $handler) {
+            $this->assertFalse(
+                $handler instanceof \Closure && (new \ReflectionFunction($handler))->getClosureThis() instanceof \Quantum\Tracer\ErrorHandler,
+                'A handler of Quantum\Tracer\ErrorHandler is still registered'
+            );
+        }
     }
 
     public function testWebAppAdapterStartSuccessfully(): void

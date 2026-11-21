@@ -2,6 +2,7 @@
 
 namespace Quantum\Tests\Unit\Module\Templates;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use OpenApi\Annotations\OpenApi;
 use PHPUnit\Framework\TestCase;
 use OpenApi\Generator;
@@ -28,17 +29,13 @@ class OpenApiTemplatesTest extends TestCase
         }
     }
 
-    /**
-     * @dataProvider apiTemplateProvider
-     */
+    #[DataProvider('apiTemplateProvider')]
     public function testApiTemplatesProduceAValidOpenApiSpecification(string $template): void
     {
         $this->assertTrue($this->generate($template)->validate());
     }
 
-    /**
-     * @dataProvider apiTemplateProvider
-     */
+    #[DataProvider('apiTemplateProvider')]
     public function testApiTemplatesDescribeTheApiAndItsSecurity(string $template): void
     {
         $spec = $this->generateSpecification($template);
@@ -47,9 +44,7 @@ class OpenApiTemplatesTest extends TestCase
         $this->assertArrayHasKey('bearer_token', $spec['components']['securitySchemes']);
     }
 
-    /**
-     * @dataProvider apiTemplateProvider
-     */
+    #[DataProvider('apiTemplateProvider')]
     public function testApiTemplatesDescribeEveryOperationWithASummaryAndResponses(string $template): void
     {
         $spec = $this->generateSpecification($template);
@@ -64,9 +59,7 @@ class OpenApiTemplatesTest extends TestCase
         }
     }
 
-    /**
-     * @dataProvider apiTemplateProvider
-     */
+    #[DataProvider('apiTemplateProvider')]
     public function testApiTemplatesDescribeTheApiWithAttributesOnly(string $template): void
     {
         $templates = glob(dirname(__DIR__, 4) . '/src/Module/Templates/' . $template . '/src/Controllers/OpenApi/*.php.tpl') ?: [];

@@ -11,13 +11,12 @@ declare(strict_types=1);
 namespace Quantum\Cache\Adapters;
 
 use Quantum\Model\Exceptions\ModelException;
-use Quantum\Cache\Enums\ExceptionMessages;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Model\Factories\ModelFactory;
 use Quantum\Cache\Traits\CacheTrait;
 use Psr\SimpleCache\CacheInterface;
-use InvalidArgumentException;
 use Quantum\Model\DbModel;
+use DateInterval;
 use Exception;
 
 /**
@@ -44,7 +43,7 @@ class DatabaseAdapter implements CacheInterface
      * @inheritDoc
      * @throws BaseException
      */
-    public function get($key, $default = null)
+    public function get(string $key, mixed $default = null): mixed
     {
         if ($this->has($key)) {
             $cacheItem = $this->cacheModel->findOneBy('key', $this->keyHash($key));
@@ -68,21 +67,14 @@ class DatabaseAdapter implements CacheInterface
      * @inheritDoc
      * @param iterable<string> $keys
      * @return iterable<string, mixed>
-     * @throws InvalidArgumentException|BaseException
+     * @throws BaseException
      */
-    public function getMultiple($keys, $default = null)
+    public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
-        if (!is_array($keys)) {
-            throw new InvalidArgumentException(
-                _message(ExceptionMessages::ARGUMENT_NOT_ITERABLE, '$keys'),
-                E_WARNING
-            );
-        }
-
         $result = [];
 
         foreach ($keys as $key) {
-            $result[$key] = $this->get($key, $default);
+            $result[$key] = $this->get($this->normalizeKey($key), $default);
         }
 
         return $result;
@@ -91,7 +83,7 @@ class DatabaseAdapter implements CacheInterface
     /**
      * @inheritDoc
      */
-    public function has($key): bool
+    public function has(string $key): bool
     {
         $cacheItem = $this->cacheModel->findOneBy('key', $this->keyHash($key));
 
@@ -110,7 +102,7 @@ class DatabaseAdapter implements CacheInterface
     /**
      * @inheritDoc
      */
-    public function set($key, $value, $ttl = null): bool
+    public function set(string $key, mixed $value, null|int|DateInterval $ttl = null): bool
     {
         $cacheItem = $this->cacheModel->findOneBy('key', $this->keyHash($key));
 
@@ -127,22 +119,14 @@ class DatabaseAdapter implements CacheInterface
 
     /**
      * @inheritDoc
-     * @throws InvalidArgumentException
      * @param iterable<string, mixed> $values
      */
-    public function setMultiple($values, $ttl = null): bool
+    public function setMultiple(iterable $values, null|int|DateInterval $ttl = null): bool
     {
-        if (!is_array($values)) {
-            throw new InvalidArgumentException(
-                _message(ExceptionMessages::ARGUMENT_NOT_ITERABLE, '$values'),
-                E_WARNING
-            );
-        }
-
         $results = [];
 
         foreach ($values as $key => $value) {
-            $results[] = $this->set($key, $value, $ttl);
+            $results[] = $this->set($this->normalizeKey($key), $value, $ttl);
         }
 
         return !in_array(false, $results, true);
@@ -151,21 +135,14 @@ class DatabaseAdapter implements CacheInterface
     /**
      * @inheritDoc
      * @param iterable<string> $keys
-     * @throws ModelException|BaseException|InvalidArgumentException
+     * @throws ModelException|BaseException
      */
-    public function deleteMultiple($keys): bool
+    public function deleteMultiple(iterable $keys): bool
     {
-        if (!is_array($keys)) {
-            throw new InvalidArgumentException(
-                _message(ExceptionMessages::ARGUMENT_NOT_ITERABLE, '$keys'),
-                E_WARNING
-            );
-        }
-
         $results = [];
 
         foreach ($keys as $key) {
-            $results[] = $this->delete($key);
+            $results[] = $this->delete($this->normalizeKey($key));
         }
 
         return !in_array(false, $results, true);
@@ -175,7 +152,7 @@ class DatabaseAdapter implements CacheInterface
      * @inheritDoc
      * @throws ModelException|BaseException
      */
-    public function delete($key): bool
+    public function delete(string $key): bool
     {
         $cacheItem = $this->cacheModel->findOneBy('key', $this->keyHash($key));
 

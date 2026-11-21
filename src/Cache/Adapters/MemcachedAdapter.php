@@ -11,11 +11,10 @@ declare(strict_types=1);
 namespace Quantum\Cache\Adapters;
 
 use Quantum\Cache\Exceptions\CacheException;
-use Quantum\Cache\Enums\ExceptionMessages;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Cache\Traits\CacheTrait;
 use Psr\SimpleCache\CacheInterface;
-use InvalidArgumentException;
+use DateInterval;
 use Memcached;
 use Throwable;
 
@@ -49,7 +48,7 @@ class MemcachedAdapter implements CacheInterface
     /**
      * @inheritDoc
      */
-    public function get($key, $default = null)
+    public function get(string $key, mixed $default = null): mixed
     {
         if ($this->has($key)) {
             $cacheItem = $this->memcached->get($this->keyHash($key));
@@ -67,23 +66,15 @@ class MemcachedAdapter implements CacheInterface
 
     /**
      * @inheritDoc
-     * @throws InvalidArgumentException
      * @param iterable<string> $keys
      * @return iterable<string, mixed>
      */
-    public function getMultiple($keys, $default = null)
+    public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
-        if (!is_array($keys)) {
-            throw new InvalidArgumentException(
-                _message(ExceptionMessages::ARGUMENT_NOT_ITERABLE, '$keys'),
-                E_WARNING
-            );
-        }
-
         $result = [];
 
         foreach ($keys as $key) {
-            $result[$key] = $this->get($key, $default);
+            $result[$key] = $this->get($this->normalizeKey($key), $default);
         }
 
         return $result;
@@ -92,7 +83,7 @@ class MemcachedAdapter implements CacheInterface
     /**
      * @inheritDoc
      */
-    public function has($key): bool
+    public function has(string $key): bool
     {
         $cacheItem = $this->memcached->get($this->keyHash($key));
         return (bool) $cacheItem;
@@ -101,29 +92,21 @@ class MemcachedAdapter implements CacheInterface
     /**
      * @inheritDoc
      */
-    public function set($key, $value, $ttl = null): bool
+    public function set(string $key, mixed $value, null|int|DateInterval $ttl = null): bool
     {
         return $this->memcached->set($this->keyHash($key), serialize($value), $this->normalizeTtl($ttl));
     }
 
     /**
      * @inheritDoc
-     * @throws InvalidArgumentException
      * @param iterable<string, mixed> $values
      */
-    public function setMultiple($values, $ttl = null): bool
+    public function setMultiple(iterable $values, null|int|DateInterval $ttl = null): bool
     {
-        if (!is_array($values)) {
-            throw new InvalidArgumentException(
-                _message(ExceptionMessages::ARGUMENT_NOT_ITERABLE, '$values'),
-                E_WARNING
-            );
-        }
-
         $results = [];
 
         foreach ($values as $key => $value) {
-            $results[] = $this->set($key, $value, $ttl);
+            $results[] = $this->set($this->normalizeKey($key), $value, $ttl);
         }
 
         return !in_array(false, $results, true);
@@ -132,29 +115,21 @@ class MemcachedAdapter implements CacheInterface
     /**
      * @inheritDoc
      */
-    public function delete($key): bool
+    public function delete(string $key): bool
     {
         return $this->memcached->delete($this->keyHash($key));
     }
 
     /**
      * @inheritDoc
-     * @throws InvalidArgumentException
      * @param iterable<string> $keys
      */
-    public function deleteMultiple($keys): bool
+    public function deleteMultiple(iterable $keys): bool
     {
-        if (!is_array($keys)) {
-            throw new InvalidArgumentException(
-                _message(ExceptionMessages::ARGUMENT_NOT_ITERABLE, '$keys'),
-                E_WARNING
-            );
-        }
-
         $results = [];
 
         foreach ($keys as $key) {
-            $results[] = $this->delete($key);
+            $results[] = $this->delete($this->normalizeKey($key));
         }
 
         return !in_array(false, $results, true);

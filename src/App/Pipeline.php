@@ -24,17 +24,17 @@ use InvalidArgumentException;
  * @template TContext of AppContext
  * @package Quantum\App
  */
-final class Pipeline
+final readonly class Pipeline
 {
     /**
      * @var array<StageInterface<TContext>>
      */
-    private readonly array $stages;
+    private array $stages;
 
     /**
      * @var StageInterface<TContext>|null
      */
-    private readonly ?StageInterface $closingStage;
+    private ?StageInterface $closingStage;
 
     /**
      * @param array<StageInterface<TContext>> $stages
