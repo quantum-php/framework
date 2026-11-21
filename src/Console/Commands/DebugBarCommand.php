@@ -41,14 +41,9 @@ class DebugBarCommand extends CliCommand
     protected ?string $help = 'The command will publish debugbar assets';
 
     /**
-     * Path to public debug bar resources
-     */
-    private string $publicDebugBarFolderPath = 'public/assets/DebugBar/Resources';
-
-    /**
      * Path to vendor debug bar resources
      */
-    private string $vendorDebugBarFolderPath = 'vendor/php-debugbar/php-debugbar/src/DebugBar/Resources';
+    private string $vendorDebugBarFolderPath = 'vendor/php-debugbar/php-debugbar/resources';
 
     /**
      * Executes the command and publishes the debug bar assets
@@ -58,12 +53,16 @@ class DebugBarCommand extends CliCommand
     {
         $fs = FileSystemFactory::get();
 
-        if ($fs->exists(assets_dir() . DS . 'DebugBar' . DS . 'Resources' . DS . 'debugbar.css')) {
+        $publicDebugBarFolderPath = assets_dir() . DS . 'DebugBar' . DS . 'Resources';
+
+        $distPath = $publicDebugBarFolderPath . DS . 'dist';
+
+        if ($fs->exists($distPath . DS . 'debugbar.min.js') && $fs->exists($distPath . DS . 'debugbar.min.css')) {
             $this->error('The debug ber already installed');
             return;
         }
 
-        $this->copyResources($fs, $this->vendorDebugBarFolderPath, $this->publicDebugBarFolderPath);
+        $this->copyResources($fs, $this->vendorDebugBarFolderPath, $publicDebugBarFolderPath);
 
         $this->info('Debugbar resources successfully published');
     }
@@ -74,11 +73,15 @@ class DebugBarCommand extends CliCommand
      */
     private function copyResources(FileSystem $fs, string $src, string $dst): void
     {
-        $dir = opendir($src);
+        if (!$fs->isDirectory($src)) {
+            throw FileSystemException::directoryNotExists($src);
+        }
 
-        if ($dst != $this->publicDebugBarFolderPath && $fs->makeDirectory($dst) === false) {
+        if (!$fs->isDirectory($dst) && !mkdir($dst, 0777, true)) {
             throw FileSystemException::directoryNotWritable($dst);
         }
+
+        $dir = opendir($src);
 
         if (is_resource($dir)) {
             while (($file = readdir($dir))) {
@@ -86,7 +89,11 @@ class DebugBarCommand extends CliCommand
                     if ($fs->isDirectory($src . DS . $file)) {
                         $this->copyResources($fs, $src . DS . $file, $dst . DS . $file);
                     } else {
-                        copy($src . DS . $file, $dst . DS . $file);
+                        if (!$fs->copy($src . DS . $file, $dst . DS . $file)) {
+                            closedir($dir);
+
+                            throw FileSystemException::directoryNotWritable($dst);
+                        }
                     }
                 }
             }

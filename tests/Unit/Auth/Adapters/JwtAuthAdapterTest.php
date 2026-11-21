@@ -52,6 +52,8 @@ class JwtAuthAdapterTest extends AuthTestCase
         self::$users = [];
 
         $this->jwtAuth->signout();
+
+        parent::tearDown();
     }
 
     public function testApiAdapterConstructor(): void

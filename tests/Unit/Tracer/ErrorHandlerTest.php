@@ -3,6 +3,7 @@
 namespace Quantum\Tests\Unit\Tracer;
 
 use Symfony\Component\Console\Output\BufferedOutput;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Quantum\Tracer\WebExceptionRenderer;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Tracer\ErrorHandler;
@@ -102,9 +103,7 @@ class ErrorHandlerTest extends AppTestCase
         }
     }
 
-    /**
-     * @dataProvider deprecationSeverityProvider
-     */
+    #[DataProvider('deprecationSeverityProvider')]
     public function testHandleErrorLogsADeprecationInsteadOfThrowing(int $severity): void
     {
         $logged = $this->captureWarnings();
@@ -121,9 +120,7 @@ class ErrorHandlerTest extends AppTestCase
         }
     }
 
-    /**
-     * @dataProvider deprecationSeverityProvider
-     */
+    #[DataProvider('deprecationSeverityProvider')]
     public function testHandleErrorIgnoresADeprecationWhenThereIsNoLogger(int $severity): void
     {
         $this->setPrivateProperty($this->errorHandler, 'logger', null);
@@ -289,9 +286,7 @@ class ErrorHandlerTest extends AppTestCase
         ];
     }
 
-    /**
-     * @dataProvider errorTypeProvider
-     */
+    #[DataProvider('errorTypeProvider')]
     public function testGetErrorTypeMappings(\Throwable $throwable, string $expected): void
     {
         $type = $this->invokePrivateMethod($this->errorHandler, 'getErrorType', [$throwable]);

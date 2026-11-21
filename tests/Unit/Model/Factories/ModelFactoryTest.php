@@ -2,6 +2,8 @@
 
 namespace Quantum\Tests\Unit\Model\Factories;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use Quantum\Tests\_root\shared\Models\TestUserModel;
 use Quantum\Database\Contracts\DbalInterface;
 use Quantum\Model\Exceptions\ModelException;
@@ -9,10 +11,8 @@ use Quantum\Model\Factories\ModelFactory;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Model\DbModel;
 
-/**
- * @runTestsInSeparateProcesses
- * @preserveGlobalState disabled
- */
+#[RunTestsInSeparateProcesses]
+#[PreserveGlobalState(false)]
 class ModelFactoryTest extends AppTestCase
 {
     public function setUp(): void

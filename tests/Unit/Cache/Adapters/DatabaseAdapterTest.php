@@ -2,7 +2,9 @@
 
 namespace Quantum\Tests\Unit\Cache\Adapters;
 
+use Quantum\Cache\Exceptions\InvalidCacheKeyException;
 use Quantum\Database\Adapters\Sleekdb\SleekDbal;
+use Psr\SimpleCache\InvalidArgumentException;
 use Quantum\Cache\Adapters\DatabaseAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Config\Setup;
@@ -38,6 +40,8 @@ class DatabaseAdapterTest extends AppTestCase
         $this->databaseCache->clear();
 
         SleekDbal::disconnect();
+
+        parent::tearDown();
     }
 
     public function testDatabaseAdapterSetGetDelete(): void
@@ -200,4 +204,50 @@ class DatabaseAdapterTest extends AppTestCase
         $this->assertEquals('Long TTL', $this->databaseCache->get('long'));
     }
 
+    public function testDatabaseAdapterMultipleMethodsAcceptAnyIterable(): void
+    {
+        $this->assertTrue($this->databaseCache->setMultiple((function () {
+            yield 'test1' => 'Test value one';
+            yield 'test2' => 'Test value two';
+        })()));
+
+        $this->assertSame(
+            ['test1' => 'Test value one', 'test2' => 'Test value two'],
+            $this->databaseCache->getMultiple((function () {
+                yield 'test1';
+                yield 'test2';
+            })())
+        );
+
+        $this->assertTrue($this->databaseCache->deleteMultiple(new \ArrayIterator(['test1', 'test2'])));
+
+        $this->assertFalse($this->databaseCache->has('test1'));
+
+        $this->assertFalse($this->databaseCache->has('test2'));
+    }
+
+    public function testDatabaseAdapterMultipleMethodsAcceptNumericKeys(): void
+    {
+        $this->assertTrue($this->databaseCache->setMultiple(['1' => 'Value one', '2' => 'Value two']));
+
+        $this->assertSame([1 => 'Value one', 2 => 'Value two'], $this->databaseCache->getMultiple([1, 2]));
+
+        $this->assertTrue($this->databaseCache->deleteMultiple([1, 2]));
+
+        $this->assertFalse($this->databaseCache->has('1'));
+    }
+    public function testDatabaseAdapterDeleteMultipleRejectsKeysThatAreNotStringsOrIntegers(): void
+    {
+        $this->databaseCache->set('1', 'Value one');
+
+        try {
+            $this->databaseCache->deleteMultiple([true]);
+            $this->fail('A boolean key was accepted');
+        } catch (InvalidArgumentException $e) {
+            $this->assertInstanceOf(InvalidCacheKeyException::class, $e);
+            $this->assertSame('The cache key must be a string, bool given', $e->getMessage());
+        }
+
+        $this->assertTrue($this->databaseCache->has('1'));
+    }
 }

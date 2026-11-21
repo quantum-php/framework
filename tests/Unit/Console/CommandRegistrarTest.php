@@ -6,8 +6,8 @@ use Quantum\Tests\_root\shared\Commands\TestCommand;
 use Symfony\Component\Console\Command\Command;
 use Quantum\App\Stages\Boot\LoadHelpersStage;
 use Symfony\Component\Console\Application;
-use Quantum\Environment\Environment;
 use Quantum\Console\CommandRegistrar;
+use Quantum\Environment\Environment;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Di\Di;
 
@@ -58,13 +58,32 @@ class CommandRegistrarTest extends AppTestCase
 
     public function testCommandRegistrarReplacesAnExistingCommandWithTheSameName(): void
     {
-        $this->application->add(new Command('test:dummy'));
+        $this->application->addCommand(new Command('test:dummy'));
 
         $this->assertNotInstanceOf(TestCommand::class, $this->application->get('test:dummy'));
 
         CommandRegistrar::register($this->application, $this->directory, $this->namespace);
 
         $this->assertInstanceOf(TestCommand::class, $this->application->get('test:dummy'));
+    }
+
+    public function testCommandRegistrarRaisesNoDeprecation(): void
+    {
+        $deprecations = [];
+
+        set_error_handler(function (int $errno, string $errstr) use (&$deprecations): bool {
+            $deprecations[] = $errstr;
+
+            return true;
+        }, E_DEPRECATED | E_USER_DEPRECATED);
+
+        try {
+            CommandRegistrar::register($this->application, $this->directory, $this->namespace);
+        } finally {
+            restore_error_handler();
+        }
+
+        $this->assertSame([], $deprecations);
     }
 
     public function testCommandRegistrarRegistersTheCoreCommandsWithoutLoadingTheEnvironmentOrAnyConfig(): void

@@ -17,11 +17,11 @@ use Quantum\Http\Request;
  * @internal Resolves an incoming request to a matched route.
  * @package Quantum\Router
  */
-final class RouteFinder
+final readonly class RouteFinder
 {
-    private readonly PatternCompiler $patternCompiler;
+    private PatternCompiler $patternCompiler;
 
-    private readonly RouteCollection $routes;
+    private RouteCollection $routes;
 
     public function __construct(RouteCollection $routes)
     {

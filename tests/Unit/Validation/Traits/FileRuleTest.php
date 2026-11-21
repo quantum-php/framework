@@ -37,6 +37,8 @@ class FileRuleTest extends AppTestCase
         $this->request->flush();
 
         unlink(base_dir() . DS . 'php8fe2.tmp');
+
+        parent::tearDown();
     }
 
     public function testRuleFileSize(): void

@@ -5,6 +5,7 @@ namespace Quantum\Tests\Unit\Session\Adapters\Database;
 use Quantum\Session\Adapters\Database\DatabaseHandler;
 use Quantum\Database\Adapters\Idiorm\IdiormDbal;
 use Quantum\Tests\Unit\Session\TestCaseHelper;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Quantum\Database\Contracts\DbalInterface;
 use Quantum\Model\Factories\ModelFactory;
 use Quantum\Tests\Unit\AppTestCase;
@@ -61,9 +62,7 @@ class DatabaseHandlerTest extends AppTestCase
         $this->assertFalse((new DatabaseHandler($model))->gc(3600));
     }
 
-    /**
-     * @dataProvider interfaceMethodProvider
-     */
+    #[DataProvider('interfaceMethodProvider')]
     public function testDatabaseHandlerDeclaresTheReturnTypeOfItsInterfaceMethods(string $method): void
     {
         $this->assertTrue((new ReflectionMethod(DatabaseHandler::class, $method))->hasReturnType());

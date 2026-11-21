@@ -55,6 +55,8 @@ class DropboxFileSystemAdapterTest extends AppTestCase
     public function tearDown(): void
     {
         self::$response = [];
+
+        parent::tearDown();
     }
 
     public function testDropboxMakeCheckRemoveDirectory(): void

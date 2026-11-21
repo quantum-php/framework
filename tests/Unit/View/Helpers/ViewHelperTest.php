@@ -3,9 +3,9 @@
 namespace Quantum\Tests\Unit\View\Helpers;
 
 use Quantum\View\Factories\ViewFactory;
+use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Router\MatchedRoute;
 use Quantum\Router\Route;
-use Quantum\Tests\Unit\AppTestCase;
 use Quantum\View\View;
 
 class ViewHelperTest extends AppTestCase
@@ -34,6 +34,8 @@ class ViewHelperTest extends AppTestCase
     public function tearDown(): void
     {
         $this->view->setLayout(null);
+
+        parent::tearDown();
     }
 
     public function testViewReturnsInstance(): void

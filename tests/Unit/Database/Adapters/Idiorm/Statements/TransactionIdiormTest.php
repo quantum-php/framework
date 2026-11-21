@@ -3,12 +3,12 @@
 namespace Libraries\Database\Adapters\Idiorm\Statements;
 
 use Quantum\Tests\Unit\Database\Adapters\Idiorm\IdiormDbalTestCase;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use Quantum\Database\Adapters\Idiorm\IdiormDbal;
 
-/**
- * @runTestsInSeparateProcesses
- * @preserveGlobalState disabled
- */
+#[RunTestsInSeparateProcesses]
+#[PreserveGlobalState(false)]
 class TransactionIdiormTest extends IdiormDbalTestCase
 {
     public function testBeginTransactionAndRollback(): void

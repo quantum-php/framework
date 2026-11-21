@@ -27,6 +27,8 @@ class MemcachedAdapterTest extends AppTestCase
     public function tearDown(): void
     {
         $this->memCached->clear();
+
+        parent::tearDown();
     }
 
     public function testMemcachedAdapterConnectsWithThePortAsText(): void

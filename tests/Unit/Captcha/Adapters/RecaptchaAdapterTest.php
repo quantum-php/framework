@@ -33,6 +33,8 @@ class RecaptchaAdapterTest extends AppTestCase
     {
         asset()->flush();
         Mockery::close();
+
+        parent::tearDown();
     }
 
     public function testRecaptchaAdapterInstance(): void

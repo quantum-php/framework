@@ -27,6 +27,8 @@ class FileRateLimitAdapterTest extends AppTestCase
         if (fs()->isDirectory($this->rateLimitDir)) {
             fs()->removeDirectory($this->rateLimitDir);
         }
+
+        parent::tearDown();
     }
 
     public function testFileAdapterHitAndResetFlow(): void

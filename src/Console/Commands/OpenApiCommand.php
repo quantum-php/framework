@@ -166,7 +166,7 @@ class OpenApiCommand extends CliCommand
 
         $specPath = modules_dir() . DS . $module . DS . 'resources' . DS . 'openapi' . DS . 'spec.json';
 
-        $openApi = Generator::scan([$annotationPath]);
+        $openApi = (new Generator())->generate([$annotationPath]);
 
         if ($openApi === null) {
             $this->error('Failed to generate OpenAPI specification.');

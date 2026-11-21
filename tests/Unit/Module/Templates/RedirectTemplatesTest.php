@@ -2,15 +2,14 @@
 
 namespace Quantum\Tests\Unit\Module\Templates;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use PHPUnit\Framework\TestCase;
+use RecursiveIteratorIterator;
 
 class RedirectTemplatesTest extends TestCase
 {
-    /**
-     * @dataProvider redirectTemplateProvider
-     */
+    #[DataProvider('redirectTemplateProvider')]
     public function testTemplatesDoNotRepeatTheManualReferrerFallback(string $template): void
     {
         $files = $this->templateFiles($template);
@@ -26,9 +25,7 @@ class RedirectTemplatesTest extends TestCase
         }
     }
 
-    /**
-     * @dataProvider redirectTemplateProvider
-     */
+    #[DataProvider('redirectTemplateProvider')]
     public function testTemplatesGoBackWithTheBackRedirect(string $template): void
     {
         $backRedirects = 0;

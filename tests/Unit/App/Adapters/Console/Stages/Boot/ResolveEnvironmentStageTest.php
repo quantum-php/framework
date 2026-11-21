@@ -5,12 +5,22 @@ namespace Quantum\Tests\Unit\App\Adapters\Console\Stages\Boot;
 use Quantum\Tests\Unit\App\Adapters\Console\Stages\ConsoleStageTestCase;
 use Quantum\App\Adapters\Console\Stages\Boot\ResolveEnvironmentStage;
 use Quantum\Environment\Exceptions\EnvException;
+use Quantum\Tests\Helpers\UsesTemporaryAppRoot;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Dotenv\Exception\InvalidFileException;
 use Symfony\Component\Console\Application;
 use Quantum\Console\CliCommand;
 
 class ResolveEnvironmentStageTest extends ConsoleStageTestCase
 {
+    use UsesTemporaryAppRoot;
+
+    public function tearDown(): void
+    {
+        parent::tearDown();
+        $this->removeTemporaryAppRoot();
+    }
+
     public function testResolveEnvironmentStageDoesNothingWhenTheEnvFileLoads(): void
     {
         $context = $this->createConsoleContext(['command' => 'needs:env'], $this->createApplication());
@@ -20,9 +30,7 @@ class ResolveEnvironmentStageTest extends ConsoleStageTestCase
         $this->assertFalse($context->isStopped());
     }
 
-    /**
-     * @dataProvider commandsThatRunWithoutTheEnvironment
-     */
+    #[DataProvider('commandsThatRunWithoutTheEnvironment')]
     public function testResolveEnvironmentStageStopsTheBootWhenTheEnvFileIsMissing(string $commandName): void
     {
         $context = $this->createConsoleContext(['command' => $commandName], $this->createApplication());
@@ -34,9 +42,7 @@ class ResolveEnvironmentStageTest extends ConsoleStageTestCase
         $this->assertTrue($context->isStopped());
     }
 
-    /**
-     * @dataProvider commandsThatRunWithoutTheEnvironment
-     */
+    #[DataProvider('commandsThatRunWithoutTheEnvironment')]
     public function testResolveEnvironmentStageStopsTheBootWhenTheEnvFileIsMalformed(string $commandName): void
     {
         $context = $this->createConsoleContext(['command' => $commandName], $this->createApplication());
@@ -49,9 +55,9 @@ class ResolveEnvironmentStageTest extends ConsoleStageTestCase
     }
 
     /**
-     * @dataProvider inputsThatNeedTheEnvironment
      * @param array<string, string> $input
      */
+    #[DataProvider('inputsThatNeedTheEnvironment')]
     public function testResolveEnvironmentStageThrowsTheEnvExceptionWhenTheEnvFileIsMissing(array $input): void
     {
         $context = $this->createConsoleContext($input, $this->createApplication());
@@ -68,9 +74,9 @@ class ResolveEnvironmentStageTest extends ConsoleStageTestCase
     }
 
     /**
-     * @dataProvider inputsThatNeedTheEnvironment
      * @param array<string, string> $input
      */
+    #[DataProvider('inputsThatNeedTheEnvironment')]
     public function testResolveEnvironmentStageThrowsTheParseExceptionWhenTheEnvFileIsMalformed(array $input): void
     {
         $context = $this->createConsoleContext($input, $this->createApplication());
@@ -110,6 +116,14 @@ class ResolveEnvironmentStageTest extends ConsoleStageTestCase
         ];
     }
 
+    public function testHidingTheEnvironmentFileLeavesTheSharedTestAppUntouched(): void
+    {
+        $this->withoutEnvironmentFile(function (): void {
+            $this->assertFileDoesNotExist(base_dir() . DS . '.env.testing');
+            $this->assertFileExists(PROJECT_ROOT . DS . '.env.testing');
+        });
+    }
+
     /**
      * An application with a CliCommand that requires the environment and one that does not
      */
@@ -118,7 +132,7 @@ class ResolveEnvironmentStageTest extends ConsoleStageTestCase
         $application = new Application();
 
         foreach (['needs:env' => true, 'no:env' => false] as $commandName => $requiresEnvironment) {
-            $application->add(new class ($commandName, $requiresEnvironment) extends CliCommand {
+            $application->addCommand(new class ($commandName, $requiresEnvironment) extends CliCommand {
                 public function __construct(string $commandName, bool $requiresEnvironment)
                 {
                     $this->name = $commandName;
@@ -141,7 +155,7 @@ class ResolveEnvironmentStageTest extends ConsoleStageTestCase
      */
     private function withoutEnvironmentFile(callable $test): void
     {
-        $file = PROJECT_ROOT . DS . '.env.testing';
+        $file = $this->appBaseDir() . DS . '.env.testing';
         $hidden = $file . '.hidden';
 
         $this->assertTrue(rename($file, $hidden));
@@ -158,7 +172,7 @@ class ResolveEnvironmentStageTest extends ConsoleStageTestCase
      */
     private function withEnvironmentFileContent(string $content, callable $test): void
     {
-        $file = PROJECT_ROOT . DS . '.env.testing';
+        $file = $this->appBaseDir() . DS . '.env.testing';
         $backup = $file . '.backup';
 
         $this->assertTrue(rename($file, $backup));
