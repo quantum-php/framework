@@ -2,6 +2,7 @@
 
 namespace Quantum\Tests\Unit\Cache\Adapters;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Quantum\Cache\Adapters\MemcachedAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use DateInterval;
@@ -195,6 +196,63 @@ class MemcachedAdapterTest extends AppTestCase
         sleep(2);
 
         $this->assertNull($this->memCached->get('test'));
+    }
+
+    #[DataProvider('expiredTtlProvider')]
+    public function testMemcachedAdapterDoesNotKeepAnItemWithAnExpiredTtl(int|DateInterval $ttl): void
+    {
+        $this->assertTrue($this->memCached->set('test', 'Test value', $ttl));
+
+        $this->assertFalse($this->memCached->has('test'));
+
+        $this->assertSame('Default', $this->memCached->get('test', 'Default'));
+    }
+
+    public static function expiredTtlProvider(): array
+    {
+        $past = new DateInterval('PT60S');
+        $past->invert = 1;
+
+        return [
+            'negative seconds' => [-1],
+            'zero seconds' => [0],
+            'interval in the past' => [$past],
+        ];
+    }
+
+    public function testMemcachedAdapterRemovesAnExistingItemWhenSetWithAnExpiredTtl(): void
+    {
+        $this->memCached->set('test', 'Test value', 120);
+
+        $this->assertTrue($this->memCached->set('test', 'New value', -1));
+
+        $this->assertFalse($this->memCached->has('test'));
+    }
+
+    public function testMemcachedAdapterSetMultipleWithAnExpiredTtlKeepsNothing(): void
+    {
+        $this->assertTrue($this->memCached->setMultiple(['test1' => 'One', 'test2' => 'Two'], -1));
+
+        $this->assertFalse($this->memCached->has('test1'));
+
+        $this->assertFalse($this->memCached->has('test2'));
+    }
+
+    #[DataProvider('longTtlProvider')]
+    public function testMemcachedAdapterKeepsAnItemWithATtlOfMoreThanThirtyDays(int|DateInterval $ttl): void
+    {
+        $this->assertTrue($this->memCached->set('test', 'Test value', $ttl));
+
+        $this->assertSame('Test value', $this->memCached->get('test'));
+    }
+
+    public static function longTtlProvider(): array
+    {
+        return [
+            'exactly thirty days' => [2592000],
+            'thirty days and one second' => [2592001],
+            'interval of 31 days' => [new DateInterval('P31D')],
+        ];
     }
 
 }
