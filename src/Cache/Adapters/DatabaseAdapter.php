@@ -67,7 +67,7 @@ class DatabaseAdapter implements CacheInterface
     /**
      * @inheritDoc
      * @param iterable<int|string> $keys
-     * @return iterable<int|string, mixed>
+     * @return iterable<string, mixed>
      * @throws BaseException
      * @throws InvalidCacheKeyException
      */
@@ -76,7 +76,8 @@ class DatabaseAdapter implements CacheInterface
         $result = [];
 
         foreach ($keys as $key) {
-            $result[$key] = $this->get($this->normalizeKey($key), $default);
+            $key = $this->normalizeKey($key);
+            $result[$key] = $this->get($key, $default);
         }
 
         return $result;

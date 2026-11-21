@@ -78,7 +78,7 @@ class FileAdapter implements CacheInterface
     /**
      * @inheritDoc
      * @param iterable<int|string> $keys
-     * @return iterable<int|string, mixed>
+     * @return iterable<string, mixed>
      * @throws InvalidCacheKeyException
      */
     public function getMultiple(iterable $keys, mixed $default = null): iterable
@@ -86,7 +86,8 @@ class FileAdapter implements CacheInterface
         $result = [];
 
         foreach ($keys as $key) {
-            $result[$key] = $this->get($this->normalizeKey($key), $default);
+            $key = $this->normalizeKey($key);
+            $result[$key] = $this->get($key, $default);
         }
 
         return $result;

@@ -21,7 +21,7 @@ use Quantum\Console\CliCommand;
 use ReflectionException;
 
 /**
- * Class DebugBarAssetsCommand
+ * Class DebugBarCommand
  * @package Quantum\Console
  */
 class DebugBarCommand extends CliCommand
