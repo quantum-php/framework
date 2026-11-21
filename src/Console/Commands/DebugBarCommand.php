@@ -89,7 +89,11 @@ class DebugBarCommand extends CliCommand
                     if ($fs->isDirectory($src . DS . $file)) {
                         $this->copyResources($fs, $src . DS . $file, $dst . DS . $file);
                     } else {
-                        copy($src . DS . $file, $dst . DS . $file);
+                        if (!$fs->copy($src . DS . $file, $dst . DS . $file)) {
+                            closedir($dir);
+
+                            throw FileSystemException::directoryNotWritable($dst);
+                        }
                     }
                 }
             }

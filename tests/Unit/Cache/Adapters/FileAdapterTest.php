@@ -2,10 +2,11 @@
 
 namespace Quantum\Tests\Unit\Cache\Adapters;
 
+use Quantum\Cache\Exceptions\InvalidCacheKeyException;
+use Psr\SimpleCache\InvalidArgumentException;
 use Quantum\Cache\Adapters\FileAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use DateInterval;
-use TypeError;
 
 class FileAdapterTest extends AppTestCase
 {
@@ -219,7 +220,9 @@ class FileAdapterTest extends AppTestCase
         try {
             $this->fileCache->deleteMultiple([true]);
             $this->fail('A boolean key was accepted');
-        } catch (TypeError) {
+        } catch (InvalidArgumentException $e) {
+            $this->assertInstanceOf(InvalidCacheKeyException::class, $e);
+            $this->assertSame('The cache key must be a string, bool given', $e->getMessage());
         }
 
         $this->assertTrue($this->fileCache->has('1'));

@@ -2,12 +2,13 @@
 
 namespace Quantum\Tests\Unit\Cache\Adapters;
 
+use Quantum\Cache\Exceptions\InvalidCacheKeyException;
 use Quantum\Database\Adapters\Sleekdb\SleekDbal;
+use Psr\SimpleCache\InvalidArgumentException;
 use Quantum\Cache\Adapters\DatabaseAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Config\Setup;
 use DateInterval;
-use TypeError;
 
 class DatabaseAdapterTest extends AppTestCase
 {
@@ -242,7 +243,9 @@ class DatabaseAdapterTest extends AppTestCase
         try {
             $this->databaseCache->deleteMultiple([true]);
             $this->fail('A boolean key was accepted');
-        } catch (TypeError) {
+        } catch (InvalidArgumentException $e) {
+            $this->assertInstanceOf(InvalidCacheKeyException::class, $e);
+            $this->assertSame('The cache key must be a string, bool given', $e->getMessage());
         }
 
         $this->assertTrue($this->databaseCache->has('1'));

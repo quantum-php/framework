@@ -2,11 +2,14 @@
 
 namespace Quantum\Tests\Unit\Console\Commands;
 
+use Quantum\Storage\Adapters\Local\LocalFileSystemAdapter;
 use Quantum\Storage\Exceptions\FileSystemException;
 use Symfony\Component\Console\Tester\CommandTester;
 use Quantum\Console\Commands\DebugBarCommand;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Storage\FileSystem;
 use ReflectionMethod;
+use Mockery;
 
 class DebugBarCommandTest extends AppTestCase
 {
@@ -37,6 +40,8 @@ class DebugBarCommandTest extends AppTestCase
     {
         $this->removeTree($this->sourceDir);
         $this->removeTree(assets_dir() . DS . 'DebugBar');
+
+        Mockery::close();
 
         parent::tearDown();
     }
@@ -109,6 +114,25 @@ class DebugBarCommandTest extends AppTestCase
         $this->expectException(FileSystemException::class);
 
         $this->tester->execute([]);
+    }
+
+    public function testCopyResourcesFailsWhenAFileCannotBeCopied(): void
+    {
+        $adapter = Mockery::mock(LocalFileSystemAdapter::class)->makePartial();
+        $adapter->shouldReceive('copy')->andReturn(false);
+
+        $method = new ReflectionMethod($this->command, 'copyResources');
+        $method->setAccessible(true);
+
+        $targetDir = base_dir() . DS . 'var' . DS . 'tmp_debugbar_dst_' . uniqid();
+
+        $this->expectException(FileSystemException::class);
+
+        try {
+            $method->invoke($this->command, new FileSystem($adapter), $this->sourceDir, $targetDir);
+        } finally {
+            $this->removeTree($targetDir);
+        }
     }
 
     public function testCopyResourcesRecursivelyCopiesFiles(): void

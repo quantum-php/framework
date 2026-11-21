@@ -14,8 +14,8 @@ use Quantum\Storage\Factories\FileSystemFactory;
 use Quantum\Config\Exceptions\ConfigException;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Di\Exceptions\DiException;
-use Psr\SimpleCache\CacheInterface;
 use Quantum\Cache\Traits\CacheTrait;
+use Psr\SimpleCache\CacheInterface;
 use Quantum\Storage\FileSystem;
 use ReflectionException;
 use DateInterval;
@@ -84,7 +84,7 @@ class FileAdapter implements CacheInterface
         $result = [];
 
         foreach ($keys as $key) {
-            $result[$key] = $this->get(is_int($key) ? (string) $key : $key, $default);
+            $result[$key] = $this->get($this->normalizeKey($key), $default);
         }
 
         return $result;
@@ -134,7 +134,7 @@ class FileAdapter implements CacheInterface
         $results = [];
 
         foreach ($values as $key => $value) {
-            $results[] = $this->set(is_int($key) ? (string) $key : $key, $value, $ttl);
+            $results[] = $this->set($this->normalizeKey($key), $value, $ttl);
         }
 
         return !in_array(false, $results, true);
@@ -163,7 +163,7 @@ class FileAdapter implements CacheInterface
         $results = [];
 
         foreach ($keys as $key) {
-            $results[] = $this->delete(is_int($key) ? (string) $key : $key);
+            $results[] = $this->delete($this->normalizeKey($key));
         }
 
         return !in_array(false, $results, true);

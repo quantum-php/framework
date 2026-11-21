@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace Quantum\Cache\Traits;
 
+use Quantum\Cache\Exceptions\InvalidCacheKeyException;
 use DateTimeImmutable;
 use DateInterval;
 
@@ -29,6 +30,24 @@ trait CacheTrait
     protected function keyHash(string $key): string
     {
         return sha1($this->prefix . $key);
+    }
+
+    /**
+     * Returns a key given to a *Multiple() method as a string: PHP turns numeric string
+     * array keys into integers, so integers become strings again; any other type is rejected
+     * @throws InvalidCacheKeyException
+     */
+    protected function normalizeKey(mixed $key): string
+    {
+        if (is_int($key)) {
+            return (string) $key;
+        }
+
+        if (!is_string($key)) {
+            throw InvalidCacheKeyException::keyNotString(get_debug_type($key));
+        }
+
+        return $key;
     }
 
     /**

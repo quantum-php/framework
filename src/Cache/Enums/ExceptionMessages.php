@@ -19,4 +19,6 @@ use Quantum\App\Enums\ExceptionMessages as BaseExceptionMessages;
 final class ExceptionMessages extends BaseExceptionMessages
 {
     public const ARGUMENT_NOT_ITERABLE = 'The argument {%1} is not iterable';
+
+    public const KEY_NOT_STRING = 'The cache key must be a string, {%1} given';
 }
