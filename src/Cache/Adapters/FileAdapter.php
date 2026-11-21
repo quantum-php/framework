@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace Quantum\Cache\Adapters;
 
+use Quantum\Cache\Exceptions\InvalidCacheKeyException;
 use Quantum\Storage\Factories\FileSystemFactory;
 use Quantum\Config\Exceptions\ConfigException;
 use Quantum\App\Exceptions\BaseException;
@@ -76,15 +77,17 @@ class FileAdapter implements CacheInterface
 
     /**
      * @inheritDoc
-     * @param iterable<string> $keys
+     * @param iterable<int|string> $keys
      * @return iterable<string, mixed>
+     * @throws InvalidCacheKeyException
      */
     public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
         $result = [];
 
         foreach ($keys as $key) {
-            $result[$key] = $this->get($this->normalizeKey($key), $default);
+            $key = $this->normalizeKey($key);
+            $result[$key] = $this->get($key, $default);
         }
 
         return $result;
@@ -127,7 +130,8 @@ class FileAdapter implements CacheInterface
 
     /**
      * @inheritDoc
-     * @param iterable<string, mixed> $values
+     * @param iterable<int|string, mixed> $values
+     * @throws InvalidCacheKeyException
      */
     public function setMultiple(iterable $values, null|int|DateInterval $ttl = null): bool
     {
@@ -156,7 +160,8 @@ class FileAdapter implements CacheInterface
 
     /**
      * @inheritDoc
-     * @param iterable<string> $keys
+     * @param iterable<int|string> $keys
+     * @throws InvalidCacheKeyException
      */
     public function deleteMultiple(iterable $keys): bool
     {
