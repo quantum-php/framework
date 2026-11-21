@@ -17,13 +17,13 @@ use Psr\SimpleCache\CacheInterface;
 /**
  * Class Cache
  * @package Quantum\Cache
- * @method mixed get($key, $default = null)
- * @method iterable<string, mixed> getMultiple($keys, $default = null)
- * @method has($key): bool
- * @method bool set($key, $value, $ttl = null)
- * @method bool setMultiple($values, $ttl = null)
- * @method bool delete($key)
- * @method bool deleteMultiple($keys)
+ * @method mixed get(string $key, mixed $default = null)
+ * @method iterable<int|string, mixed> getMultiple(iterable<int|string> $keys, mixed $default = null)
+ * @method bool has(string $key)
+ * @method bool set(string $key, mixed $value, null|int|\DateInterval $ttl = null)
+ * @method bool setMultiple(iterable<int|string, mixed> $values, null|int|\DateInterval $ttl = null)
+ * @method bool delete(string $key)
+ * @method bool deleteMultiple(iterable<int|string> $keys)
  * @method bool clear()
  */
 class Cache

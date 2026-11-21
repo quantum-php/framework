@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace Quantum\Cache\Adapters;
 
+use Quantum\Cache\Exceptions\InvalidCacheKeyException;
 use Quantum\Model\Exceptions\ModelException;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Model\Factories\ModelFactory;
@@ -65,9 +66,10 @@ class DatabaseAdapter implements CacheInterface
 
     /**
      * @inheritDoc
-     * @param iterable<string> $keys
-     * @return iterable<string, mixed>
+     * @param iterable<int|string> $keys
+     * @return iterable<int|string, mixed>
      * @throws BaseException
+     * @throws InvalidCacheKeyException
      */
     public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
@@ -119,7 +121,8 @@ class DatabaseAdapter implements CacheInterface
 
     /**
      * @inheritDoc
-     * @param iterable<string, mixed> $values
+     * @param iterable<int|string, mixed> $values
+     * @throws InvalidCacheKeyException
      */
     public function setMultiple(iterable $values, null|int|DateInterval $ttl = null): bool
     {
@@ -134,8 +137,9 @@ class DatabaseAdapter implements CacheInterface
 
     /**
      * @inheritDoc
-     * @param iterable<string> $keys
+     * @param iterable<int|string> $keys
      * @throws ModelException|BaseException
+     * @throws InvalidCacheKeyException
      */
     public function deleteMultiple(iterable $keys): bool
     {

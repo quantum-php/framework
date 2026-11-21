@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace Quantum\Cache\Adapters;
 
+use Quantum\Cache\Exceptions\InvalidCacheKeyException;
 use Quantum\Cache\Traits\CacheTrait;
 use Psr\SimpleCache\CacheInterface;
 use RedisException;
@@ -61,8 +62,9 @@ class RedisAdapter implements CacheInterface
 
     /**
      * @inheritDoc
-     * @param iterable<string> $keys
-     * @return iterable<string, mixed>
+     * @param iterable<int|string> $keys
+     * @return iterable<int|string, mixed>
+     * @throws InvalidCacheKeyException
      */
     public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
@@ -109,7 +111,8 @@ class RedisAdapter implements CacheInterface
     /**
      * @inheritDoc
      * @throws RedisException
-     * @param iterable<string, mixed> $values
+     * @param iterable<int|string, mixed> $values
+     * @throws InvalidCacheKeyException
      */
     public function setMultiple(iterable $values, null|int|DateInterval $ttl = null): bool
     {
@@ -132,7 +135,8 @@ class RedisAdapter implements CacheInterface
 
     /**
      * @inheritDoc
-     * @param iterable<string> $keys
+     * @param iterable<int|string> $keys
+     * @throws InvalidCacheKeyException
      */
     public function deleteMultiple(iterable $keys): bool
     {

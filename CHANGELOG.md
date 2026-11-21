@@ -20,6 +20,7 @@ The format is based on Keep a Changelog.
 ### Fixed
 - The storage adapters no longer raise PHP warnings where they return `false`: `LocalFileSystemAdapter::listDirectory()` returns `false` for a folder that does not exist without calling `scandir()`, `DropboxFileSystemAdapter::put()` returns `false` when the response has no `size`, and `DropboxFileSystemAdapter::isFile()` and `GoogleDriveFileSystemAdapter::isFile()` return `false` when the metadata lacks `.tag`, `kind` or `mimeType` (#687)
 - `php qt install:debugbar` copies the toolbar files through the local filesystem. It used the application's default storage, so with `fs.default` set to `dropbox` or `gdrive` it looked for the local files in the cloud and failed. Its message for an installation that is already complete reads "The debug bar is already installed" (#691)
+- The `@method` annotations of the `Cache` facade declare the PSR-16 types the adapters have, so static analysis and IDEs report `cache()->get(42)`, which throws a `TypeError` at runtime. The `*Multiple()` methods document integer keys and `InvalidCacheKeyException` (#691)
 
 ## [3.1.2] - 2026-11-19
 
