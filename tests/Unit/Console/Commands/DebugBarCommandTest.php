@@ -8,6 +8,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 use Quantum\Console\Commands\DebugBarCommand;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Storage\FileSystem;
+use Quantum\Config\Setup;
 use ReflectionMethod;
 use Mockery;
 
@@ -63,8 +64,22 @@ class DebugBarCommandTest extends AppTestCase
 
         $this->tester->execute([]);
 
-        $this->assertStringContainsString('already installed', $this->tester->getDisplay());
+        $this->assertStringContainsString('The debug bar is already installed', $this->tester->getDisplay());
         $this->assertStringEqualsFile($distPath . DS . 'debugbar.min.js', '/* installed */');
+    }
+
+    public function testExecPublishesToTheLocalDiskWhenTheDefaultStorageIsACloudAdapter(): void
+    {
+        if (!config()->has('fs')) {
+            config()->import(new Setup('config', 'fs'));
+        }
+
+        config()->set('fs.default', 'dropbox');
+
+        $this->tester->execute([]);
+
+        $this->assertStringContainsString('successfully published', $this->tester->getDisplay());
+        $this->assertFileExists(assets_dir() . DS . 'DebugBar' . DS . 'Resources' . DS . 'dist' . DS . 'debugbar.min.js');
     }
 
     public function testExecPublishesAgainWhenOnlyPartOfTheBundleIsInstalled(): void
