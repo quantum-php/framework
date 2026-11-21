@@ -13,6 +13,7 @@ namespace Quantum\Console\Commands;
 use Quantum\Storage\Exceptions\FileSystemException;
 use Quantum\Storage\Factories\FileSystemFactory;
 use Quantum\Config\Exceptions\ConfigException;
+use Quantum\Storage\Enums\FileSystemType;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Di\Exceptions\DiException;
 use Quantum\Storage\FileSystem;
@@ -20,7 +21,7 @@ use Quantum\Console\CliCommand;
 use ReflectionException;
 
 /**
- * Class DebugBarAssetsCommand
+ * Class DebugBarCommand
  * @package Quantum\Console
  */
 class DebugBarCommand extends CliCommand
@@ -51,14 +52,14 @@ class DebugBarCommand extends CliCommand
      */
     public function exec(): void
     {
-        $fs = FileSystemFactory::get();
+        $fs = FileSystemFactory::get(FileSystemType::LOCAL);
 
         $publicDebugBarFolderPath = assets_dir() . DS . 'DebugBar' . DS . 'Resources';
 
         $distPath = $publicDebugBarFolderPath . DS . 'dist';
 
         if ($fs->exists($distPath . DS . 'debugbar.min.js') && $fs->exists($distPath . DS . 'debugbar.min.css')) {
-            $this->error('The debug ber already installed');
+            $this->error('The debug bar is already installed');
             return;
         }
 
