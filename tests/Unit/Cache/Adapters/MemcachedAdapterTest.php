@@ -6,6 +6,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Quantum\Cache\Adapters\MemcachedAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use DateInterval;
+use Memcached;
 
 class MemcachedAdapterTest extends AppTestCase
 {
@@ -227,6 +228,16 @@ class MemcachedAdapterTest extends AppTestCase
         $this->assertTrue($this->memCached->set('test', 'New value', -1));
 
         $this->assertFalse($this->memCached->has('test'));
+    }
+
+    public function testMemcachedAdapterReportsAFailedRemovalForAnExpiredTtl(): void
+    {
+        $unreachable = new Memcached();
+        $unreachable->addServer('127.0.0.1', 1);
+
+        $this->setPrivateProperty($this->memCached, 'memcached', $unreachable);
+
+        $this->assertFalse($this->memCached->set('test', 'Test value', -1));
     }
 
     public function testMemcachedAdapterSetMultipleWithAnExpiredTtlKeepsNothing(): void

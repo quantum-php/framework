@@ -106,9 +106,8 @@ class MemcachedAdapter implements CacheInterface
         $key = $this->keyHash($key);
 
         if ($ttl <= 0) {
-            $this->memcached->delete($key);
-
-            return true;
+            return $this->memcached->delete($key)
+                || $this->memcached->getResultCode() === Memcached::RES_NOTFOUND;
         }
 
         if ($ttl > self::MAX_RELATIVE_TTL) {
