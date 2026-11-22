@@ -21,6 +21,7 @@ The format is based on Keep a Changelog.
 - The storage adapters no longer raise PHP warnings where they return `false`: `LocalFileSystemAdapter::listDirectory()` returns `false` for a folder that does not exist without calling `scandir()`, `DropboxFileSystemAdapter::put()` returns `false` when the response has no `size`, and `DropboxFileSystemAdapter::isFile()` and `GoogleDriveFileSystemAdapter::isFile()` return `false` when the metadata lacks `.tag`, `kind` or `mimeType` (#687)
 - `php qt install:debugbar` copies the toolbar files through the local filesystem. It used the application's default storage, so with `fs.default` set to `dropbox` or `gdrive` it looked for the local files in the cloud and failed. Its message for an installation that is already complete reads "The debug bar is already installed" (#691)
 - The `@method` annotations of the `Cache` facade declare the PSR-16 types the adapters have, so static analysis and IDEs report `cache()->get(42)`, which throws a `TypeError` at runtime. The `*Multiple()` methods document integer keys and `InvalidCacheKeyException` (#691)
+- `MemcachedAdapter::set()` handles the TTL as PSR-16 and the other adapters do. A TTL of zero, or a `DateInterval` in the past, removes the item: Memcached read the resulting `0` as "never expires" and kept it. A TTL of more than 30 days is sent as an absolute time: Memcached reads a longer number of seconds as a Unix timestamp, so the item expired at once although `set()` returned `true` (#692)
 
 ## [3.1.2] - 2026-11-19
 
