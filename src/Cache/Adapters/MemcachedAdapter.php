@@ -27,6 +27,11 @@ class MemcachedAdapter implements CacheInterface
 {
     use CacheTrait;
 
+    /**
+     * Longest expiration Memcached reads as seconds from now; a larger value is read as a Unix timestamp
+     */
+    private const MAX_RELATIVE_TTL = 2592000;
+
     private Memcached $memcached;
 
     /**
@@ -97,7 +102,19 @@ class MemcachedAdapter implements CacheInterface
      */
     public function set(string $key, mixed $value, null|int|DateInterval $ttl = null): bool
     {
-        return $this->memcached->set($this->keyHash($key), serialize($value), $this->normalizeTtl($ttl));
+        $ttl = $this->normalizeTtl($ttl);
+        $key = $this->keyHash($key);
+
+        if ($ttl <= 0) {
+            return $this->memcached->delete($key)
+                || $this->memcached->getResultCode() === Memcached::RES_NOTFOUND;
+        }
+
+        if ($ttl > self::MAX_RELATIVE_TTL) {
+            $ttl = time() + $ttl;
+        }
+
+        return $this->memcached->set($key, serialize($value), $ttl);
     }
 
     /**
