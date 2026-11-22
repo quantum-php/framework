@@ -9,6 +9,7 @@ use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Logger\Logger;
 use Psr\Log\LogLevel;
 use Stringable;
+use TypeError;
 
 class LoggerTest extends AppTestCase
 {
@@ -64,6 +65,13 @@ class LoggerTest extends AppTestCase
         $this->logger->critical($message);
 
         $this->assertSame([['critical' => $message]], $this->adapter->getMessages());
+    }
+
+    public function testLoggerRejectsAnArrayMessage(): void
+    {
+        $this->expectException(TypeError::class);
+
+        $this->logger->info(['order' => 1042]);
     }
 
     /**

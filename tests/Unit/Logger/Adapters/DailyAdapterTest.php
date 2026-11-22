@@ -50,4 +50,17 @@ class DailyAdapterTest extends AppTestCase
 
         $this->fs->remove($logFile);
     }
+
+    public function testDailyAdapterWritesTheContextAsJsonAfterTheMessage(): void
+    {
+        $this->adapter->report('info', 'Order paid', ['order' => 1042]);
+
+        $logFile = base_dir() . DS . 'logs' . DS . date('Y-m-d') . '.log';
+
+        $logContent = $this->fs->get($logFile);
+
+        $this->fs->remove($logFile);
+
+        $this->assertStringContainsString('Info: Order paid {"order":1042}' . PHP_EOL, $logContent);
+    }
 }
