@@ -63,4 +63,11 @@ class MessageAdapterTest extends AppTestCase
         $this->assertSame(['info' => 'Message 2'], $messages[0]);
         $this->assertSame(['info' => 'Message 1001'], $messages[999]);
     }
+
+    public function testReportKeepsOnlyTheLevelAndTheMessageOfAReportWithContext(): void
+    {
+        $this->adapter->report('error', 'Failed', ['task' => 'cleanup', 'trace' => '#0 main']);
+
+        $this->assertSame([['error' => 'Failed']], $this->adapter->getMessages());
+    }
 }
