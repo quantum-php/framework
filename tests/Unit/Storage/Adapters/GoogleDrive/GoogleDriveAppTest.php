@@ -133,13 +133,66 @@ class GoogleDriveAppTest extends AppTestCase
 
     public function testGoogleDriveRequestWithATextErrorThrowsTheText(): void
     {
-        $this->currentErrors = ['code' => 500];
+        $this->responseQueue = [
+            ['body' => 'Internal Server Error', 'errors' => ['code' => 500]],
+        ];
 
-        $this->currentResponse = 'Internal Server Error';
+        try {
+            $this->googleDriveApp->sendRequest(GoogleDriveApp::FILE_METADATA_URL . '/' . $this->fileMetadataResponse['id']);
+            $this->fail('The error was not thrown');
+        } catch (Exception $e) {
+            $this->assertSame('Internal Server Error', $e->getMessage());
+        }
+    }
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Internal Server Error');
+    public function testGoogleDriveRefreshesTheTokenOnlyOnceWhenTheRetryFailsAgain(): void
+    {
+        $this->responseQueue = [
+            ['body' => 'Unauthorized', 'errors' => ['code' => 401]],
+            ['body' => (object) ['access_token' => 'new_tok'], 'errors' => []],
+            ['body' => 'Unauthorized', 'errors' => ['code' => 401]],
+            ['body' => (object) ['access_token' => 'newer_tok'], 'errors' => []],
+            ['body' => (object) $this->fileMetadataResponse, 'errors' => []],
+        ];
 
-        $this->googleDriveApp->sendRequest(GoogleDriveApp::FILE_METADATA_URL . '/' . $this->fileMetadataResponse['id']);
+        try {
+            $this->googleDriveApp->sendRequest(GoogleDriveApp::FILE_METADATA_URL . '/' . $this->fileMetadataResponse['id']);
+            $this->fail('The error was not thrown');
+        } catch (Exception $e) {
+            $this->assertSame('Unauthorized', $e->getMessage());
+            $this->assertCount(3, $this->sentMethods);
+        }
+    }
+
+    public function testGoogleDriveDoesNotRefreshAgainWhenTheTokenRequestIsUnauthorized(): void
+    {
+        $this->responseQueue = [
+            ['body' => (object) $this->errorResponse, 'errors' => ['code' => 401]],
+            ['body' => (object) ['error' => 'invalid_client'], 'errors' => ['code' => 401]],
+            ['body' => (object) ['access_token' => 'new_tok'], 'errors' => []],
+            ['body' => (object) $this->fileMetadataResponse, 'errors' => []],
+        ];
+
+        try {
+            $this->googleDriveApp->sendRequest(GoogleDriveApp::FILE_METADATA_URL . '/' . $this->fileMetadataResponse['id']);
+            $this->fail('The error was not thrown');
+        } catch (Exception $e) {
+            $this->assertStringContainsString('invalid_client', $e->getMessage());
+            $this->assertCount(2, $this->sentMethods);
+        }
+    }
+
+    public function testGoogleDriveRetryKeepsTheMethodOfTheRequest(): void
+    {
+        $this->responseQueue = [
+            ['body' => (object) $this->errorResponse, 'errors' => ['code' => 401]],
+            ['body' => (object) ['access_token' => 'new_tok'], 'errors' => []],
+            ['body' => (object) $this->fileMetadataResponse, 'errors' => []],
+        ];
+
+        $response = $this->googleDriveApp->sendRequest(GoogleDriveApp::FILE_METADATA_URL . '/' . $this->fileMetadataResponse['id'], null, [], 'GET');
+
+        $this->assertEquals((object) $this->fileMetadataResponse, $response);
+        $this->assertSame(['GET', 'POST', 'GET'], $this->sentMethods);
     }
 }

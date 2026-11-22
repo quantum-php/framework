@@ -150,39 +150,121 @@ class DropboxAppTest extends AppTestCase
         ];
     }
 
-    public function testDropboxRequestWithAnUnauthorizedErrorWithoutBodyRefreshesTheToken(): void
+    #[DataProvider('noBodyProvider')]
+    public function testDropboxRefreshesTheTokenWhenTheUnauthorizedErrorHasNoBody(mixed $body): void
     {
-        $this->currentErrors = ['code' => 401];
-
-        $this->currentResponse = null;
+        $this->responseQueue = [
+            ['body' => $body, 'errors' => ['code' => 401]],
+            ['body' => (object) ['access_token' => 'new_tok'], 'errors' => []],
+            ['body' => (object) $this->profileDataResponse, 'errors' => []],
+        ];
 
         $response = $this->dropboxApp->sendRequest('https://api.dropboxapi.com/2/users/get_account2');
 
         $this->assertEquals((object) $this->profileDataResponse, $response);
+        $this->assertCount(3, $this->sentMethods);
     }
 
-    public function testDropboxRequestWithAnotherUnauthorizedErrorDoesNotRefreshTheToken(): void
+    public static function noBodyProvider(): array
     {
-        $this->currentErrors = ['code' => 401];
-
-        $this->currentResponse = (object) $this->errorResponse;
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('no_account');
-
-        $this->dropboxApp->sendRequest('https://api.dropboxapi.com/2/users/get_account2');
+        return [
+            'empty body' => [''],
+            'no body' => [null],
+        ];
     }
 
-    public function testDropboxRequestWithATextErrorThrowsTheText(): void
+    #[DataProvider('otherUnauthorizedBodyProvider')]
+    public function testDropboxDoesNotRefreshTheTokenForAnotherUnauthorizedError(mixed $body): void
     {
-        $this->currentErrors = ['code' => 401];
+        $this->responseQueue = [
+            ['body' => $body, 'errors' => ['code' => 401]],
+        ];
 
-        $this->currentResponse = 'Error in call to API function "users/get_account": Bad request';
+        try {
+            $this->dropboxApp->sendRequest('https://api.dropboxapi.com/2/users/get_account2');
+            $this->fail('The error was not thrown');
+        } catch (Exception) {
+            $this->assertCount(1, $this->sentMethods);
+        }
+    }
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Error in call to API function');
+    public static function otherUnauthorizedBodyProvider(): array
+    {
+        return [
+            'another error tag' => [(object) ['error' => (object) ['.tag' => 'no_account']]],
+            'an error without a tag' => [(object) ['error' => (object) ['reason' => 'unknown']]],
+            'an object without an error' => [(object) ['message' => 'Unauthorized']],
+            'an error that is a string' => [(object) ['error' => 'invalid_grant']],
+            'a text body' => ['Error in call to API function "users/get_account": Bad request'],
+            'an array body' => [['error' => ['.tag' => 'expired_access_token']]],
+            'a number body' => [401],
+        ];
+    }
 
-        $this->dropboxApp->sendRequest('https://api.dropboxapi.com/2/users/get_account2');
+    public function testDropboxThrowsTheTextOfATextErrorAsItIs(): void
+    {
+        $text = 'Error in call to API function "users/get_account": Bad request';
+
+        $this->responseQueue = [
+            ['body' => $text, 'errors' => ['code' => 401]],
+        ];
+
+        try {
+            $this->dropboxApp->sendRequest('https://api.dropboxapi.com/2/users/get_account2');
+            $this->fail('The error was not thrown');
+        } catch (Exception $e) {
+            $this->assertSame($text, $e->getMessage());
+        }
+    }
+
+    public function testDropboxThrowsTheClientErrorWhenAnErrorHasNoBody(): void
+    {
+        $errors = ['code' => 500, 'message' => 'HTTP/1.1 500 Internal Server Error'];
+
+        $this->responseQueue = [
+            ['body' => '', 'errors' => $errors],
+        ];
+
+        try {
+            $this->dropboxApp->sendRequest('https://api.dropboxapi.com/2/users/get_account2');
+            $this->fail('The error was not thrown');
+        } catch (Exception $e) {
+            $this->assertSame(json_encode($errors), $e->getMessage());
+        }
+    }
+
+    public function testDropboxRefreshesTheTokenOnlyOnceWhenTheRetryFailsAgain(): void
+    {
+        $expired = (object) ['error' => (object) ['.tag' => 'expired_access_token']];
+
+        $this->responseQueue = [
+            ['body' => $expired, 'errors' => ['code' => 401]],
+            ['body' => (object) ['access_token' => 'new_tok'], 'errors' => []],
+            ['body' => $expired, 'errors' => ['code' => 401]],
+            ['body' => (object) ['access_token' => 'newer_tok'], 'errors' => []],
+            ['body' => (object) $this->profileDataResponse, 'errors' => []],
+        ];
+
+        try {
+            $this->dropboxApp->sendRequest('https://api.dropboxapi.com/2/users/get_account2');
+            $this->fail('The error was not thrown');
+        } catch (Exception) {
+            $this->assertCount(3, $this->sentMethods);
+        }
+    }
+
+    public function testDropboxRetryKeepsTheMethodOfTheRequest(): void
+    {
+        $this->responseQueue = [
+            ['body' => (object) ['error' => (object) ['.tag' => 'expired_access_token']], 'errors' => ['code' => 401]],
+            ['body' => (object) ['access_token' => 'new_tok'], 'errors' => []],
+            ['body' => (object) $this->profileDataResponse, 'errors' => []],
+        ];
+
+        $response = $this->dropboxApp->sendRequest('https://api.dropboxapi.com/2/users/get_account2', null, [], 'GET');
+
+        $this->assertEquals((object) $this->profileDataResponse, $response);
+        $this->assertSame(['GET', 'POST', 'GET'], $this->sentMethods);
     }
 
     public function testDropboxPathNormalizer(): void

@@ -19,6 +19,17 @@ trait HttpClientTestCase
 
     protected $options;
 
+    /**
+     * Responses for the next requests, in order: each ['body' => ..., 'errors' => [...]].
+     * When it is empty, a request answers with $currentResponse and $currentErrors.
+     */
+    protected array $responseQueue = [];
+
+    /**
+     * The HTTP method of every request sent, in order
+     */
+    protected array $sentMethods = [];
+
     protected function mockHttpClient()
     {
         $httpClientMock = Mockery::mock(HttpClient::class);
@@ -28,7 +39,10 @@ trait HttpClientTestCase
             return $httpClientMock;
         });
 
-        $httpClientMock->shouldReceive('setMethod')->andReturnSelf();
+        $httpClientMock->shouldReceive('setMethod')->andReturnUsing(function ($method) use ($httpClientMock) {
+            $this->sentMethods[] = $method;
+            return $httpClientMock;
+        });
 
         $httpClientMock->shouldReceive('setHeaders')->andReturnSelf();
 
@@ -47,6 +61,13 @@ trait HttpClientTestCase
         });
 
         $httpClientMock->shouldReceive('start')->andReturnUsing(function () use ($httpClientMock) {
+            if ($this->responseQueue !== []) {
+                $next = array_shift($this->responseQueue);
+                $this->response[$this->url]['body'] = $next['body'];
+                $this->response[$this->url]['errors'] = $next['errors'];
+                return $httpClientMock;
+            }
+
             $this->response[$this->url]['body'] = $this->currentResponse;
             $this->response[$this->url]['errors'] = $this->currentErrors;
             $this->currentResponse = [];
