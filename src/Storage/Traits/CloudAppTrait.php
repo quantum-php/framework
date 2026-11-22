@@ -21,6 +21,12 @@ use Exception;
 trait CloudAppTrait
 {
     /**
+     * Set while the access token is being refreshed: the token request and the retried
+     * request may not start another refresh, so a request refreshes the token at most once
+     */
+    private bool $refreshingAccessToken = false;
+
+    /**
      * @inheritDoc
      * @param array<string, mixed>|string|null $data
      * @param array<string, string> $headers
@@ -38,35 +44,42 @@ trait CloudAppTrait
         $errors = $this->httpClient->getErrors();
         $responseBody = $this->httpClient->getResponseBody();
 
-        if ($errors) {
-            $code = $errors['code'];
+        if (!$errors) {
+            return $responseBody;
+        }
 
-            if ($this->accessTokenNeedsRefresh($code, $responseBody)) {
-                $prevUrl = $this->httpClient->url();
+        if (!$this->refreshingAccessToken && $this->accessTokenNeedsRefresh($errors['code'], $responseBody)) {
+            $this->refreshingAccessToken = true;
 
-                if (empty($prevUrl)) {
-                    throw new Exception('Cannot retry request: original URL is not available.', E_ERROR);
-                }
+            try {
+                $accessToken = $this->fetchAccessTokenByRefreshToken($this->tokenService->getRefreshToken());
 
-                $prevData = $this->httpClient->getData();
-                $prevHeaders = $this->httpClient->getRequestHeaders();
+                $headers['Authorization'] = 'Bearer ' . $accessToken;
 
-                $refreshToken = $this->tokenService->getRefreshToken();
-
-                $accessToken = $this->fetchAccessTokenByRefreshToken($refreshToken);
-
-                $prevHeaders['Authorization'] = 'Bearer ' . $accessToken;
-
-                $responseBody = $this->sendRequest($prevUrl, $prevData, $prevHeaders);
-
-            } else {
-                throw new Exception(
-                    json_encode($responseBody ?? $errors) ?: '',
-                    E_ERROR
-                );
+                return $this->sendRequest($uri, $data, $headers, $method);
+            } finally {
+                $this->refreshingAccessToken = false;
             }
         }
 
-        return $responseBody;
+        throw new Exception($this->errorMessage($responseBody, $errors), E_ERROR);
+    }
+
+    /**
+     * The message of a failed request: a text body as it is, the client's error
+     * when there is no body, and any other body as JSON
+     * @param array<int|string, mixed> $errors
+     */
+    private function errorMessage(mixed $responseBody, array $errors): string
+    {
+        if (is_string($responseBody) && $responseBody !== '') {
+            return $responseBody;
+        }
+
+        if ($responseBody === null || $responseBody === '') {
+            return json_encode($errors) ?: '';
+        }
+
+        return json_encode($responseBody) ?: '';
     }
 }

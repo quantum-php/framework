@@ -180,9 +180,9 @@ class GoogleDriveApp implements CloudAppInterface
     }
 
     /**
-     * Checks if the access token need refresh
+     * Checks if the access token needs a refresh: every 401, whatever the body is
      */
-    private function accessTokenNeedsRefresh(int $code, ?object $message = null): bool
+    private function accessTokenNeedsRefresh(int $code, mixed $message = null): bool
     {
         return $code === self::INVALID_TOKEN_ERROR_CODE;
     }
