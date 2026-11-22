@@ -22,6 +22,10 @@ class SingleAdapterTest extends AppTestCase
 
         $this->logFile = base_dir() . DS . 'logs' . DS . 'app.log';
 
+        if ($this->fs->exists($this->logFile)) {
+            $this->fs->remove($this->logFile);
+        }
+
         $this->adapter = new SingleAdapter([
             'path' => $this->logFile,
         ]);
@@ -156,6 +160,47 @@ class SingleAdapterTest extends AppTestCase
         fclose($resource);
 
         $this->assertStringContainsString('Info: Opened {"handle":null,"mode":"r"}' . PHP_EOL, $this->written());
+    }
+
+    public function testSingleAdapterWritesTheLineWhenAContextValueCannotBeConverted(): void
+    {
+        $value = new class () implements Stringable {
+            public function __toString(): string
+            {
+                throw new RuntimeException('Not loaded');
+            }
+        };
+
+        $this->adapter->report('error', 'Failed', ['user' => $value]);
+
+        $this->assertStringContainsString('Error: Failed {"context":"not encodable"}' . PHP_EOL, $this->written());
+    }
+
+    public function testSingleAdapterWritesATraceThatIsNotTextInTheContext(): void
+    {
+        $this->adapter->report('error', 'Failed', ['trace' => ['#0 main', '#1 run']]);
+
+        $this->assertMatchesRegularExpression(
+            self::LINE_START . preg_quote('Error: Failed {"trace":["#0 main","#1 run"]}' . PHP_EOL, '/') . '$/',
+            $this->written()
+        );
+    }
+
+    public function testSingleAdapterWritesAStringableTraceOnItsOwnLine(): void
+    {
+        $trace = new class () implements Stringable {
+            public function __toString(): string
+            {
+                return '#0 main';
+            }
+        };
+
+        $this->adapter->report('error', 'Failed', ['trace' => $trace]);
+
+        $this->assertMatchesRegularExpression(
+            self::LINE_START . preg_quote('Error: Failed' . PHP_EOL . '#0 main' . PHP_EOL, '/') . '$/',
+            $this->written()
+        );
     }
 
     private function written(): string
