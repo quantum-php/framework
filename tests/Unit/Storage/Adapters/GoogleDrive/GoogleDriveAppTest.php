@@ -5,6 +5,7 @@ namespace Quantum\Tests\Unit\Storage\Adapters\GoogleDrive;
 use Quantum\Storage\Adapters\GoogleDrive\GoogleDriveApp;
 use Quantum\Tests\Unit\Storage\HttpClientTestCase;
 use Quantum\Tests\Unit\AppTestCase;
+use Exception;
 
 class GoogleDriveAppTest extends AppTestCase
 {
@@ -119,4 +120,26 @@ class GoogleDriveAppTest extends AppTestCase
         $this->assertEquals((object) $this->fileMetadataResponse, $response);
     }
 
+    public function testGoogleDriveRequestWithATextBodyOnAnExpiredTokenRefreshesTheToken(): void
+    {
+        $this->currentErrors = ['code' => 401];
+
+        $this->currentResponse = 'Unauthorized';
+
+        $response = $this->googleDriveApp->sendRequest(GoogleDriveApp::FILE_METADATA_URL . '/' . $this->fileMetadataResponse['id']);
+
+        $this->assertEquals((object) $this->fileMetadataResponse, $response);
+    }
+
+    public function testGoogleDriveRequestWithATextErrorThrowsTheText(): void
+    {
+        $this->currentErrors = ['code' => 500];
+
+        $this->currentResponse = 'Internal Server Error';
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Internal Server Error');
+
+        $this->googleDriveApp->sendRequest(GoogleDriveApp::FILE_METADATA_URL . '/' . $this->fileMetadataResponse['id']);
+    }
 }

@@ -2,9 +2,11 @@
 
 namespace Quantum\Tests\Unit\Storage\Adapters\Dropbox;
 
-use Quantum\Storage\Adapters\Dropbox\DropboxApp;
 use Quantum\Tests\Unit\Storage\HttpClientTestCase;
+use Quantum\Storage\Adapters\Dropbox\DropboxApp;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Quantum\Tests\Unit\AppTestCase;
+use Exception;
 
 class DropboxAppTest extends AppTestCase
 {
@@ -126,17 +128,61 @@ class DropboxAppTest extends AppTestCase
         $this->assertEquals((object) $this->profileDataResponse, $response);
     }
 
-    public function testDropboxRequestWithAccessTokenExpired(): void
+    #[DataProvider('tokenErrorProvider')]
+    public function testDropboxRequestWithAccessTokenExpired(string $tag): void
     {
         $this->currentErrors = ['code' => 401];
 
-        $this->currentResponse = (object) $this->errorResponse;
+        $this->currentResponse = (object) ['error' => (object) ['.tag' => $tag], 'error_summary' => $tag . '/...'];
 
         $response = $this->dropboxApp->sendRequest('https://api.dropboxapi.com/2/users/get_account2');
 
         $this->assertIsObject($response);
 
         $this->assertEquals((object) $this->profileDataResponse, $response);
+    }
+
+    public static function tokenErrorProvider(): array
+    {
+        return [
+            'expired access token' => ['expired_access_token'],
+            'invalid access token' => ['invalid_access_token'],
+        ];
+    }
+
+    public function testDropboxRequestWithAnUnauthorizedErrorWithoutBodyRefreshesTheToken(): void
+    {
+        $this->currentErrors = ['code' => 401];
+
+        $this->currentResponse = null;
+
+        $response = $this->dropboxApp->sendRequest('https://api.dropboxapi.com/2/users/get_account2');
+
+        $this->assertEquals((object) $this->profileDataResponse, $response);
+    }
+
+    public function testDropboxRequestWithAnotherUnauthorizedErrorDoesNotRefreshTheToken(): void
+    {
+        $this->currentErrors = ['code' => 401];
+
+        $this->currentResponse = (object) $this->errorResponse;
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('no_account');
+
+        $this->dropboxApp->sendRequest('https://api.dropboxapi.com/2/users/get_account2');
+    }
+
+    public function testDropboxRequestWithATextErrorThrowsTheText(): void
+    {
+        $this->currentErrors = ['code' => 401];
+
+        $this->currentResponse = 'Error in call to API function "users/get_account": Bad request';
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Error in call to API function');
+
+        $this->dropboxApp->sendRequest('https://api.dropboxapi.com/2/users/get_account2');
     }
 
     public function testDropboxPathNormalizer(): void

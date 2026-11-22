@@ -230,18 +230,19 @@ class DropboxApp implements CloudAppInterface
     }
 
     /**
-     * Checks if the access token need refresh
+     * Checks if the access token needs a refresh: a 401, and when the body names an error,
+     * only the tags of an invalid or expired token; a plain text body is not a token error
      */
-    private function accessTokenNeedsRefresh(int $code, ?object $message = null): bool
+    private function accessTokenNeedsRefresh(int $code, mixed $message = null): bool
     {
-        if ($code !== self::INVALID_TOKEN_ERROR_CODE) {
+        if ($code !== self::INVALID_TOKEN_ERROR_CODE || is_string($message)) {
             return false;
         }
 
-        if (isset($message->error)) {
+        if (is_object($message) && isset($message->error)) {
             $error = (array) $message->error;
 
-            if (!isset($error['.tag']) && !in_array($error['.tag'], self::ACCESS_TOKEN_STATUS)) {
+            if (!isset($error['.tag']) || !in_array($error['.tag'], self::ACCESS_TOKEN_STATUS, true)) {
                 return false;
             }
         }

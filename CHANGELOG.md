@@ -22,6 +22,7 @@ The format is based on Keep a Changelog.
 - `php qt install:debugbar` copies the toolbar files through the local filesystem. It used the application's default storage, so with `fs.default` set to `dropbox` or `gdrive` it looked for the local files in the cloud and failed. Its message for an installation that is already complete reads "The debug bar is already installed" (#691)
 - The `@method` annotations of the `Cache` facade declare the PSR-16 types the adapters have, so static analysis and IDEs report `cache()->get(42)`, which throws a `TypeError` at runtime. The `*Multiple()` methods document integer keys and `InvalidCacheKeyException` (#691)
 - `MemcachedAdapter::set()` handles the TTL as PSR-16 and the other adapters do. A TTL of zero, or a `DateInterval` in the past, removes the item: Memcached read the resulting `0` as "never expires" and kept it. A TTL of more than 30 days is sent as an absolute time: Memcached reads a longer number of seconds as a Unix timestamp, so the item expired at once although `set()` returned `true` (#692)
+- The Dropbox and Google Drive storage adapters handle an API error whose body is plain text: it raised a `TypeError` in the check for an expired access token, and now ends in the adapters' `Exception` with that text (Dropbox) or, for a 401, in a token refresh (Google Drive). Dropbox refreshes the token only when the error says it is invalid or expired; it refreshed on every 401 and retried, so another 401, such as a missing permission, repeated the request without end (#694)
 
 ## [3.1.2] - 2026-11-19
 
