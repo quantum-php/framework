@@ -31,8 +31,6 @@ class SetupTest extends AppTestCase
 
         $this->assertEquals('database', $setup->getFilename());
 
-        $this->assertEquals(true, $setup->getHierarchy());
-
         $this->assertEquals('File `' . $setup->getPathPrefix() . DS . $setup->getFilename() . '` not found!', $setup->getExceptionMessage());
     }
 
@@ -45,7 +43,7 @@ class SetupTest extends AppTestCase
         request()->setMatchedRoute(null);
 
         $this->assertSame('Test', $setup->getModule());
-        $this->assertSame('Meme', (new Setup('config', 'dependencies', true, 'Meme'))->getModule());
+        $this->assertSame('Meme', (new Setup('config', 'dependencies', module: 'Meme'))->getModule());
     }
 
     public function testDefaultExceptionMessageIsCapturedAtConstruction(): void
@@ -71,13 +69,6 @@ class SetupTest extends AppTestCase
         $this->assertEquals('users', $this->setup->getFilename());
     }
 
-    public function testSetGetHierarchy(): void
-    {
-        $this->setup->setHierarchy(true);
-
-        $this->assertTrue($this->setup->getHierarchy());
-    }
-
     public function testSetupRaisesNoDeprecationByDefault(): void
     {
         $messages = $this->collectDeprecations(function (): void {
@@ -86,40 +77,6 @@ class SetupTest extends AppTestCase
         });
 
         $this->assertSame([], $messages);
-    }
-
-    public function testSetupRaisesDeprecationWhenHierarchicalArgumentIsPassed(): void
-    {
-        $messages = $this->collectDeprecations(function (): void {
-            new Setup('config', 'app', false);
-        });
-
-        $this->assertCount(1, $messages);
-        $this->assertStringContainsString('$hierarchical argument', $messages[0]);
-        $this->assertStringContainsString('3.2.0', $messages[0]);
-    }
-
-    public function testSetupKeepsHierarchicalValueWhenArgumentIsPassed(): void
-    {
-        $setup = null;
-
-        $this->collectDeprecations(function () use (&$setup): void {
-            $setup = new Setup('config', 'app', false);
-        });
-
-        $this->assertFalse($setup->getHierarchy());
-    }
-
-    public function testSetHierarchyRaisesDeprecation(): void
-    {
-        $messages = $this->collectDeprecations(function (): void {
-            $this->setup->setHierarchy(false);
-        });
-
-        $this->assertCount(1, $messages);
-        $this->assertStringContainsString('setHierarchy()', $messages[0]);
-        $this->assertStringContainsString('3.2.0', $messages[0]);
-        $this->assertFalse($this->setup->getHierarchy());
     }
 
     public function testSetGetModule(): void
@@ -134,6 +91,27 @@ class SetupTest extends AppTestCase
         $this->setup->setExceptionMessage('Action not allowed');
 
         $this->assertEquals('Action not allowed', $this->setup->getExceptionMessage());
+    }
+
+    public function testThirdArgumentIsTheModule(): void
+    {
+        $setup = new Setup('config', 'app', 'Blog');
+
+        $this->assertSame('Blog', $setup->getModule());
+    }
+
+    public function testFourthArgumentIsTheExceptionMessage(): void
+    {
+        $setup = new Setup('config', 'app', 'Blog', 'App config is missing');
+
+        $this->assertSame('Blog', $setup->getModule());
+        $this->assertSame('App config is missing', $setup->getExceptionMessage());
+    }
+
+    public function testHierarchyMethodsAreRemoved(): void
+    {
+        $this->assertFalse(method_exists(Setup::class, 'setHierarchy'));
+        $this->assertFalse(method_exists(Setup::class, 'getHierarchy'));
     }
 
     /**

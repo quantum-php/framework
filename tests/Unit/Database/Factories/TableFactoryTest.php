@@ -20,7 +20,7 @@ class TableFactoryTest extends AppTestCase
         parent::setUp();
 
         if (!config()->has('database')) {
-            config()->import(new Setup('config', 'database', true));
+            config()->import(new Setup('config', 'database'));
         }
 
         config()->set('database.default', 'sqlite');
