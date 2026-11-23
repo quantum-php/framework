@@ -49,7 +49,7 @@ class ConfigTest extends AppTestCase
 
     public function testImportLoadsModuleConfig(): void
     {
-        $this->config->import(new Setup('config', 'dependencies', true, 'Test'));
+        $this->config->import(new Setup('config', 'dependencies', module: 'Test'));
 
         $this->assertSame(
             PostTransformer::class,
@@ -64,7 +64,7 @@ class ConfigTest extends AppTestCase
 
         try {
             $this->createFile($moduleConfig, "<?php\n\nreturn ['name' => 'Module app'];\n");
-            $this->config->import(new Setup('config', 'app', true, 'Test'));
+            $this->config->import(new Setup('config', 'app', module: 'Test'));
 
             $this->assertSame('Module app', $this->config->get('app.name'));
         } finally {
@@ -74,7 +74,7 @@ class ConfigTest extends AppTestCase
 
     public function testImportFallsBackToSharedConfig(): void
     {
-        $this->config->import(new Setup('config', 'app', true, 'Test'));
+        $this->config->import(new Setup('config', 'app', module: 'Test'));
 
         $this->assertSame('Quantum PHP Framework', $this->config->get('app.name'));
     }
@@ -99,7 +99,7 @@ class ConfigTest extends AppTestCase
 
         try {
             chdir($workingDirectory);
-            $this->config->import(new Setup('config', $filename, false));
+            $this->config->import(new Setup('config', $filename));
 
             $this->assertSame('application', $this->config->get($filename . '.source'));
         } finally {
@@ -143,16 +143,6 @@ class ConfigTest extends AppTestCase
         $this->expectExceptionMessage('Config key `app` is already in use');
 
         $this->config->importIfExists(new Setup('config', 'app'));
-    }
-
-    public function testImportDoesNotFallBackWhenHierarchyIsDisabled(): void
-    {
-        try {
-            $this->config->import(new Setup('config', 'app', false, 'Test'));
-            $this->fail('Expected a missing config exception');
-        } catch (ConfigException $exception) {
-            $this->assertFalse($this->config->has('app'));
-        }
     }
 
     public function testLoadDoesNotReplacePreviouslyLoadedConfig(): void
