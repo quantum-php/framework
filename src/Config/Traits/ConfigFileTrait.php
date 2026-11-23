@@ -92,14 +92,12 @@ trait ConfigFileTrait
             return $filePath;
         }
 
-        if ($setup->getHierarchy()) {
-            $filePath = $baseDir . DS . 'shared' . DS
-                . strtolower($setup->getPathPrefix() ?? '') . DS
-                . $setup->getFilename() . '.php';
+        $filePath = $baseDir . DS . 'shared' . DS
+            . strtolower($setup->getPathPrefix() ?? '') . DS
+            . $setup->getFilename() . '.php';
 
-            if (file_exists($filePath)) {
-                return $filePath;
-            }
+        if (file_exists($filePath)) {
+            return $filePath;
         }
 
         return null;
