@@ -20,6 +20,9 @@ use Dflydev\DotAccessData\Data;
  * Read-only config values: a section of the config, such as `cache.redis`,
  * made by Config::section() or from an array.
  *
+ * Arrays are copied, so a section and the arrays it returns never change each other.
+ * Objects stored in the config, such as closures or services, are not cloned: they are shared.
+ *
  * @package Quantum\Config
  */
 final class ConfigSection

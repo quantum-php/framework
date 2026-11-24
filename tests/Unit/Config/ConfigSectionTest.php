@@ -5,6 +5,7 @@ namespace Quantum\Tests\Unit\Config;
 use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Config\ConfigSection;
+use stdClass;
 
 class ConfigSectionTest extends AppTestCase
 {
@@ -92,5 +93,41 @@ class ConfigSectionTest extends AppTestCase
         foreach (['set', 'delete', 'flush', 'load', 'import', 'importIfExists'] as $method) {
             $this->assertFalse(method_exists(ConfigSection::class, $method), $method);
         }
+    }
+
+    public function testAllReturnsACopyOfNestedArrays(): void
+    {
+        $section = new ConfigSection(['redis' => ['options' => ['timeout' => 5]]]);
+
+        $values = $section->all();
+        $values['redis']['options']['timeout'] = 99;
+
+        $this->assertSame(5, $section->get('redis.options.timeout'));
+    }
+
+    public function testSectionReturnsACopyOfNestedArrays(): void
+    {
+        $section = new ConfigSection(['redis' => ['options' => ['timeout' => 5]]]);
+
+        $redis = $section->section('redis');
+        $values = $redis->all();
+        $values['options']['timeout'] = 99;
+
+        $this->assertSame(5, $redis->get('options.timeout'));
+        $this->assertSame(5, $section->get('redis.options.timeout'));
+    }
+
+    public function testObjectsInASectionAreShared(): void
+    {
+        $handler = new stdClass();
+        $handler->calls = 0;
+
+        $section = new ConfigSection(['handler' => $handler]);
+
+        $section->get('handler')->calls++;
+
+        $this->assertSame($handler, $section->get('handler'));
+        $this->assertSame($handler, $section->all()['handler']);
+        $this->assertSame(1, $handler->calls);
     }
 }
