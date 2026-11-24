@@ -5,6 +5,7 @@ namespace Quantum\Tests\Unit\Logger\Adapters;
 use Quantum\Logger\Exceptions\LoggerException;
 use Quantum\Logger\Adapters\DailyAdapter;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Config\ConfigSection;
 
 class DailyAdapterTest extends AppTestCase
 {
@@ -14,9 +15,9 @@ class DailyAdapterTest extends AppTestCase
     {
         parent::setUp();
 
-        $this->adapter = new DailyAdapter([
+        $this->adapter = new DailyAdapter(new ConfigSection([
             'path' => base_dir() . DS . 'logs',
-        ]);
+        ]));
     }
 
     public function testDailyAdapterInstance(): void
@@ -28,9 +29,9 @@ class DailyAdapterTest extends AppTestCase
     {
         $this->expectException(LoggerException::class);
 
-        new DailyAdapter([
+        new DailyAdapter(new ConfigSection([
             'path' => base_dir() . DS . 'invalid_path',
-        ]);
+        ]));
     }
 
     public function testDailyAdapterReportWritesToFile(): void

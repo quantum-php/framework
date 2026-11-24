@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace Quantum\Logger\Traits;
 
 use Quantum\Logger\Exceptions\LoggerException;
+use Quantum\Config\ConfigSection;
 use Quantum\Storage\FileSystem;
 use Stringable;
 use Throwable;
@@ -29,7 +30,7 @@ trait LoggerTrait
      * Initialize the logger
      * @throws LoggerException
      */
-    abstract protected function initialize(array $params): void;
+    abstract protected function initialize(ConfigSection $config): void;
 
     /**
      * Reports a log message

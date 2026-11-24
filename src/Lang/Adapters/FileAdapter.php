@@ -15,6 +15,7 @@ use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Lang\Exceptions\LangException;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Di\Exceptions\DiException;
+use Quantum\Config\ConfigSection;
 use Dflydev\DotAccessData\Data;
 use ReflectionException;
 
@@ -22,20 +23,14 @@ class FileAdapter implements LangAdapterInterface
 {
     protected string $lang;
 
-    /**
-     * @var array<string, mixed>
-     */
-    protected array $params = [];
+    protected ConfigSection $config;
 
     private ?Data $translations = null;
 
-    /**
-     * @param array<string, mixed> $params
-     */
-    public function __construct(string $lang, array $params = [])
+    public function __construct(string $lang, ConfigSection $config = new ConfigSection())
     {
         $this->lang = $lang;
-        $this->params = $params;
+        $this->config = $config;
     }
 
     public function setLang(string $lang): LangAdapterInterface

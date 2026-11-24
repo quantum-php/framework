@@ -84,7 +84,7 @@ class AuthFactory
     private function createInstance(string $adapterClass, string $adapter): Auth
     {
         $authService = $this->createAuthService($adapter);
-        $authConfig = (array) config()->get('auth');
+        $authConfig = config()->section('auth');
 
         $adapterInstance = $adapter === AuthType::JWT
             ? new $adapterClass($authService, mailer(), new Hasher(), $this->createJwtInstance(), $authConfig)

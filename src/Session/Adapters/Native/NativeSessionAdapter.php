@@ -12,7 +12,9 @@ namespace Quantum\Session\Adapters\Native;
 
 use Quantum\Session\Contracts\SessionStorageInterface;
 use Quantum\Session\Exceptions\SessionException;
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Session\Traits\SessionTrait;
+use Quantum\Config\ConfigSection;
 
 /**
  * Class Session
@@ -28,10 +30,9 @@ class NativeSessionAdapter implements SessionStorageInterface
     public const SESSION_TIMEOUT = 30 * 60;
 
     /**
-     * Session params
-     * @var array<string, mixed>|null
+     * Session config, kept to start the session again after regenerateId()
      */
-    private static ?array $params = [];
+    private static ?ConfigSection $config = null;
 
     /**
      * Session storage
@@ -40,21 +41,19 @@ class NativeSessionAdapter implements SessionStorageInterface
     private static array $storage = [];
 
     /**
-     * @param array<string, mixed>|null $params
-     * @throws SessionException
+     * @throws ConfigException|SessionException
      */
-    public function __construct(?array $params = null)
+    public function __construct(ConfigSection $config = new ConfigSection())
     {
-        $this->initializeSession($params);
+        $this->initializeSession($config);
     }
 
     /**
-     * @param array<string, mixed>|null $params
-     * @throws SessionException
+     * @throws ConfigException|SessionException
      */
-    protected function initializeSession(?array $params = null): void
+    protected function initializeSession(ConfigSection $config): void
     {
-        $timeout = $params['timeout'] ?? self::SESSION_TIMEOUT;
+        $timeout = $config->getInt('timeout', self::SESSION_TIMEOUT);
 
         if (session_status() !== PHP_SESSION_ACTIVE && @session_start() === false) {
             throw SessionException::sessionNotStarted();
@@ -66,7 +65,7 @@ class NativeSessionAdapter implements SessionStorageInterface
 
         $_SESSION['LAST_ACTIVITY'] = time();
 
-        self::$params = $params;
+        self::$config = $config;
         self::$storage = &$_SESSION;
     }
 }

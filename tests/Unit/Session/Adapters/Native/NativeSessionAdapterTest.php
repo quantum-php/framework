@@ -4,6 +4,7 @@ namespace Quantum\Tests\Unit\Session\Adapters\Native;
 
 use Quantum\Session\Adapters\Native\NativeSessionAdapter;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Config\ConfigSection;
 
 class NativeSessionAdapterTest extends AppTestCase
 {
@@ -112,5 +113,17 @@ class NativeSessionAdapterTest extends AppTestCase
         $this->session->regenerateId();
 
         $this->assertNotEquals(session_id(), $sessionId);
+    }
+
+    public function testNativeSessionKeepsItsConfigAfterRegenerateId(): void
+    {
+        $session = new NativeSessionAdapter(new ConfigSection(['timeout' => '60']));
+
+        $session->regenerateId();
+
+        $config = $this->getPrivateProperty($session, 'config');
+
+        $this->assertInstanceOf(ConfigSection::class, $config);
+        $this->assertSame(60, $config->getInt('timeout'));
     }
 }

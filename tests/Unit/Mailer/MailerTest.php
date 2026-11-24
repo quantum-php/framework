@@ -12,6 +12,7 @@ use Quantum\Mailer\Adapters\MailgunAdapter;
 use Quantum\Mailer\Adapters\ResendAdapter;
 use Quantum\Mailer\Adapters\SmtpAdapter;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Config\ConfigSection;
 use Quantum\Mailer\Mailer;
 use Quantum\Config\Setup;
 use ReflectionMethod;
@@ -29,7 +30,7 @@ class MailerTest extends AppTestCase
 
     public function testMailerGetAdapter(): void
     {
-        $mailer = new Mailer(new SmtpAdapter(config()->get('mailer.smtp')));
+        $mailer = new Mailer(new SmtpAdapter(config()->section('mailer.smtp')));
 
         $this->assertInstanceOf(SmtpAdapter::class, $mailer->getAdapter());
 
@@ -38,7 +39,7 @@ class MailerTest extends AppTestCase
 
     public function testMailerCallingValidMethod(): void
     {
-        $mailer = new Mailer(new SmtpAdapter(config()->get('mailer.smtp')));
+        $mailer = new Mailer(new SmtpAdapter(config()->section('mailer.smtp')));
 
         $mailer->setSubject('Welcome');
 
@@ -47,7 +48,7 @@ class MailerTest extends AppTestCase
 
     public function testMailerCallingInvalidMethod(): void
     {
-        $mailer = new Mailer(new SmtpAdapter(config()->get('mailer.smtp')));
+        $mailer = new Mailer(new SmtpAdapter(config()->section('mailer.smtp')));
 
         $this->expectException(MailerException::class);
 
@@ -57,9 +58,9 @@ class MailerTest extends AppTestCase
     }
 
     #[DataProvider('httpAdapterProvider')]
-    public function testHttpAdapterGetTransportErrorsReturnsArray(string $adapterClass, array $params): void
+    public function testHttpAdapterGetTransportErrorsReturnsArray(string $adapterClass, array $config): void
     {
-        $adapter = new $adapterClass($params);
+        $adapter = new $adapterClass(new ConfigSection($config));
 
         $httpClient = $this->getPrivateProperty($adapter, 'httpClient');
         $httpClient->createRequest('http://localhost');

@@ -5,6 +5,7 @@ namespace Quantum\Tests\Unit\Mailer\Adapters;
 use Quantum\Tests\Unit\Mailer\MailerTestCase;
 use Quantum\Mailer\Contracts\MailerInterface;
 use Quantum\Mailer\Adapters\SendgridAdapter;
+use Quantum\Config\ConfigSection;
 
 class SendgridAdapterTest extends MailerTestCase
 {
@@ -12,7 +13,7 @@ class SendgridAdapterTest extends MailerTestCase
     {
         parent::setUp();
 
-        $this->adapter = new SendgridAdapter(['api_key' => 'xxx111222333']);
+        $this->adapter = new SendgridAdapter(new ConfigSection(['api_key' => 'xxx111222333']));
     }
 
     public function testSendgridAdapterInstance(): void

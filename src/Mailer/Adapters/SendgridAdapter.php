@@ -13,6 +13,7 @@ namespace Quantum\Mailer\Adapters;
 use Quantum\Mailer\Contracts\MailerInterface;
 use Quantum\Mailer\Traits\MailerTrait;
 use Quantum\HttpClient\HttpClient;
+use Quantum\Config\ConfigSection;
 use Exception;
 
 /**
@@ -38,13 +39,12 @@ class SendgridAdapter implements MailerInterface
 
     /**
      * SendgridAdapter constructor
-     * @param array<string, mixed> $params
      */
-    public function __construct(array $params)
+    public function __construct(ConfigSection $config)
     {
         $this->httpClient = new HttpClient();
 
-        $this->apiKey = $params['api_key'];
+        $this->apiKey = $config->get('api_key');
     }
 
     /**

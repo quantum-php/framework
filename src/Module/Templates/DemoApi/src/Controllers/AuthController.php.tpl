@@ -30,7 +30,7 @@ class AuthController extends BaseController
         try {
             $code = auth()->signin($request->get('email'), $request->get('password'));
 
-            if (config()->getBool('auth.two_fa')) {
+            if (config()->getBool('auth.two_fa', false)) {
                 $response->set('code', $code);
             }
 

@@ -3,7 +3,9 @@
 namespace Quantum\Tests\Unit\RateLimit\Adapters;
 
 use Quantum\RateLimit\Adapters\RedisRateLimitAdapter;
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Config\ConfigSection;
 
 class RedisRateLimitAdapterTest extends AppTestCase
 {
@@ -13,11 +15,11 @@ class RedisRateLimitAdapterTest extends AppTestCase
     {
         parent::setUp();
 
-        $this->adapter = new RedisRateLimitAdapter([
+        $this->adapter = new RedisRateLimitAdapter(new ConfigSection([
             'host' => '127.0.0.1',
             'port' => 6379,
             'ttl' => 30,
-        ]);
+        ]));
     }
 
     public function tearDown(): void
@@ -29,11 +31,11 @@ class RedisRateLimitAdapterTest extends AppTestCase
 
     public function testRedisAdapterConnectsWithThePortAsText(): void
     {
-        $adapter = new RedisRateLimitAdapter([
+        $adapter = new RedisRateLimitAdapter(new ConfigSection([
             'host' => '127.0.0.1',
             'port' => '6379',
             'ttl' => 30,
-        ]);
+        ]));
 
         $this->assertTrue($adapter->hit('k2', 5, 30));
     }
@@ -51,5 +53,21 @@ class RedisRateLimitAdapterTest extends AppTestCase
     {
         $this->adapter->reset('missing-key');
         $this->assertSame(0, $this->adapter->retryAfter('missing-key'));
+    }
+
+    public function testRedisRateLimitAdapterRejectsAMissingTtl(): void
+    {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('The config key `ttl` is missing.');
+
+        new RedisRateLimitAdapter(new ConfigSection(['prefix' => 'test', 'host' => '127.0.0.1', 'port' => 6379]));
+    }
+
+    public function testRedisRateLimitAdapterRejectsAMissingPort(): void
+    {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('The config key `port` is missing.');
+
+        new RedisRateLimitAdapter(new ConfigSection(['prefix' => 'test', 'host' => '127.0.0.1', 'ttl' => 60]));
     }
 }

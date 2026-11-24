@@ -72,7 +72,7 @@ class RendererFactory
      */
     private function createInstance(string $adapterClass, string $adapter): Renderer
     {
-        $adapterInstance = new $adapterClass(config()->get('view.' . $adapter));
+        $adapterInstance = new $adapterClass(config()->section('view.' . $adapter));
 
         if (!$adapterInstance instanceof TemplateRendererInterface) {
             throw RendererException::adapterNotSupported($adapter);

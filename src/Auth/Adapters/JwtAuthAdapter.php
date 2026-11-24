@@ -12,10 +12,12 @@ namespace Quantum\Auth\Adapters;
 
 use Quantum\Auth\Contracts\AuthenticatableInterface;
 use Quantum\Auth\Contracts\AuthServiceInterface;
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Auth\Exceptions\AuthException;
 use Quantum\Jwt\Exceptions\JwtException;
 use Quantum\Di\Exceptions\DiException;
 use Quantum\Auth\Traits\AuthTrait;
+use Quantum\Config\ConfigSection;
 use Quantum\Auth\Enums\AuthKeys;
 use Quantum\Mailer\Mailer;
 use Quantum\Hasher\Hasher;
@@ -35,18 +37,27 @@ class JwtAuthAdapter implements AuthenticatableInterface
     protected JwtToken $jwt;
 
     /**
-     * @param array<string, mixed> $config
-     * @throws AuthException
+     * @throws AuthException|ConfigException
      */
-    public function __construct(AuthServiceInterface $authService, Mailer $mailer, Hasher $hasher, JwtToken $jwt, array $config = [])
+    public function __construct(AuthServiceInterface $authService, Mailer $mailer, Hasher $hasher, JwtToken $jwt, ConfigSection $config)
     {
         $this->authService = $authService;
         $this->mailer = $mailer;
         $this->hasher = $hasher;
         $this->jwt = $jwt;
-        $this->config = $config;
+        $this->readConfig($config);
 
         $this->verifySchema($this->authService->userSchema());
+    }
+
+    /**
+     * Reads the auth settings once, so an invalid value fails when the adapter is built
+     * @throws ConfigException
+     */
+    protected function readConfig(ConfigSection $config): void
+    {
+        $this->twoFactorEnabled = $config->getBool('two_fa', false);
+        $this->otpExpires = $config->getInt('otp_expires', 2);
     }
 
     /**

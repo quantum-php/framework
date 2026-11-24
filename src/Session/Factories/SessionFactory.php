@@ -72,7 +72,7 @@ class SessionFactory
      */
     private function createInstance(string $adapterClass, string $adapter): Session
     {
-        $adapterInstance = new $adapterClass(config()->get('session.' . $adapter));
+        $adapterInstance = new $adapterClass(config()->section('session.' . $adapter));
 
         if (!$adapterInstance instanceof SessionStorageInterface) {
             throw SessionException::adapterNotSupported($adapter);

@@ -5,6 +5,7 @@ namespace Quantum\Tests\Unit\Mailer\Adapters;
 use Quantum\Tests\Unit\Mailer\MailerTestCase;
 use Quantum\Mailer\Contracts\MailerInterface;
 use Quantum\Mailer\Adapters\MailgunAdapter;
+use Quantum\Config\ConfigSection;
 
 class MailgunAdapterTest extends MailerTestCase
 {
@@ -17,7 +18,7 @@ class MailgunAdapterTest extends MailerTestCase
             'domain' => 'mailgun.example.com',
         ];
 
-        $this->adapter = new MailgunAdapter($config);
+        $this->adapter = new MailgunAdapter(new ConfigSection($config));
     }
 
     public function testMailgunAdapterInstance(): void
