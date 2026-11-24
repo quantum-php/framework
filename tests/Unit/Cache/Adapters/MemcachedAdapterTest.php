@@ -275,4 +275,12 @@ class MemcachedAdapterTest extends AppTestCase
 
         new MemcachedAdapter(new ConfigSection(['prefix' => 'test', 'host' => '127.0.0.1', 'port' => 11211]));
     }
+
+    public function testMemcachedAdapterRejectsAMissingPort(): void
+    {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('The config key `port` is missing.');
+
+        new MemcachedAdapter(new ConfigSection(['prefix' => 'test', 'host' => '127.0.0.1', 'ttl' => 60]));
+    }
 }

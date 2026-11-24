@@ -62,4 +62,12 @@ class RedisRateLimitAdapterTest extends AppTestCase
 
         new RedisRateLimitAdapter(new ConfigSection(['prefix' => 'test', 'host' => '127.0.0.1', 'port' => 6379]));
     }
+
+    public function testRedisRateLimitAdapterRejectsAMissingPort(): void
+    {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('The config key `port` is missing.');
+
+        new RedisRateLimitAdapter(new ConfigSection(['prefix' => 'test', 'host' => '127.0.0.1', 'ttl' => 60]));
+    }
 }

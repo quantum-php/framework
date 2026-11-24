@@ -348,6 +348,6 @@ trait AuthTrait
 
     protected function isTwoFactorEnabled(): bool
     {
-        return $this->config->getBool('two_fa');
+        return $this->config->getBool('two_fa', false);
     }
 }

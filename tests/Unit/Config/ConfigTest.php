@@ -254,12 +254,26 @@ class ConfigTest extends AppTestCase
 
     public function testGetBoolReturnsDefaultForMissingOrNullKey(): void
     {
-        $this->assertFalse($this->config->getBool('missing'));
         $this->assertTrue($this->config->getBool('missing', true));
+        $this->assertFalse($this->config->getBool('missing', false));
 
         $this->config->set('flag', null);
 
         $this->assertTrue($this->config->getBool('flag', true));
+    }
+
+    public function testGetBoolWithoutADefaultRequiresTheKey(): void
+    {
+        $this->config->set('flag', null);
+
+        foreach (['missing', 'flag'] as $key) {
+            try {
+                $this->config->getBool($key);
+                $this->fail('No exception for ' . $key);
+            } catch (ConfigException $e) {
+                $this->assertSame('The config key `' . $key . '` is missing.', $e->getMessage());
+            }
+        }
     }
 
     public function testGetBoolReadsNestedKey(): void
@@ -281,12 +295,26 @@ class ConfigTest extends AppTestCase
 
     public function testGetIntReturnsDefaultForMissingOrNullKey(): void
     {
-        $this->assertSame(0, $this->config->getInt('missing'));
         $this->assertSame(1000, $this->config->getInt('missing', 1000));
+        $this->assertSame(0, $this->config->getInt('missing', 0));
 
         $this->config->set('number', null);
 
         $this->assertSame(1000, $this->config->getInt('number', 1000));
+    }
+
+    public function testGetIntWithoutADefaultRequiresTheKey(): void
+    {
+        $this->config->set('number', null);
+
+        foreach (['missing', 'number'] as $key) {
+            try {
+                $this->config->getInt($key);
+                $this->fail('No exception for ' . $key);
+            } catch (ConfigException $e) {
+                $this->assertSame('The config key `' . $key . '` is missing.', $e->getMessage());
+            }
+        }
     }
 
     public function testGetIntThrowsForTextThatIsNotAWholeNumber(): void

@@ -104,7 +104,7 @@ class Debugger
      */
     public function isEnabled(): bool
     {
-        return config()->getBool('app.debug');
+        return config()->getBool('app.debug', false);
     }
 
     public function initStore(): void

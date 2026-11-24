@@ -136,7 +136,7 @@ trait RemoteAdapterTrait
 
     private function isCacheEnabled(): bool
     {
-        return $this->config->getBool('cache.enabled');
+        return $this->config->getBool('cache.enabled', false);
     }
 
     private function getCacheAdapter(): string
@@ -163,7 +163,7 @@ trait RemoteAdapterTrait
 
     private function usesSourceCatalog(): bool
     {
-        return $this->config->getBool('use_source_catalog');
+        return $this->config->getBool('use_source_catalog', false);
     }
 
     private function getSourceLocale(): ?string

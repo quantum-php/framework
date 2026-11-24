@@ -73,7 +73,7 @@ function slugify(string $text): string
  */
 function is_debug_mode(): bool
 {
-    return config()->getBool('app.debug');
+    return config()->getBool('app.debug', false);
 }
 
 /**

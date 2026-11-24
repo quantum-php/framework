@@ -37,10 +37,6 @@ class DatabaseAdapter implements CacheInterface
      */
     public function __construct(ConfigSection $config)
     {
-        if (!$config->has('ttl')) {
-            throw ConfigException::missingKey('ttl');
-        }
-
         $this->ttl = $config->getInt('ttl');
         $this->prefix = $config->get('prefix');
         $this->cacheModel = ModelFactory::createDynamicModel($config->get('table'));

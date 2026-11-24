@@ -34,10 +34,6 @@ class RedisRateLimitAdapter implements RateLimitAdapterInterface
      */
     public function __construct(ConfigSection $config)
     {
-        if (!$config->has('ttl')) {
-            throw ConfigException::missingKey('ttl');
-        }
-
         $this->resetInterval = $config->getInt('ttl');
         $this->prefix = (string) $config->get('prefix', '');
 

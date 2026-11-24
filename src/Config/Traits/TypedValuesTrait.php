@@ -26,14 +26,15 @@ trait TypedValuesTrait
     abstract public function get(string $key, $default = null);
 
     /**
-     * Gets the value as a boolean
+     * Gets the value as a boolean; without a default, the key is required
+     * @throws ConfigException
      */
-    public function getBool(string $key, bool $default = false): bool
+    public function getBool(string $key, ?bool $default = null): bool
     {
         $value = $this->get($key);
 
         if ($value === null) {
-            return $default;
+            return $default ?? throw ConfigException::missingKey($key);
         }
 
         if (is_bool($value)) {
@@ -44,15 +45,15 @@ trait TypedValuesTrait
     }
 
     /**
-     * Gets the value as an integer
+     * Gets the value as an integer; without a default, the key is required
      * @throws ConfigException
      */
-    public function getInt(string $key, int $default = 0): int
+    public function getInt(string $key, ?int $default = null): int
     {
         $value = $this->get($key);
 
         if ($value === null) {
-            return $default;
+            return $default ?? throw ConfigException::missingKey($key);
         }
 
         if (is_int($value)) {

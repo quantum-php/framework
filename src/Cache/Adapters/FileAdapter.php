@@ -47,10 +47,6 @@ class FileAdapter implements CacheInterface
     public function __construct(ConfigSection $config)
     {
         $this->fs = FileSystemFactory::get();
-        if (!$config->has('ttl')) {
-            throw ConfigException::missingKey('ttl');
-        }
-
         $this->ttl = $config->getInt('ttl');
         $this->prefix = $config->get('prefix');
         $this->cacheDir = $config->get('path');

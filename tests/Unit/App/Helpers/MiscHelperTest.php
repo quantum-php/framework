@@ -42,4 +42,11 @@ class MiscHelperTest extends AppTestCase
 
         $this->assertEquals('ebay-com-itm-dual-arm-tv-trkparms-aid-3d111001-26brand-3dunbranded-trksid-p2380057', slugify('ebay.com/itm/DUAL-ARM-TV/?_trkparms=aid%3D111001%26brand%3DUnbranded&_trksid=p2380057'));
     }
+
+    public function testIsDebugModeIsOffWhenTheDebugKeyIsNotSet(): void
+    {
+        config()->flush();
+
+        $this->assertFalse(is_debug_mode());
+    }
 }

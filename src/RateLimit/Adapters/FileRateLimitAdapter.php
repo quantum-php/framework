@@ -37,10 +37,6 @@ class FileRateLimitAdapter implements RateLimitAdapterInterface
      */
     public function __construct(ConfigSection $config)
     {
-        if (!$config->has('ttl')) {
-            throw ConfigException::missingKey('ttl');
-        }
-
         $this->resetInterval = $config->getInt('ttl');
         $this->path = $config->get('path');
         $this->prefix = (string) $config->get('prefix', '');
