@@ -2,6 +2,7 @@
 
 namespace Quantum\Tests\Unit\Cache\Adapters;
 
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Cache\Adapters\RedisAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Config\ConfigSection;
@@ -209,4 +210,11 @@ class RedisAdapterTest extends AppTestCase
         $this->assertNull($this->redis->get('test'));
     }
 
+    public function testRedisAdapterRejectsAMissingTtl(): void
+    {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('The config key `ttl` is missing.');
+
+        new RedisAdapter(new ConfigSection(['prefix' => 'test', 'host' => '127.0.0.1', 'port' => 6379]));
+    }
 }

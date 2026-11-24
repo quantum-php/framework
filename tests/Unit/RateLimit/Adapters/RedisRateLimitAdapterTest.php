@@ -3,6 +3,7 @@
 namespace Quantum\Tests\Unit\RateLimit\Adapters;
 
 use Quantum\RateLimit\Adapters\RedisRateLimitAdapter;
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Config\ConfigSection;
 
@@ -52,5 +53,13 @@ class RedisRateLimitAdapterTest extends AppTestCase
     {
         $this->adapter->reset('missing-key');
         $this->assertSame(0, $this->adapter->retryAfter('missing-key'));
+    }
+
+    public function testRedisRateLimitAdapterRejectsAMissingTtl(): void
+    {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('The config key `ttl` is missing.');
+
+        new RedisRateLimitAdapter(new ConfigSection(['prefix' => 'test', 'host' => '127.0.0.1', 'port' => 6379]));
     }
 }

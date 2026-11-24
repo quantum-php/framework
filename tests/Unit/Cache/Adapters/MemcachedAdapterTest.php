@@ -3,6 +3,7 @@
 namespace Quantum\Tests\Unit\Cache\Adapters;
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Cache\Adapters\MemcachedAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Config\ConfigSection;
@@ -267,4 +268,11 @@ class MemcachedAdapterTest extends AppTestCase
         ];
     }
 
+    public function testMemcachedAdapterRejectsAMissingTtl(): void
+    {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('The config key `ttl` is missing.');
+
+        new MemcachedAdapter(new ConfigSection(['prefix' => 'test', 'host' => '127.0.0.1', 'port' => 11211]));
+    }
 }

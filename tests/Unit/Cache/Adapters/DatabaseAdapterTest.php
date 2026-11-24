@@ -4,6 +4,7 @@ namespace Quantum\Tests\Unit\Cache\Adapters;
 
 use Quantum\Cache\Exceptions\InvalidCacheKeyException;
 use Quantum\Database\Adapters\Sleekdb\SleekDbal;
+use Quantum\Config\Exceptions\ConfigException;
 use Psr\SimpleCache\InvalidArgumentException;
 use Quantum\Cache\Adapters\DatabaseAdapter;
 use Quantum\Tests\Unit\AppTestCase;
@@ -250,5 +251,13 @@ class DatabaseAdapterTest extends AppTestCase
         }
 
         $this->assertTrue($this->databaseCache->has('1'));
+    }
+
+    public function testDatabaseAdapterRejectsAMissingTtl(): void
+    {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('The config key `ttl` is missing.');
+
+        new DatabaseAdapter(new ConfigSection(['prefix' => 'test', 'table' => 'cache']));
     }
 }
