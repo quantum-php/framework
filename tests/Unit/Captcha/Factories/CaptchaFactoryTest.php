@@ -9,6 +9,7 @@ use Quantum\Captcha\Factories\CaptchaFactory;
 use Quantum\Captcha\Enums\CaptchaType;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\Captcha\Captcha;
+use Quantum\Config\Setup;
 use Quantum\Di\Di;
 
 class CaptchaFactoryTest extends AppTestCase
@@ -63,6 +64,19 @@ class CaptchaFactoryTest extends AppTestCase
         $captcha2 = CaptchaFactory::get(CaptchaType::RECAPTCHA);
 
         $this->assertSame($captcha1, $captcha2);
+    }
+
+    public function testCaptchaFactoryKeepsAMissingTypeAsNull(): void
+    {
+        if (!config()->has('captcha')) {
+            config()->import(new Setup('config', 'captcha'));
+        }
+
+        config()->set('captcha.recaptcha', ['secret_key' => 'secret', 'site_key' => 'site']);
+
+        $captcha = CaptchaFactory::get(CaptchaType::RECAPTCHA);
+
+        $this->assertNull($captcha->getAdapter()->getType());
     }
 
     private function resetCaptchaFactory(): void

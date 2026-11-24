@@ -7,6 +7,7 @@ use Quantum\Captcha\Contracts\CaptchaInterface;
 use Quantum\Captcha\Adapters\RecaptchaAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\HttpClient\HttpClient;
+use Quantum\Config\ConfigSection;
 use Quantum\Captcha\Captcha;
 
 class CaptchaTest extends AppTestCase
@@ -18,13 +19,13 @@ class CaptchaTest extends AppTestCase
 
     public function testCaptchaGetAdapter(): void
     {
-        $params = [
+        $config = [
             'type' => 'visible',
             'secret_key' => '0xE1a02fB374Bf2',
             'site_key' => '07737dfc-abfa-66ac44365d0c',
         ];
 
-        $captcha = new Captcha(new RecaptchaAdapter($params, new HttpClient()));
+        $captcha = new Captcha(new RecaptchaAdapter(new ConfigSection($config), new HttpClient()));
 
         $this->assertInstanceOf(RecaptchaAdapter::class, $captcha->getAdapter());
 
@@ -33,26 +34,26 @@ class CaptchaTest extends AppTestCase
 
     public function testCaptchaCallingValidMethod(): void
     {
-        $params = [
+        $config = [
             'type' => 'visible',
             'secret_key' => '0xE1a02fB374Bf2',
             'site_key' => '07737dfc-abfa-66ac44365d0c',
         ];
 
-        $captcha = new Captcha(new RecaptchaAdapter($params, new HttpClient()));
+        $captcha = new Captcha(new RecaptchaAdapter(new ConfigSection($config), new HttpClient()));
 
         $this->assertEquals('visible', $captcha->getType());
     }
 
     public function testCacheCallingInvalidMethod(): void
     {
-        $params = [
+        $config = [
             'type' => 'visible',
             'secret_key' => '0xE1a02fB374Bf2',
             'site_key' => '07737dfc-abfa-66ac44365d0c',
         ];
 
-        $captcha = new Captcha(new RecaptchaAdapter($params, new HttpClient()));
+        $captcha = new Captcha(new RecaptchaAdapter(new ConfigSection($config), new HttpClient()));
 
         $this->expectException(CaptchaException::class);
 

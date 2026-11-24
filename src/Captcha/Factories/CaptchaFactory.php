@@ -76,7 +76,7 @@ class CaptchaFactory
      */
     private function createInstance(string $adapterClass, string $adapter): Captcha
     {
-        $adapterInstance = new $adapterClass(config()->get('captcha.' . $adapter), new HttpClient());
+        $adapterInstance = new $adapterClass(config()->section('captcha.' . $adapter), new HttpClient());
 
         if (!$adapterInstance instanceof CaptchaInterface) {
             throw CaptchaException::adapterNotSupported($adapter);

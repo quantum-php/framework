@@ -25,7 +25,7 @@ class HcaptchaAdapterTest extends AppTestCase
 
         $this->httpClientMock = Mockery::mock(HttpClient::class);
 
-        $this->adapter = new HcaptchaAdapter(config()->get('captcha.hcaptcha'), $this->httpClientMock);
+        $this->adapter = new HcaptchaAdapter(config()->section('captcha.hcaptcha'), $this->httpClientMock);
     }
 
     public function tearDown(): void

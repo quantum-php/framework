@@ -20,7 +20,7 @@ class SmtpAdapterTest extends MailerTestCase
             config()->import(new Setup('config', 'mailer'));
         }
 
-        $this->adapter = new SmtpAdapter(config()->get('mailer.smtp'));
+        $this->adapter = new SmtpAdapter(config()->section('mailer.smtp'));
     }
 
     public function testSmtpAdapterInstance(): void
@@ -107,7 +107,7 @@ class SmtpAdapterTest extends MailerTestCase
     {
         config()->set('app.debug', true);
 
-        $adapter = new SmtpAdapter(config()->get('mailer.smtp'));
+        $adapter = new SmtpAdapter(config()->section('mailer.smtp'));
 
         $debugOutput = $this->getPrivateProperty($adapter, 'mailer')->Debugoutput;
 
@@ -121,7 +121,7 @@ class SmtpAdapterTest extends MailerTestCase
         config()->set('app.debug', true);
         config()->set('mailer.transport_log_limit', 2);
 
-        $adapter = new SmtpAdapter(config()->get('mailer.smtp'));
+        $adapter = new SmtpAdapter(config()->section('mailer.smtp'));
 
         $debugOutput = $this->getPrivateProperty($adapter, 'mailer')->Debugoutput;
 
@@ -147,7 +147,7 @@ class SmtpAdapterTest extends MailerTestCase
         config()->set('mailer.mail_trap', false);
         config()->set('mailer.transport_log_limit', 1);
 
-        $adapter = new SmtpAdapter(config()->get('mailer.smtp'));
+        $adapter = new SmtpAdapter(config()->section('mailer.smtp'));
 
         $failingMailer = new class (true) extends PHPMailer {
             public int $sends = 0;
@@ -189,7 +189,7 @@ class SmtpAdapterTest extends MailerTestCase
     {
         config()->set('mailer.mail_trap', 'false');
 
-        $adapter = new SmtpAdapter(config()->get('mailer.smtp'));
+        $adapter = new SmtpAdapter(config()->section('mailer.smtp'));
 
         $this->setPrivateProperty($adapter, 'mailer', new class (true) extends PHPMailer {
             public function send()
@@ -224,7 +224,7 @@ class SmtpAdapterTest extends MailerTestCase
     {
         config()->set('app.debug', false);
 
-        $adapter = new SmtpAdapter(config()->get('mailer.smtp'));
+        $adapter = new SmtpAdapter(config()->section('mailer.smtp'));
 
         $this->assertSame(SMTP::DEBUG_OFF, $this->getPrivateProperty($adapter, 'mailer')->SMTPDebug);
     }

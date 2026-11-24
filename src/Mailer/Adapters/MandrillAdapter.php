@@ -13,6 +13,7 @@ namespace Quantum\Mailer\Adapters;
 use Quantum\Mailer\Contracts\MailerInterface;
 use Quantum\Mailer\Traits\MailerTrait;
 use Quantum\HttpClient\HttpClient;
+use Quantum\Config\ConfigSection;
 use Exception;
 
 /**
@@ -36,13 +37,12 @@ class MandrillAdapter implements MailerInterface
 
     /**
      * MandrillAdapter constructor
-     * @param array<string, mixed> $params
      */
-    public function __construct(array $params)
+    public function __construct(ConfigSection $config)
     {
         $this->httpClient = new HttpClient();
 
-        $this->data['key'] = $params['api_key'];
+        $this->data['key'] = $config->get('api_key');
     }
 
     /**

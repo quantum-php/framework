@@ -10,10 +10,12 @@ declare(strict_types=1);
 
 namespace Quantum\Mailer\Adapters;
 
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Mailer\Contracts\MailerInterface;
 use Quantum\Di\Exceptions\DiException;
 use Quantum\Mailer\Traits\MailerTrait;
 use PHPMailer\PHPMailer\PHPMailer;
+use Quantum\Config\ConfigSection;
 use PHPMailer\PHPMailer\SMTP;
 use ReflectionException;
 use Exception;
@@ -32,16 +34,15 @@ class SmtpAdapter implements MailerInterface
 
     /**
      * SmtpAdapter constructor
-     * @param array<string, mixed> $params
-     * @throws DiException|ReflectionException
+     * @throws ConfigException|DiException|ReflectionException
      */
-    public function __construct(array $params)
+    public function __construct(ConfigSection $config)
     {
         $this->mailer = new PHPMailer(true);
 
         $this->mailer->CharSet = 'UTF-8';
 
-        $this->setupSmtp($params);
+        $this->setupSmtp($config);
 
         if (is_debug_mode()) {
             $this->mailer->SMTPDebug = SMTP::DEBUG_SERVER;
@@ -219,17 +220,16 @@ class SmtpAdapter implements MailerInterface
 
     /**
      * Setups the SMTP
-     * @param array<string, mixed> $params
      */
-    private function setupSmtp(array $params): void
+    private function setupSmtp(ConfigSection $config): void
     {
         $this->mailer->isSMTP();
         $this->mailer->SMTPAuth = true;
-        $this->mailer->Host = $params['host'];
-        $this->mailer->SMTPSecure = $params['secure'];
-        $this->mailer->Port = $params['port'];
-        $this->mailer->Username = $params['username'];
-        $this->mailer->Password = $params['password'];
+        $this->mailer->Host = $config->get('host');
+        $this->mailer->SMTPSecure = $config->get('secure');
+        $this->mailer->Port = $config->getInt('port');
+        $this->mailer->Username = $config->get('username');
+        $this->mailer->Password = $config->get('password');
     }
 
     /**

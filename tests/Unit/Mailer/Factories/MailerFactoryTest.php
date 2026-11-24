@@ -3,6 +3,7 @@
 namespace Quantum\Tests\Unit\Mailer\Factories;
 
 use Quantum\Mailer\Exceptions\MailerException;
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Mailer\Adapters\SendinblueAdapter;
 use Quantum\Mailer\Adapters\MandrillAdapter;
 use Quantum\Mailer\Adapters\SendgridAdapter;
@@ -100,6 +101,25 @@ class MailerFactoryTest extends AppTestCase
         $mailer2 = MailerFactory::get(MailerType::SMTP);
 
         $this->assertSame($mailer1, $mailer2);
+    }
+
+    public function testMailerFactoryReadsTheSmtpPortGivenAsText(): void
+    {
+        config()->set('mailer.smtp.port', '587');
+
+        $adapter = MailerFactory::get(MailerType::SMTP)->getAdapter();
+
+        $this->assertSame(587, $this->getPrivateProperty($adapter, 'mailer')->Port);
+    }
+
+    public function testMailerFactoryRejectsAnSmtpPortThatIsNotANumber(): void
+    {
+        config()->set('mailer.smtp.port', 'abc');
+
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('The config key `port` has the value `abc`, which is not a whole number.');
+
+        MailerFactory::get(MailerType::SMTP);
     }
 
     private function resetMailerFactory(): void

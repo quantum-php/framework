@@ -13,6 +13,7 @@ namespace Quantum\Captcha\Adapters;
 use Quantum\Captcha\Contracts\CaptchaInterface;
 use Quantum\Captcha\Traits\CaptchaTrait;
 use Quantum\HttpClient\HttpClient;
+use Quantum\Config\ConfigSection;
 
 /**
  * Class RecaptchaAdapter
@@ -35,14 +36,13 @@ class RecaptchaAdapter implements CaptchaInterface
 
     /**
      * RecaptchaAdapter constructor
-     * @param array<string, mixed> $params
      */
-    public function __construct(array $params, HttpClient $httpClient)
+    public function __construct(ConfigSection $config, HttpClient $httpClient)
     {
         $this->http = $httpClient;
 
-        $this->secretKey = $params['secret_key'];
-        $this->siteKey = $params['site_key'];
-        $this->type = $params['type'] ?? null;
+        $this->secretKey = $config->get('secret_key');
+        $this->siteKey = $config->get('site_key');
+        $this->type = $config->get('type');
     }
 }
