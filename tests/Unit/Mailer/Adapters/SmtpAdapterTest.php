@@ -2,7 +2,6 @@
 
 namespace Quantum\Tests\Unit\Mailer\Adapters;
 
-use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Tests\Unit\Mailer\MailerTestCase;
 use Quantum\Mailer\Contracts\MailerInterface;
 use Quantum\Mailer\Adapters\SmtpAdapter;
@@ -244,11 +243,14 @@ class SmtpAdapterTest extends MailerTestCase
         $this->assertTrue($this->adapter->send());
     }
 
-    public function testSmtpAdapterRejectsAMissingPort(): void
+    public function testSmtpAdapterUsesPort25WhenThePortIsMissingOrEmpty(): void
     {
-        $this->expectException(ConfigException::class);
-        $this->expectExceptionMessage('The config key `port` is missing.');
+        $config = ['host' => '127.0.0.1', 'secure' => 'ssl', 'username' => 'user', 'password' => 'secret'];
 
-        new SmtpAdapter(new ConfigSection(['host' => '127.0.0.1', 'secure' => 'ssl', 'username' => 'user', 'password' => 'secret']));
+        foreach ([$config, $config + ['port' => '']] as $values) {
+            $adapter = new SmtpAdapter(new ConfigSection($values));
+
+            $this->assertSame(25, $this->getPrivateProperty($adapter, 'mailer')->Port);
+        }
     }
 }

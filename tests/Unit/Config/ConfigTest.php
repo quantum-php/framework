@@ -245,7 +245,7 @@ class ConfigTest extends AppTestCase
 
     public function testGetBoolReadsFalseValues(): void
     {
-        foreach ([false, 0, '0', 'false', 'off', 'no', '', 'abc', []] as $value) {
+        foreach ([false, 0, '0', 'false', 'off', 'no', 'abc', []] as $value) {
             $this->config->set('flag', $value);
 
             $this->assertFalse($this->config->getBool('flag', true), var_export($value, true));
@@ -258,15 +258,18 @@ class ConfigTest extends AppTestCase
         $this->assertFalse($this->config->getBool('missing', false));
 
         $this->config->set('flag', null);
+        $this->config->set('empty_flag', '');
 
         $this->assertTrue($this->config->getBool('flag', true));
+        $this->assertTrue($this->config->getBool('empty_flag', true));
     }
 
     public function testGetBoolWithoutADefaultRequiresTheKey(): void
     {
         $this->config->set('flag', null);
+        $this->config->set('empty_flag', '');
 
-        foreach (['missing', 'flag'] as $key) {
+        foreach (['missing', 'flag', 'empty_flag'] as $key) {
             try {
                 $this->config->getBool($key);
                 $this->fail('No exception for ' . $key);
@@ -299,15 +302,18 @@ class ConfigTest extends AppTestCase
         $this->assertSame(0, $this->config->getInt('missing', 0));
 
         $this->config->set('number', null);
+        $this->config->set('empty_number', '');
 
         $this->assertSame(1000, $this->config->getInt('number', 1000));
+        $this->assertSame(25, $this->config->getInt('empty_number', 25));
     }
 
     public function testGetIntWithoutADefaultRequiresTheKey(): void
     {
         $this->config->set('number', null);
+        $this->config->set('empty_number', '');
 
-        foreach (['missing', 'number'] as $key) {
+        foreach (['missing', 'number', 'empty_number'] as $key) {
             try {
                 $this->config->getInt($key);
                 $this->fail('No exception for ' . $key);
@@ -319,7 +325,7 @@ class ConfigTest extends AppTestCase
 
     public function testGetIntThrowsForTextThatIsNotAWholeNumber(): void
     {
-        foreach (['abc', '1.5', '', '12abc', 1.5, []] as $value) {
+        foreach (['abc', '1.5', ' ', '12abc', 1.5, []] as $value) {
             $this->config->set('number', $value);
 
             try {

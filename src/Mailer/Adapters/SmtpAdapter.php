@@ -227,7 +227,7 @@ class SmtpAdapter implements MailerInterface
         $this->mailer->SMTPAuth = true;
         $this->mailer->Host = $config->get('host');
         $this->mailer->SMTPSecure = $config->get('secure');
-        $this->mailer->Port = $config->getInt('port');
+        $this->mailer->Port = $config->getInt('port', 25);
         $this->mailer->Username = $config->get('username');
         $this->mailer->Password = $config->get('password');
     }
