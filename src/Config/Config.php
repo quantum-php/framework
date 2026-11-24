@@ -28,9 +28,9 @@ use Quantum\App\App;
  */
 class Config implements ConfigInterface
 {
-    use ReadTrait;         // reads values: get(), has(), all(), section()
-    use TypedValuesTrait;  // reads typed values: getBool(), getInt()
-    use WriteTrait;        // changes values: set(), delete(), flush()
+    use ReadTrait;
+    use TypedValuesTrait;
+    use WriteTrait;
 
     private ?Data $configs = null;
 
