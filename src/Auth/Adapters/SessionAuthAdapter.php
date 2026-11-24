@@ -48,9 +48,19 @@ class SessionAuthAdapter implements AuthenticatableInterface
         $this->mailer = $mailer;
         $this->hasher = $hasher;
         $this->readConfig($config);
-        $this->rememberLifetime = $config->getInt('session.remember_lifetime', self::DEFAULT_REMEMBER_LIFETIME);
 
         $this->verifySchema($this->authService->userSchema());
+    }
+
+    /**
+     * Reads the auth settings once, so an invalid value fails when the adapter is built
+     * @throws ConfigException
+     */
+    protected function readConfig(ConfigSection $config): void
+    {
+        $this->twoFactorEnabled = $config->getBool('two_fa', false);
+        $this->otpExpires = $config->getInt('otp_expires', 2);
+        $this->rememberLifetime = $config->getInt('session.remember_lifetime', self::DEFAULT_REMEMBER_LIFETIME);
     }
 
     /**

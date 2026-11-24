@@ -8,9 +8,12 @@ use Quantum\Auth\Adapters\SessionAuthAdapter;
 use Quantum\Auth\Exceptions\AuthException;
 use Quantum\Auth\Enums\ExceptionMessages;
 use Quantum\Tests\Unit\Auth\AuthTestCase;
+use Quantum\Auth\Adapters\JwtAuthAdapter;
+use Quantum\Auth\Traits\AuthTrait;
 use Quantum\Hasher\Hasher;
 use ArgumentCountError;
 use Quantum\Auth\User;
+use ReflectionMethod;
 use Mockery;
 
 class SessionAuthAdapterTest extends AuthTestCase
@@ -59,6 +62,15 @@ class SessionAuthAdapterTest extends AuthTestCase
         $this->expectException(ArgumentCountError::class);
 
         new SessionAuthAdapter($this->authService, $this->mailer, (new Hasher())->setCost(4));
+    }
+
+    public function testEveryAuthAdapterReadsItsOwnConfig(): void
+    {
+        $this->assertTrue((new ReflectionMethod(AuthTrait::class, 'readConfig'))->isAbstract());
+
+        foreach ([SessionAuthAdapter::class, JwtAuthAdapter::class] as $adapter) {
+            $this->assertSame($adapter, (new ReflectionMethod($adapter, 'readConfig'))->getDeclaringClass()->getName());
+        }
     }
 
     public function testWebAdapterRejectsAUserSchemaWithAMissingKey(): void

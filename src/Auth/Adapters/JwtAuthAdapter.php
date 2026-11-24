@@ -51,6 +51,16 @@ class JwtAuthAdapter implements AuthenticatableInterface
     }
 
     /**
+     * Reads the auth settings once, so an invalid value fails when the adapter is built
+     * @throws ConfigException
+     */
+    protected function readConfig(ConfigSection $config): void
+    {
+        $this->twoFactorEnabled = $config->getBool('two_fa', false);
+        $this->otpExpires = $config->getInt('otp_expires', 2);
+    }
+
+    /**
      * @inheritDoc
      * @return string|array<string, string>
      * @throws AuthException|DiException|JwtException|ReflectionException|Exception
