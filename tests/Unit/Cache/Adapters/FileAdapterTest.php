@@ -6,6 +6,7 @@ use Quantum\Cache\Exceptions\InvalidCacheKeyException;
 use Psr\SimpleCache\InvalidArgumentException;
 use Quantum\Cache\Adapters\FileAdapter;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Config\ConfigSection;
 use DateInterval;
 
 class FileAdapterTest extends AppTestCase
@@ -16,13 +17,13 @@ class FileAdapterTest extends AppTestCase
     {
         parent::setUp();
 
-        $params = [
+        $config = [
             'prefix' => 'test',
             'path' => base_dir() . DS . 'cache' . DS . 'data',
             'ttl' => 60,
         ];
 
-        $this->fileCache = new FileAdapter($params);
+        $this->fileCache = new FileAdapter(new ConfigSection($config));
     }
 
     public function tearDown(): void
@@ -130,13 +131,13 @@ class FileAdapterTest extends AppTestCase
 
     public function testFileAdapterExpired(): void
     {
-        $params = [
+        $config = [
             'prefix' => 'test',
             'path' => base_dir() . DS . 'cache' . DS . 'data',
             'ttl' => -1,
         ];
 
-        $fileCache = new FileAdapter($params);
+        $fileCache = new FileAdapter(new ConfigSection($config));
 
         $fileCache->set('test', 'Test value');
 

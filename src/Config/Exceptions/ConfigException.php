@@ -34,4 +34,12 @@ class ConfigException extends BaseException
             E_ERROR
         );
     }
+
+    public static function missingKey(string $key): self
+    {
+        return new self(
+            _message(ExceptionMessages::MISSING_KEY, [$key]),
+            E_ERROR
+        );
+    }
 }

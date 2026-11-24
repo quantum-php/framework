@@ -82,10 +82,10 @@ class RateLimiterFactory
 
     private function createInstance(string $adapterClass, string $adapter): RateLimiter
     {
-        $params = (array) config()->get('rate_limit.' . $adapter, []);
+        $config = config()->section('rate_limit.' . $adapter);
 
         /** @var RateLimitAdapterInterface $adapterInstance */
-        $adapterInstance = new $adapterClass($params);
+        $adapterInstance = new $adapterClass($config);
 
         return new RateLimiter($adapterInstance);
     }

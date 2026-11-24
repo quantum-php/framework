@@ -5,6 +5,7 @@ namespace Quantum\Tests\Unit\Cache\Adapters;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Quantum\Cache\Adapters\MemcachedAdapter;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Config\ConfigSection;
 use DateInterval;
 use Memcached;
 
@@ -16,14 +17,14 @@ class MemcachedAdapterTest extends AppTestCase
     {
         parent::setUp();
 
-        $params = [
+        $config = [
             'prefix' => 'test',
             'host' => '127.0.0.1',
             'port' => 11211,
             'ttl' => 60,
         ];
 
-        $this->memCached = new MemcachedAdapter($params);
+        $this->memCached = new MemcachedAdapter(new ConfigSection($config));
     }
 
     public function tearDown(): void
@@ -35,12 +36,12 @@ class MemcachedAdapterTest extends AppTestCase
 
     public function testMemcachedAdapterConnectsWithThePortAsText(): void
     {
-        $adapter = new MemcachedAdapter([
+        $adapter = new MemcachedAdapter(new ConfigSection([
             'prefix' => 'test',
             'host' => '127.0.0.1',
             'port' => '11211',
             'ttl' => 60,
-        ]);
+        ]));
 
         $adapter->set('port-as-text', 'connected');
 
@@ -156,14 +157,14 @@ class MemcachedAdapterTest extends AppTestCase
 
     public function testMemcachedAdapterExpired(): void
     {
-        $params = [
+        $config = [
             'prefix' => 'test',
             'host' => '127.0.0.1',
             'port' => 11211,
             'ttl' => 1,
         ];
 
-        $memCached = new MemcachedAdapter($params);
+        $memCached = new MemcachedAdapter(new ConfigSection($config));
 
         $memCached->set('test', 'Test value');
 

@@ -11,10 +11,12 @@ declare(strict_types=1);
 namespace Quantum\Cache\Adapters;
 
 use Quantum\Cache\Exceptions\InvalidCacheKeyException;
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Cache\Exceptions\CacheException;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Cache\Traits\CacheTrait;
 use Psr\SimpleCache\CacheInterface;
+use Quantum\Config\ConfigSection;
 use DateInterval;
 use Memcached;
 use Throwable;
@@ -36,15 +38,19 @@ class MemcachedAdapter implements CacheInterface
 
     /**
      * @throws BaseException
-     * @param array<string, mixed> $params
+     * @throws ConfigException
      */
-    public function __construct(array $params)
+    public function __construct(ConfigSection $config)
     {
-        $this->ttl = $params['ttl'];
-        $this->prefix = $params['prefix'];
+        if (!$config->has('ttl')) {
+            throw ConfigException::missingKey('ttl');
+        }
+
+        $this->ttl = $config->getInt('ttl');
+        $this->prefix = $config->get('prefix');
 
         $this->memcached = new Memcached();
-        $this->memcached->addServer($params['host'], (int) $params['port']);
+        $this->memcached->addServer($config->get('host'), $config->getInt('port'));
 
         if (!$this->memcached->getStats()) {
             throw CacheException::cantConnect('Memcached server');

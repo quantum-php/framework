@@ -14,6 +14,7 @@ use Quantum\RateLimit\Contracts\RateLimitAdapterInterface;
 use Quantum\Config\Exceptions\ConfigException;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Di\Exceptions\DiException;
+use Quantum\Config\ConfigSection;
 use Quantum\Storage\FileSystem;
 use ReflectionException;
 
@@ -32,14 +33,17 @@ class FileRateLimitAdapter implements RateLimitAdapterInterface
     private readonly string $prefix;
 
     /**
-     * @param array<string, mixed> $params
      * @throws ConfigException|DiException|BaseException|ReflectionException
      */
-    public function __construct(array $params)
+    public function __construct(ConfigSection $config)
     {
-        $this->resetInterval = $params['ttl'];
-        $this->path = $params['path'];
-        $this->prefix = (string) ($params['prefix'] ?? '');
+        if (!$config->has('ttl')) {
+            throw ConfigException::missingKey('ttl');
+        }
+
+        $this->resetInterval = $config->getInt('ttl');
+        $this->path = $config->get('path');
+        $this->prefix = (string) $config->get('prefix', '');
         $this->fs = fs();
 
         if (!$this->fs->isDirectory($this->path)) {

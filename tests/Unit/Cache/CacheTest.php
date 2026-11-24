@@ -6,6 +6,7 @@ use Quantum\Cache\Exceptions\CacheException;
 use Quantum\Cache\Adapters\FileAdapter;
 use Psr\SimpleCache\CacheInterface;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Config\ConfigSection;
 use Quantum\Cache\Cache;
 
 class CacheTest extends AppTestCase
@@ -17,13 +18,13 @@ class CacheTest extends AppTestCase
 
     public function testCacheGetAdapter(): void
     {
-        $params = [
+        $config = [
             'prefix' => 'test',
             'path' => base_dir() . DS . 'cache' . DS . 'data',
             'ttl' => 60,
         ];
 
-        $cache = new Cache(new FileAdapter($params));
+        $cache = new Cache(new FileAdapter(new ConfigSection($config)));
 
         $this->assertInstanceOf(FileAdapter::class, $cache->getAdapter());
 
@@ -32,13 +33,13 @@ class CacheTest extends AppTestCase
 
     public function testCacheCallingValidMethod(): void
     {
-        $params = [
+        $config = [
             'prefix' => 'test',
             'path' => base_dir() . DS . 'cache' . DS . 'data',
             'ttl' => 60,
         ];
 
-        $cache = new Cache(new FileAdapter($params));
+        $cache = new Cache(new FileAdapter(new ConfigSection($config)));
 
         $this->assertFalse($cache->has('test'));
 
@@ -47,13 +48,13 @@ class CacheTest extends AppTestCase
 
     public function testCacheCallingInvalidMethod(): void
     {
-        $params = [
+        $config = [
             'prefix' => 'test',
             'path' => base_dir() . DS . 'cache' . DS . 'data',
             'ttl' => 60,
         ];
 
-        $cache = new Cache(new FileAdapter($params));
+        $cache = new Cache(new FileAdapter(new ConfigSection($config)));
 
         $this->expectException(CacheException::class);
 

@@ -76,7 +76,7 @@ class CacheFactory
      */
     private function createInstance(string $adapterClass, string $adapter): Cache
     {
-        $cacheAdapter = new $adapterClass(config()->get('cache.' . $adapter));
+        $cacheAdapter = new $adapterClass(config()->section('cache.' . $adapter));
 
         if (!$cacheAdapter instanceof CacheInterface) {
             throw CacheException::adapterNotSupported($adapter);

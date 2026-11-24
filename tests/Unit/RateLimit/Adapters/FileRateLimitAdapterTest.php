@@ -4,6 +4,7 @@ namespace Quantum\Tests\Unit\RateLimit\Adapters;
 
 use Quantum\RateLimit\Adapters\FileRateLimitAdapter;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Config\ConfigSection;
 
 class FileRateLimitAdapterTest extends AppTestCase
 {
@@ -33,11 +34,11 @@ class FileRateLimitAdapterTest extends AppTestCase
 
     public function testFileAdapterHitAndResetFlow(): void
     {
-        $adapter = new FileRateLimitAdapter([
+        $adapter = new FileRateLimitAdapter(new ConfigSection([
             'ttl' => 30,
             'prefix' => 'test',
             'path' => $this->rateLimitDir,
-        ]);
+        ]));
 
         $this->assertTrue($adapter->hit('k1', 2, 60));
         $this->assertTrue($adapter->hit('k1', 2, 60));
@@ -49,11 +50,11 @@ class FileRateLimitAdapterTest extends AppTestCase
 
     public function testFileAdapterRepeatedHitsRespectExactLimitBoundary(): void
     {
-        $adapter = new FileRateLimitAdapter([
+        $adapter = new FileRateLimitAdapter(new ConfigSection([
             'ttl' => 30,
             'prefix' => 'test',
             'path' => $this->rateLimitDir,
-        ]);
+        ]));
 
         for ($i = 0; $i < 100; $i++) {
             $this->assertTrue($adapter->hit('boundary', 100, 60));
@@ -71,11 +72,11 @@ class FileRateLimitAdapterTest extends AppTestCase
         }
 
         try {
-            new FileRateLimitAdapter([
+            new FileRateLimitAdapter(new ConfigSection([
                 'ttl' => 30,
                 'prefix' => 'test',
                 'path' => $path,
-            ]);
+            ]));
 
             $this->assertTrue(fs()->isDirectory($path));
         } finally {
@@ -93,11 +94,11 @@ class FileRateLimitAdapterTest extends AppTestCase
         deleteDirectoryWithFiles($root);
 
         try {
-            new FileRateLimitAdapter([
+            new FileRateLimitAdapter(new ConfigSection([
                 'ttl' => 30,
                 'prefix' => 'test',
                 'path' => $path,
-            ]);
+            ]));
 
             $this->assertTrue(fs()->isDirectory($path));
         } finally {
@@ -107,11 +108,11 @@ class FileRateLimitAdapterTest extends AppTestCase
 
     public function testFileAdapterRetryAfterReturnsZeroForMissingOrInvalidState(): void
     {
-        $adapter = new FileRateLimitAdapter([
+        $adapter = new FileRateLimitAdapter(new ConfigSection([
             'ttl' => 30,
             'prefix' => 'test',
             'path' => $this->rateLimitDir,
-        ]);
+        ]));
 
         $this->assertSame(0, $adapter->retryAfter('missing-key'));
 

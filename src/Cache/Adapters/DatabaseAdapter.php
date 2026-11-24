@@ -11,11 +11,13 @@ declare(strict_types=1);
 namespace Quantum\Cache\Adapters;
 
 use Quantum\Cache\Exceptions\InvalidCacheKeyException;
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Model\Exceptions\ModelException;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Model\Factories\ModelFactory;
 use Quantum\Cache\Traits\CacheTrait;
 use Psr\SimpleCache\CacheInterface;
+use Quantum\Config\ConfigSection;
 use Quantum\Model\DbModel;
 use DateInterval;
 use Exception;
@@ -31,13 +33,17 @@ class DatabaseAdapter implements CacheInterface
     private DbModel $cacheModel;
 
     /**
-     * @param array<string, mixed> $params
+     * @throws ConfigException
      */
-    public function __construct(array $params)
+    public function __construct(ConfigSection $config)
     {
-        $this->ttl = $params['ttl'];
-        $this->prefix = $params['prefix'];
-        $this->cacheModel = ModelFactory::createDynamicModel($params['table']);
+        if (!$config->has('ttl')) {
+            throw ConfigException::missingKey('ttl');
+        }
+
+        $this->ttl = $config->getInt('ttl');
+        $this->prefix = $config->get('prefix');
+        $this->cacheModel = ModelFactory::createDynamicModel($config->get('table'));
     }
 
     /**

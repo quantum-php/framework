@@ -4,6 +4,7 @@ namespace Quantum\Tests\Unit\Cache\Adapters;
 
 use Quantum\Cache\Adapters\RedisAdapter;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Config\ConfigSection;
 use DateInterval;
 
 class RedisAdapterTest extends AppTestCase
@@ -14,14 +15,14 @@ class RedisAdapterTest extends AppTestCase
     {
         parent::setUp();
 
-        $params = [
+        $config = [
             'prefix' => 'test',
             'host' => '127.0.0.1',
             'port' => 6379,
             'ttl' => 60,
         ];
 
-        $this->redis = new RedisAdapter($params);
+        $this->redis = new RedisAdapter(new ConfigSection($config));
     }
 
     public function tearDown(): void
@@ -33,12 +34,12 @@ class RedisAdapterTest extends AppTestCase
 
     public function testRedisAdapterConnectsWithThePortAsText(): void
     {
-        $adapter = new RedisAdapter([
+        $adapter = new RedisAdapter(new ConfigSection([
             'prefix' => 'test',
             'host' => '127.0.0.1',
             'port' => '6379',
             'ttl' => 60,
-        ]);
+        ]));
 
         $adapter->set('port-as-text', 'connected');
 
@@ -154,14 +155,14 @@ class RedisAdapterTest extends AppTestCase
 
     public function testRedisAdapterExpired(): void
     {
-        $params = [
+        $config = [
             'prefix' => 'test',
             'host' => '127.0.0.1',
             'port' => 6379,
             'ttl' => 1,
         ];
 
-        $redis = new RedisAdapter($params);
+        $redis = new RedisAdapter(new ConfigSection($config));
 
         $redis->set('test', 'Test value');
 

@@ -4,6 +4,7 @@ namespace Quantum\Tests\Unit\RateLimit\Adapters;
 
 use Quantum\RateLimit\Adapters\RedisRateLimitAdapter;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Config\ConfigSection;
 
 class RedisRateLimitAdapterTest extends AppTestCase
 {
@@ -13,11 +14,11 @@ class RedisRateLimitAdapterTest extends AppTestCase
     {
         parent::setUp();
 
-        $this->adapter = new RedisRateLimitAdapter([
+        $this->adapter = new RedisRateLimitAdapter(new ConfigSection([
             'host' => '127.0.0.1',
             'port' => 6379,
             'ttl' => 30,
-        ]);
+        ]));
     }
 
     public function tearDown(): void
@@ -29,11 +30,11 @@ class RedisRateLimitAdapterTest extends AppTestCase
 
     public function testRedisAdapterConnectsWithThePortAsText(): void
     {
-        $adapter = new RedisRateLimitAdapter([
+        $adapter = new RedisRateLimitAdapter(new ConfigSection([
             'host' => '127.0.0.1',
             'port' => '6379',
             'ttl' => 30,
-        ]);
+        ]));
 
         $this->assertTrue($adapter->hit('k2', 5, 30));
     }
