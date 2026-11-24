@@ -9,6 +9,7 @@ use Quantum\Auth\Exceptions\AuthException;
 use Quantum\Auth\Enums\ExceptionMessages;
 use Quantum\Tests\Unit\Auth\AuthTestCase;
 use Quantum\Hasher\Hasher;
+use ArgumentCountError;
 use Quantum\Auth\User;
 use Mockery;
 
@@ -51,6 +52,13 @@ class SessionAuthAdapterTest extends AuthTestCase
     public function testWebAdapterConstructor(): void
     {
         $this->assertInstanceOf(SessionAuthAdapter::class, $this->sessionAuth);
+    }
+
+    public function testWebAdapterRequiresItsConfig(): void
+    {
+        $this->expectException(ArgumentCountError::class);
+
+        new SessionAuthAdapter($this->authService, $this->mailer, (new Hasher())->setCost(4));
     }
 
     public function testWebAdapterRejectsAUserSchemaWithAMissingKey(): void

@@ -8,6 +8,7 @@ use Quantum\Auth\Enums\ExceptionMessages;
 use Quantum\Tests\Unit\Auth\AuthTestCase;
 use Quantum\Hasher\Hasher;
 use Quantum\Jwt\JwtToken;
+use ArgumentCountError;
 use Quantum\Auth\User;
 
 class JwtAuthAdapterTest extends AuthTestCase
@@ -54,6 +55,13 @@ class JwtAuthAdapterTest extends AuthTestCase
         $this->jwtAuth->signout();
 
         parent::tearDown();
+    }
+
+    public function testApiAdapterRequiresItsConfig(): void
+    {
+        $this->expectException(ArgumentCountError::class);
+
+        new JwtAuthAdapter($this->authService, $this->mailer, (new Hasher())->setCost(4), new JwtToken());
     }
 
     public function testApiAdapterConstructor(): void
