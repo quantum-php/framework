@@ -19,6 +19,7 @@ use Quantum\Auth\Exceptions\AuthException;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Di\Exceptions\DiException;
 use Quantum\Auth\Traits\AuthTrait;
+use Quantum\Config\ConfigSection;
 use Quantum\Auth\Enums\AuthKeys;
 use Quantum\Hasher\Hasher;
 use Quantum\Mailer\Mailer;
@@ -37,10 +38,9 @@ class SessionAuthAdapter implements AuthenticatableInterface
     private const DEFAULT_REMEMBER_LIFETIME = 2592000;
 
     /**
-     * @param array<string, mixed> $config
      * @throws AuthException
      */
-    public function __construct(AuthServiceInterface $authService, Mailer $mailer, Hasher $hasher, array $config = [])
+    public function __construct(AuthServiceInterface $authService, Mailer $mailer, Hasher $hasher, ConfigSection $config = new ConfigSection())
     {
         $this->authService = $authService;
         $this->mailer = $mailer;
@@ -200,7 +200,7 @@ class SessionAuthAdapter implements AuthenticatableInterface
             [$this->keyFields[AuthKeys::REMEMBER_TOKEN->value] => $rememberToken]
         );
 
-        $rememberLifetime = (int) ($this->config['session']['remember_lifetime'] ?? self::DEFAULT_REMEMBER_LIFETIME);
+        $rememberLifetime = $this->config->getInt('session.remember_lifetime', self::DEFAULT_REMEMBER_LIFETIME);
 
         cookie()->set(
             $this->keyFields[AuthKeys::REMEMBER_TOKEN->value],

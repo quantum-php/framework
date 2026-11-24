@@ -43,7 +43,7 @@ class JwtAuthAdapterTest extends AuthTestCase
             $this->mailer,
             (new Hasher())->setCost(4),
             $jwt,
-            (array) config()->get('auth')
+            config()->section('auth')
         );
     }
 

@@ -3,6 +3,7 @@
 namespace Quantum\Tests\Unit\Auth\Adapters;
 
 use Quantum\Auth\Contracts\AuthServiceInterface;
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Auth\Adapters\SessionAuthAdapter;
 use Quantum\Auth\Exceptions\AuthException;
 use Quantum\Auth\Enums\ExceptionMessages;
@@ -34,7 +35,7 @@ class SessionAuthAdapterTest extends AuthTestCase
             $this->authService,
             $this->mailer,
             (new Hasher())->setCost(4),
-            (array) config()->get('auth')
+            config()->section('auth')
         );
     }
 
@@ -63,7 +64,7 @@ class SessionAuthAdapterTest extends AuthTestCase
         $this->expectException(AuthException::class);
         $this->expectExceptionMessage(ExceptionMessages::INCORRECT_USER_SCHEMA);
 
-        new SessionAuthAdapter($authService, $this->mailer, (new Hasher())->setCost(4), (array) config()->get('auth'));
+        new SessionAuthAdapter($authService, $this->mailer, (new Hasher())->setCost(4), config()->section('auth'));
     }
 
     public function testWebSigninIncorrectCredentials(): void
@@ -266,5 +267,46 @@ class SessionAuthAdapterTest extends AuthTestCase
         $this->sessionAuth->signin('admin@qt.com', 'qwerty', true);
 
         $this->assertTrue(cookie()->has('remember_token'));
+    }
+
+    public function testWebRememberTokenLifetimeRejectsTextThatIsNotANumber(): void
+    {
+        config()->set('auth.session.remember_lifetime', 'abc');
+        $this->sessionAuth = $this->createSessionAuth();
+
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('The config key `session.remember_lifetime` has the value `abc`, which is not a whole number.');
+
+        $this->sessionAuth->signin('admin@qt.com', 'qwerty', true);
+    }
+
+    public function testWebSigninWithVerificationReadsTheSettingsGivenAsText(): void
+    {
+        config()->set('auth.two_fa', 'yes');
+        config()->set('auth.otp_expires', '5');
+        $this->sessionAuth = $this->createSessionAuth();
+
+        $this->assertIsString($this->sessionAuth->signin('admin@qt.com', 'qwerty'));
+    }
+
+    public function testWebSigninWithVerificationUsesTheDefaultOtpExpiryWhenItIsNotSet(): void
+    {
+        config()->set('auth.two_fa', true);
+        config()->delete('auth.otp_expires');
+        $this->sessionAuth = $this->createSessionAuth();
+
+        $this->assertIsString($this->sessionAuth->signin('admin@qt.com', 'qwerty'));
+    }
+
+    public function testWebSigninWithVerificationRejectsAnOtpExpiryThatIsNotANumber(): void
+    {
+        config()->set('auth.two_fa', true);
+        config()->set('auth.otp_expires', 'abc');
+        $this->sessionAuth = $this->createSessionAuth();
+
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('The config key `otp_expires` has the value `abc`, which is not a whole number.');
+
+        $this->sessionAuth->signin('admin@qt.com', 'qwerty');
     }
 }
