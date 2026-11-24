@@ -14,18 +14,24 @@ use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Config\Contracts\ConfigInterface;
 use Quantum\Config\Traits\TypedValuesTrait;
 use Quantum\Config\Traits\ConfigFileTrait;
-use Quantum\Config\Traits\ValueTrait;
+use Quantum\Config\Traits\WriteTrait;
+use Quantum\Config\Traits\ReadTrait;
 use Dflydev\DotAccessData\Data;
 
 /**
  * Class Config
+ *
+ * The application config, built up while the app runs: load() at boot,
+ * import() when a package is first used. section() gives a read-only part of it.
+ *
  * @package Quantum\Config
  */
 class Config implements ConfigInterface
 {
-    use ConfigFileTrait;
-    use ValueTrait;
-    use TypedValuesTrait;
+    use ConfigFileTrait;   // loads config files: import(), importIfExists()
+    use ReadTrait;         // reads values: get(), has(), all(), section()
+    use TypedValuesTrait;  // reads typed values: getBool(), getInt()
+    use WriteTrait;        // changes values: set(), delete(), flush()
 
     private ?Data $configs = null;
 

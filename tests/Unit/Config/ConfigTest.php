@@ -6,7 +6,7 @@ use Quantum\Tests\_root\modules\Test\Transformers\PostTransformer;
 use Quantum\Transformer\Contracts\TransformerInterface;
 use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Tests\Unit\AppTestCase;
-use Dflydev\DotAccessData\Data;
+use Quantum\Config\ConfigSection;
 use Quantum\Config\Config;
 use Quantum\Config\Setup;
 
@@ -25,13 +25,12 @@ class ConfigTest extends AppTestCase
 
     public function testConfigLoad(): void
     {
-        $this->assertEmpty($this->config->all());
+        $this->assertSame([], $this->config->all());
 
         $this->config->load(new Setup('config', 'app'));
 
         $this->assertNotEmpty($this->config->all());
-
-        $this->assertInstanceOf(Data::class, $this->config->all());
+        $this->assertSame('Quantum PHP Framework', $this->config->get('name'));
     }
 
     public function testConfigImport(): void
@@ -117,7 +116,7 @@ class ConfigTest extends AppTestCase
     public function testImportIfExistsReturnsFalseWithoutChangingConfig(): void
     {
         $this->assertFalse($this->config->importIfExists(new Setup('config', 'missing_optional')));
-        $this->assertNull($this->config->all());
+        $this->assertSame([], $this->config->all());
     }
 
     public function testImportIfExistsTreatsEmptyConfigAsPresent(): void
@@ -213,6 +212,15 @@ class ConfigTest extends AppTestCase
         $this->assertEquals('Nested Value', $this->config->get('other.nested'));
     }
 
+    public function testSetWithADotKeyOnAnEmptyConfigNestsTheValue(): void
+    {
+        $this->config->set('cache.redis', ['port' => 6379]);
+
+        $this->assertSame(6379, $this->config->get('cache.redis.port'));
+        $this->assertSame(['cache' => ['redis' => ['port' => 6379]]], $this->config->all());
+        $this->assertSame(6379, $this->config->section('cache.redis')->getInt('port'));
+    }
+
     public function testConfigDelete(): void
     {
         $this->config->import(new Setup('config', 'app'));
@@ -303,6 +311,50 @@ class ConfigTest extends AppTestCase
         $this->assertSame('587', $this->config->get('number'));
     }
 
+    public function testSectionReturnsTheSliceOfTheKey(): void
+    {
+        $this->config->set('cache', ['redis' => ['host' => '127.0.0.1', 'port' => '6379']]);
+
+        $section = $this->config->section('cache.redis');
+
+        $this->assertInstanceOf(ConfigSection::class, $section);
+        $this->assertNotInstanceOf(Config::class, $section);
+        $this->assertSame(['host' => '127.0.0.1', 'port' => '6379'], $section->all());
+        $this->assertSame(6379, $section->getInt('port'));
+    }
+
+    public function testSectionOfAMissingKeyIsEmpty(): void
+    {
+        $this->assertSame([], $this->config->section('cache.redis')->all());
+    }
+
+    public function testSectionOfAValueThatIsNotAnArrayIsEmpty(): void
+    {
+        $this->config->set('cache', ['default' => 'redis']);
+
+        $this->assertSame([], $this->config->section('cache.default')->all());
+    }
+
+    public function testSectionKeepsTheValuesItWasCreatedWith(): void
+    {
+        $this->config->set('cache', ['redis' => ['port' => 6379]]);
+
+        $section = $this->config->section('cache.redis');
+
+        $this->config->set('cache.redis.port', 6380);
+
+        $this->assertSame(6379, $section->getInt('port'));
+    }
+
+    public function testAllReturnsAllValues(): void
+    {
+        $this->assertSame([], $this->config->all());
+
+        $this->config->set('cache', ['default' => 'redis']);
+
+        $this->assertSame(['cache' => ['default' => 'redis']], $this->config->all());
+    }
+
     public function testConfigFlush(): void
     {
         $this->config->import(new Setup('config', 'app'));
@@ -311,6 +363,6 @@ class ConfigTest extends AppTestCase
 
         $this->config->flush();
 
-        $this->assertEmpty($this->config->all());
+        $this->assertSame([], $this->config->all());
     }
 }
