@@ -7,6 +7,7 @@ use Quantum\Mailer\Contracts\MailerInterface;
 use Quantum\Mailer\Adapters\SmtpAdapter;
 use Quantum\Mailer\Traits\MailerTrait;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Config\ConfigSection;
 use Quantum\Config\Setup;
 
 class MailerAdapterTraitTest extends AppTestCase
@@ -21,7 +22,7 @@ class MailerAdapterTraitTest extends AppTestCase
             config()->import(new Setup('config', 'mailer'));
         }
 
-        $this->adapter = new SmtpAdapter(config()->get('mailer.smtp'));
+        $this->adapter = new SmtpAdapter(config()->section('mailer.smtp'));
     }
 
     public function testMailerTraitSetGetFrom(): void
@@ -90,7 +91,7 @@ class MailerAdapterTraitTest extends AppTestCase
 
     public function testMailerTraitGetMessageId(): void
     {
-        $adapter = new SendinblueAdapter(['api_key' => 'xxx11122233']);
+        $adapter = new SendinblueAdapter(new ConfigSection(['api_key' => 'xxx11122233']));
 
         $this->assertIsString($adapter->getMessageId());
     }

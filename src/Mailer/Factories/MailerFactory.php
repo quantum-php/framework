@@ -80,7 +80,7 @@ class MailerFactory
      */
     private function createInstance(string $adapterClass, string $adapter): Mailer
     {
-        $adapterInstance = new $adapterClass(config()->get('mailer.' . $adapter));
+        $adapterInstance = new $adapterClass(config()->section('mailer.' . $adapter));
 
         if (!$adapterInstance instanceof MailerInterface) {
             throw MailerException::adapterNotSupported($adapter);

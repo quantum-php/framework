@@ -5,6 +5,7 @@ namespace Quantum\Tests\Unit\Mailer\Adapters;
 use Quantum\Tests\Unit\Mailer\MailerTestCase;
 use Quantum\Mailer\Contracts\MailerInterface;
 use Quantum\Mailer\Adapters\ResendAdapter;
+use Quantum\Config\ConfigSection;
 
 class ResendAdapterTest extends MailerTestCase
 {
@@ -12,7 +13,7 @@ class ResendAdapterTest extends MailerTestCase
     {
         parent::setUp();
 
-        $this->adapter = new ResendAdapter(['api_key' => 'xxx111222333']);
+        $this->adapter = new ResendAdapter(new ConfigSection(['api_key' => 'xxx111222333']));
     }
 
     public function testResendAdapterInstance(): void

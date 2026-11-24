@@ -11,6 +11,8 @@ declare(strict_types=1);
 namespace Quantum\RateLimit\Adapters;
 
 use Quantum\RateLimit\Contracts\RateLimitAdapterInterface;
+use Quantum\Config\Exceptions\ConfigException;
+use Quantum\Config\ConfigSection;
 use RedisException;
 use Redis;
 
@@ -27,16 +29,16 @@ class RedisRateLimitAdapter implements RateLimitAdapterInterface
     private readonly string $prefix;
 
     /**
-     * @param array<string, mixed> $params
      * @throws RedisException
+     * @throws ConfigException
      */
-    public function __construct(array $params)
+    public function __construct(ConfigSection $config)
     {
-        $this->resetInterval = $params['ttl'];
-        $this->prefix = (string) ($params['prefix'] ?? '');
+        $this->resetInterval = $config->getInt('ttl');
+        $this->prefix = (string) $config->get('prefix', '');
 
         $this->redis = new Redis();
-        $this->redis->connect($params['host'], (int) $params['port']);
+        $this->redis->connect($config->get('host'), $config->getInt('port'));
     }
 
     public function hit(string $key, int $limit, int $interval): bool

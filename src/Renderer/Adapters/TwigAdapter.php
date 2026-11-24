@@ -17,6 +17,7 @@ use Quantum\Config\Exceptions\ConfigException;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Di\Exceptions\DiException;
 use Twig\Loader\FilesystemLoader;
+use Quantum\Config\ConfigSection;
 use Quantum\Storage\FileSystem;
 use Twig\Error\RuntimeError;
 use Twig\Error\LoaderError;
@@ -33,18 +34,14 @@ class TwigAdapter implements TemplateRendererInterface
 {
     protected FileSystem $fs;
 
-    /**
-     * @var array<string, mixed>|null
-     */
-    protected ?array $configs;
+    protected ConfigSection $config;
 
     /**
-     * @param array<string, mixed>|null $configs
      * @throws ConfigException|DiException|BaseException|ReflectionException
      */
-    public function __construct(?array $configs = [])
+    public function __construct(ConfigSection $config = new ConfigSection())
     {
-        $this->configs = $configs;
+        $this->config = $config;
 
         $this->fs = FileSystemFactory::get();
     }
@@ -58,7 +55,7 @@ class TwigAdapter implements TemplateRendererInterface
     {
         $loader = $this->getLoader($view);
 
-        $twig = new Environment($loader, $this->configs ?? []);
+        $twig = new Environment($loader, $this->config->all());
 
         $this->addFunctionsToTwig($twig);
 

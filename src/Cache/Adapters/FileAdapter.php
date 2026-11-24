@@ -17,6 +17,7 @@ use Quantum\App\Exceptions\BaseException;
 use Quantum\Di\Exceptions\DiException;
 use Quantum\Cache\Traits\CacheTrait;
 use Psr\SimpleCache\CacheInterface;
+use Quantum\Config\ConfigSection;
 use Quantum\Storage\FileSystem;
 use ReflectionException;
 use DateInterval;
@@ -42,14 +43,13 @@ class FileAdapter implements CacheInterface
      * @throws ConfigException
      * @throws DiException
      * @throws ReflectionException
-     * @param array<string, mixed> $params
      */
-    public function __construct(array $params)
+    public function __construct(ConfigSection $config)
     {
         $this->fs = FileSystemFactory::get();
-        $this->ttl = $params['ttl'];
-        $this->prefix = $params['prefix'];
-        $this->cacheDir = $params['path'];
+        $this->ttl = $config->getInt('ttl');
+        $this->prefix = $config->get('prefix');
+        $this->cacheDir = $config->get('path');
     }
 
     /**

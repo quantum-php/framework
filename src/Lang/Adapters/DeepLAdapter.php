@@ -15,6 +15,7 @@ use Quantum\Lang\Traits\RemoteAdapterTrait;
 use Quantum\Lang\Exceptions\LangException;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\HttpClient\HttpClient;
+use Quantum\Config\ConfigSection;
 use ReflectionException;
 use ErrorException;
 
@@ -28,13 +29,10 @@ class DeepLAdapter implements LangAdapterInterface
 
     protected string $lang;
 
-    /**
-     * @param array<string, mixed> $params
-     */
-    public function __construct(string $lang, array $params, ?HttpClient $httpClient = null)
+    public function __construct(string $lang, ConfigSection $config, ?HttpClient $httpClient = null)
     {
         $this->lang = $lang;
-        $this->params = $params;
+        $this->config = $config;
         $this->httpClient = $httpClient ?? new HttpClient();
     }
 
@@ -62,14 +60,14 @@ class DeepLAdapter implements LangAdapterInterface
             return $cached;
         }
 
-        $authKey = (string) ($this->params['auth_key'] ?? '');
+        $authKey = (string) ($this->config->get('auth_key') ?? '');
 
         if ($authKey === '') {
             throw LangException::missingConfig('lang.deepl.auth_key');
         }
 
         $response = $this->sendRequest(
-            (string) ($this->params['api_url'] ?? self::API_URL),
+            (string) ($this->config->get('api_url') ?? self::API_URL),
             $this->buildPayload($text),
             [
                 'Authorization' => 'DeepL-Auth-Key ' . $authKey,
@@ -97,8 +95,8 @@ class DeepLAdapter implements LangAdapterInterface
             'target_lang' => strtoupper($this->lang),
         ];
 
-        if (!empty($this->params['source_locale'])) {
-            $payload['source_lang'] = strtoupper((string) $this->params['source_locale']);
+        if (!empty($this->config->get('source_locale'))) {
+            $payload['source_lang'] = strtoupper((string) $this->config->get('source_locale'));
         }
 
         $payloadJson = json_encode($payload);

@@ -96,6 +96,6 @@ class CommandRegistrarTest extends AppTestCase
 
         $this->assertTrue($this->application->has('core:env'));
         $this->assertFalse(Di::has(Environment::class));
-        $this->assertNull(config()->all());
+        $this->assertSame([], config()->all());
     }
 }

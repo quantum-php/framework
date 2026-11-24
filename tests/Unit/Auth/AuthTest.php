@@ -35,7 +35,7 @@ class AuthTest extends AuthTestCase
 
     public function testAuthGetAdapter(): void
     {
-        $authConfig = (array) config()->get('auth');
+        $authConfig = config()->section('auth');
 
         $auth = new Auth(new SessionAuthAdapter($this->authService, $this->mailer, $this->hasher, $authConfig));
 
@@ -48,7 +48,7 @@ class AuthTest extends AuthTestCase
 
     public function testAuthCallingValidMethod(): void
     {
-        $auth = new Auth(new JwtAuthAdapter($this->authService, $this->mailer, $this->hasher, $this->jwt, (array) config()->get('auth')));
+        $auth = new Auth(new JwtAuthAdapter($this->authService, $this->mailer, $this->hasher, $this->jwt, config()->section('auth')));
 
         $user = $auth->getAdapter()->signup($this->adminUser);
 
@@ -63,7 +63,7 @@ class AuthTest extends AuthTestCase
 
     public function testAuthCallingInvalidMethod(): void
     {
-        $auth = new Auth(new JwtAuthAdapter($this->authService, $this->mailer, $this->hasher, $this->jwt, (array) config()->get('auth')));
+        $auth = new Auth(new JwtAuthAdapter($this->authService, $this->mailer, $this->hasher, $this->jwt, config()->section('auth')));
 
         $this->expectException(AuthException::class);
 

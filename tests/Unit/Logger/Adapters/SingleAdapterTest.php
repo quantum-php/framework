@@ -5,6 +5,7 @@ namespace Quantum\Tests\Unit\Logger\Adapters;
 use Quantum\Logger\Exceptions\LoggerException;
 use Quantum\Logger\Adapters\SingleAdapter;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Config\ConfigSection;
 use RuntimeException;
 use Stringable;
 
@@ -26,9 +27,9 @@ class SingleAdapterTest extends AppTestCase
             $this->fs->remove($this->logFile);
         }
 
-        $this->adapter = new SingleAdapter([
+        $this->adapter = new SingleAdapter(new ConfigSection([
             'path' => $this->logFile,
-        ]);
+        ]));
     }
 
     public function tearDown(): void
@@ -49,9 +50,9 @@ class SingleAdapterTest extends AppTestCase
     {
         $this->expectException(LoggerException::class);
 
-        new SingleAdapter([
+        new SingleAdapter(new ConfigSection([
             'path' => base_dir() . DS . 'invalid_path',
-        ]);
+        ]));
     }
 
     public function testSingleAdapterReportWritesToFile(): void

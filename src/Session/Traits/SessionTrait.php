@@ -10,10 +10,11 @@ declare(strict_types=1);
 
 namespace Quantum\Session\Traits;
 
-use Quantum\App\Exceptions\BaseException;
-use Quantum\Di\Exceptions\DiException;
 use Quantum\Session\Exceptions\SessionException;
 use Quantum\Model\Exceptions\ModelException;
+use Quantum\App\Exceptions\BaseException;
+use Quantum\Di\Exceptions\DiException;
+use Quantum\Config\ConfigSection;
 use ReflectionException;
 
 /**
@@ -135,7 +136,7 @@ trait SessionTrait
             session_write_close();
         }
 
-        $this->initializeSession(self::$params);
+        $this->initializeSession(self::$config ?? new ConfigSection());
 
         return $result;
     }

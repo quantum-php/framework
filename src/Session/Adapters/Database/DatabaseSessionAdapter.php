@@ -17,6 +17,7 @@ use Quantum\Model\Factories\ModelFactory;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Session\Traits\SessionTrait;
 use Quantum\Di\Exceptions\DiException;
+use Quantum\Config\ConfigSection;
 use ReflectionException;
 
 /**
@@ -33,10 +34,9 @@ class DatabaseSessionAdapter implements SessionStorageInterface
     public const SESSION_TABLE = 'sessions';
 
     /**
-     * Session params
-     * @var array<string, mixed>|null
+     * Session config, kept to start the session again after regenerateId()
      */
-    private static ?array $params = [];
+    private static ?ConfigSection $config = null;
 
     /**
      * Session storage
@@ -45,21 +45,19 @@ class DatabaseSessionAdapter implements SessionStorageInterface
     private static array $storage = [];
 
     /**
-     * @param array<string, mixed>|null $params
      * @throws SessionException|ModelException|BaseException|DiException|ReflectionException
      */
-    public function __construct(?array $params = null)
+    public function __construct(ConfigSection $config = new ConfigSection())
     {
-        $this->initializeSession($params);
+        $this->initializeSession($config);
     }
 
     /**
-     * @param array<string, mixed>|null $params
      * @throws SessionException|ModelException|BaseException|DiException|ReflectionException
      */
-    protected function initializeSession(?array $params = null): void
+    protected function initializeSession(ConfigSection $config): void
     {
-        $sessionTable = $params['table'] ?? self::SESSION_TABLE;
+        $sessionTable = $config->get('table') ?? self::SESSION_TABLE;
 
         $sessionModel = ModelFactory::createDynamicModel($sessionTable);
 
@@ -71,7 +69,7 @@ class DatabaseSessionAdapter implements SessionStorageInterface
             }
         }
 
-        self::$params = $params;
+        self::$config = $config;
         self::$storage = &$_SESSION;
     }
 }

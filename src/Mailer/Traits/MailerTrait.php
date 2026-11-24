@@ -231,7 +231,7 @@ trait MailerTrait
 
         $this->prepare();
 
-        $sent = config()->getBool('mailer.mail_trap') ? $this->saveEmail() : $this->sendEmail();
+        $sent = config()->getBool('mailer.mail_trap', false) ? $this->saveEmail() : $this->sendEmail();
 
         $this->resetFields();
 

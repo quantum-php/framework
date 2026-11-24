@@ -26,7 +26,7 @@ class RecaptchaAdapterTest extends AppTestCase
 
         $this->httpClientMock = Mockery::mock(HttpClient::class);
 
-        $this->adapter = new RecaptchaAdapter(config()->get('captcha.recaptcha'), $this->httpClientMock);
+        $this->adapter = new RecaptchaAdapter(config()->section('captcha.recaptcha'), $this->httpClientMock);
     }
 
     public function tearDown(): void

@@ -20,4 +20,5 @@ final class ExceptionMessages extends BaseExceptionMessages
 {
     public const CONFIG_COLLISION = 'Config key `{%1}` is already in use';
     public const INVALID_WHOLE_NUMBER = 'The config key `{%1}` has the value `{%2}`, which is not a whole number.';
+    public const MISSING_KEY = 'The config key `{%1}` is missing.';
 }

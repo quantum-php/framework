@@ -44,7 +44,7 @@ class ViewCache
      */
     public function __construct()
     {
-        $this->isEnabled = request()->getRouteCacheSettings()['enabled'] ?? config()->getBool('resource_cache');
+        $this->isEnabled = request()->getRouteCacheSettings()['enabled'] ?? config()->getBool('resource_cache', false);
 
         $this->fs = FileSystemFactory::get();
     }

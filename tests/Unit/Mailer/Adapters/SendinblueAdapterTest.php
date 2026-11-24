@@ -5,6 +5,7 @@ namespace Quantum\Tests\Unit\Mailer\Adapters;
 use Quantum\Mailer\Adapters\SendinblueAdapter;
 use Quantum\Tests\Unit\Mailer\MailerTestCase;
 use Quantum\Mailer\Contracts\MailerInterface;
+use Quantum\Config\ConfigSection;
 
 class SendinblueAdapterTest extends MailerTestCase
 {
@@ -12,7 +13,7 @@ class SendinblueAdapterTest extends MailerTestCase
     {
         parent::setUp();
 
-        $this->adapter = new SendinblueAdapter(['api_key' => 'xxx111222333']);
+        $this->adapter = new SendinblueAdapter(new ConfigSection(['api_key' => 'xxx111222333']));
     }
 
     public function testSendinblueAdapterInstance(): void

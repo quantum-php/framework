@@ -19,6 +19,7 @@ use Quantum\Auth\Exceptions\AuthException;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Di\Exceptions\DiException;
 use Quantum\Auth\Traits\AuthTrait;
+use Quantum\Config\ConfigSection;
 use Quantum\Auth\Enums\AuthKeys;
 use Quantum\Hasher\Hasher;
 use Quantum\Mailer\Mailer;
@@ -36,18 +37,30 @@ class SessionAuthAdapter implements AuthenticatableInterface
 
     private const DEFAULT_REMEMBER_LIFETIME = 2592000;
 
+    private int $rememberLifetime;
+
     /**
-     * @param array<string, mixed> $config
-     * @throws AuthException
+     * @throws AuthException|ConfigException
      */
-    public function __construct(AuthServiceInterface $authService, Mailer $mailer, Hasher $hasher, array $config = [])
+    public function __construct(AuthServiceInterface $authService, Mailer $mailer, Hasher $hasher, ConfigSection $config)
     {
         $this->authService = $authService;
         $this->mailer = $mailer;
         $this->hasher = $hasher;
-        $this->config = $config;
+        $this->readConfig($config);
 
         $this->verifySchema($this->authService->userSchema());
+    }
+
+    /**
+     * Reads the auth settings once, so an invalid value fails when the adapter is built
+     * @throws ConfigException
+     */
+    protected function readConfig(ConfigSection $config): void
+    {
+        $this->twoFactorEnabled = $config->getBool('two_fa', false);
+        $this->otpExpires = $config->getInt('otp_expires', 2);
+        $this->rememberLifetime = $config->getInt('session.remember_lifetime', self::DEFAULT_REMEMBER_LIFETIME);
     }
 
     /**
@@ -200,12 +213,10 @@ class SessionAuthAdapter implements AuthenticatableInterface
             [$this->keyFields[AuthKeys::REMEMBER_TOKEN->value] => $rememberToken]
         );
 
-        $rememberLifetime = (int) ($this->config['session']['remember_lifetime'] ?? self::DEFAULT_REMEMBER_LIFETIME);
-
         cookie()->set(
             $this->keyFields[AuthKeys::REMEMBER_TOKEN->value],
             $rememberToken,
-            $rememberLifetime,
+            $this->rememberLifetime,
             '/',
             '',
             true,

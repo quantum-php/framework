@@ -11,8 +11,10 @@ declare(strict_types=1);
 namespace Quantum\Cache\Adapters;
 
 use Quantum\Cache\Exceptions\InvalidCacheKeyException;
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Cache\Traits\CacheTrait;
 use Psr\SimpleCache\CacheInterface;
+use Quantum\Config\ConfigSection;
 use RedisException;
 use DateInterval;
 use Throwable;
@@ -30,15 +32,15 @@ class RedisAdapter implements CacheInterface
 
     /**
      * @throws RedisException
-     * @param array<string, mixed> $params
+     * @throws ConfigException
      */
-    public function __construct(array $params)
+    public function __construct(ConfigSection $config)
     {
-        $this->ttl = $params['ttl'];
-        $this->prefix = $params['prefix'];
+        $this->ttl = $config->getInt('ttl');
+        $this->prefix = $config->get('prefix');
 
         $this->redis = new Redis();
-        $this->redis->connect($params['host'], (int) $params['port']);
+        $this->redis->connect($config->get('host'), $config->getInt('port'));
     }
 
     /**

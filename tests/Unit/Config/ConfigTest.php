@@ -6,7 +6,7 @@ use Quantum\Tests\_root\modules\Test\Transformers\PostTransformer;
 use Quantum\Transformer\Contracts\TransformerInterface;
 use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Tests\Unit\AppTestCase;
-use Dflydev\DotAccessData\Data;
+use Quantum\Config\ConfigSection;
 use Quantum\Config\Config;
 use Quantum\Config\Setup;
 
@@ -25,13 +25,12 @@ class ConfigTest extends AppTestCase
 
     public function testConfigLoad(): void
     {
-        $this->assertEmpty($this->config->all());
+        $this->assertSame([], $this->config->all());
 
         $this->config->load(new Setup('config', 'app'));
 
         $this->assertNotEmpty($this->config->all());
-
-        $this->assertInstanceOf(Data::class, $this->config->all());
+        $this->assertSame('Quantum PHP Framework', $this->config->get('name'));
     }
 
     public function testConfigImport(): void
@@ -117,7 +116,7 @@ class ConfigTest extends AppTestCase
     public function testImportIfExistsReturnsFalseWithoutChangingConfig(): void
     {
         $this->assertFalse($this->config->importIfExists(new Setup('config', 'missing_optional')));
-        $this->assertNull($this->config->all());
+        $this->assertSame([], $this->config->all());
     }
 
     public function testImportIfExistsTreatsEmptyConfigAsPresent(): void
@@ -213,6 +212,15 @@ class ConfigTest extends AppTestCase
         $this->assertEquals('Nested Value', $this->config->get('other.nested'));
     }
 
+    public function testSetWithADotKeyOnAnEmptyConfigNestsTheValue(): void
+    {
+        $this->config->set('cache.redis', ['port' => 6379]);
+
+        $this->assertSame(6379, $this->config->get('cache.redis.port'));
+        $this->assertSame(['cache' => ['redis' => ['port' => 6379]]], $this->config->all());
+        $this->assertSame(6379, $this->config->section('cache.redis')->getInt('port'));
+    }
+
     public function testConfigDelete(): void
     {
         $this->config->import(new Setup('config', 'app'));
@@ -237,7 +245,7 @@ class ConfigTest extends AppTestCase
 
     public function testGetBoolReadsFalseValues(): void
     {
-        foreach ([false, 0, '0', 'false', 'off', 'no', '', 'abc', []] as $value) {
+        foreach ([false, 0, '0', 'false', 'off', 'no', 'abc', []] as $value) {
             $this->config->set('flag', $value);
 
             $this->assertFalse($this->config->getBool('flag', true), var_export($value, true));
@@ -246,12 +254,29 @@ class ConfigTest extends AppTestCase
 
     public function testGetBoolReturnsDefaultForMissingOrNullKey(): void
     {
-        $this->assertFalse($this->config->getBool('missing'));
         $this->assertTrue($this->config->getBool('missing', true));
+        $this->assertFalse($this->config->getBool('missing', false));
 
         $this->config->set('flag', null);
+        $this->config->set('empty_flag', '');
 
         $this->assertTrue($this->config->getBool('flag', true));
+        $this->assertTrue($this->config->getBool('empty_flag', true));
+    }
+
+    public function testGetBoolWithoutADefaultRequiresTheKey(): void
+    {
+        $this->config->set('flag', null);
+        $this->config->set('empty_flag', '');
+
+        foreach (['missing', 'flag', 'empty_flag'] as $key) {
+            try {
+                $this->config->getBool($key);
+                $this->fail('No exception for ' . $key);
+            } catch (ConfigException $e) {
+                $this->assertSame('The config key `' . $key . '` is missing.', $e->getMessage());
+            }
+        }
     }
 
     public function testGetBoolReadsNestedKey(): void
@@ -273,17 +298,34 @@ class ConfigTest extends AppTestCase
 
     public function testGetIntReturnsDefaultForMissingOrNullKey(): void
     {
-        $this->assertSame(0, $this->config->getInt('missing'));
         $this->assertSame(1000, $this->config->getInt('missing', 1000));
+        $this->assertSame(0, $this->config->getInt('missing', 0));
 
         $this->config->set('number', null);
+        $this->config->set('empty_number', '');
 
         $this->assertSame(1000, $this->config->getInt('number', 1000));
+        $this->assertSame(25, $this->config->getInt('empty_number', 25));
+    }
+
+    public function testGetIntWithoutADefaultRequiresTheKey(): void
+    {
+        $this->config->set('number', null);
+        $this->config->set('empty_number', '');
+
+        foreach (['missing', 'number', 'empty_number'] as $key) {
+            try {
+                $this->config->getInt($key);
+                $this->fail('No exception for ' . $key);
+            } catch (ConfigException $e) {
+                $this->assertSame('The config key `' . $key . '` is missing.', $e->getMessage());
+            }
+        }
     }
 
     public function testGetIntThrowsForTextThatIsNotAWholeNumber(): void
     {
-        foreach (['abc', '1.5', '', '12abc', 1.5, []] as $value) {
+        foreach (['abc', '1.5', ' ', '12abc', 1.5, []] as $value) {
             $this->config->set('number', $value);
 
             try {
@@ -303,6 +345,50 @@ class ConfigTest extends AppTestCase
         $this->assertSame('587', $this->config->get('number'));
     }
 
+    public function testSectionReturnsTheSliceOfTheKey(): void
+    {
+        $this->config->set('cache', ['redis' => ['host' => '127.0.0.1', 'port' => '6379']]);
+
+        $section = $this->config->section('cache.redis');
+
+        $this->assertInstanceOf(ConfigSection::class, $section);
+        $this->assertNotInstanceOf(Config::class, $section);
+        $this->assertSame(['host' => '127.0.0.1', 'port' => '6379'], $section->all());
+        $this->assertSame(6379, $section->getInt('port'));
+    }
+
+    public function testSectionOfAMissingKeyIsEmpty(): void
+    {
+        $this->assertSame([], $this->config->section('cache.redis')->all());
+    }
+
+    public function testSectionOfAValueThatIsNotAnArrayIsEmpty(): void
+    {
+        $this->config->set('cache', ['default' => 'redis']);
+
+        $this->assertSame([], $this->config->section('cache.default')->all());
+    }
+
+    public function testSectionKeepsTheValuesItWasCreatedWith(): void
+    {
+        $this->config->set('cache', ['redis' => ['port' => 6379]]);
+
+        $section = $this->config->section('cache.redis');
+
+        $this->config->set('cache.redis.port', 6380);
+
+        $this->assertSame(6379, $section->getInt('port'));
+    }
+
+    public function testAllReturnsAllValues(): void
+    {
+        $this->assertSame([], $this->config->all());
+
+        $this->config->set('cache', ['default' => 'redis']);
+
+        $this->assertSame(['cache' => ['default' => 'redis']], $this->config->all());
+    }
+
     public function testConfigFlush(): void
     {
         $this->config->import(new Setup('config', 'app'));
@@ -311,6 +397,6 @@ class ConfigTest extends AppTestCase
 
         $this->config->flush();
 
-        $this->assertEmpty($this->config->all());
+        $this->assertSame([], $this->config->all());
     }
 }

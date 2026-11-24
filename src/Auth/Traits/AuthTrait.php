@@ -16,6 +16,7 @@ use Quantum\Auth\Exceptions\AuthException;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Jwt\Exceptions\JwtException;
 use Quantum\Di\Exceptions\DiException;
+use Quantum\Config\ConfigSection;
 use Quantum\Auth\Enums\AuthKeys;
 use Quantum\Mailer\Mailer;
 use Quantum\Hasher\Hasher;
@@ -39,10 +40,9 @@ trait AuthTrait
 
     protected int $otpLength = 6;
 
-    /**
-     * @var array<string, mixed>
-     */
-    protected array $config = [];
+    protected bool $twoFactorEnabled = false;
+
+    protected int $otpExpires = 2;
 
     /**
      * @var array<string, string>
@@ -217,7 +217,7 @@ trait AuthTrait
 
         $time = new DateTime();
 
-        $time->add(new DateInterval('PT' . ($this->config['otp_expires'] ?? 2) . 'M'));
+        $time->add(new DateInterval('PT' . $this->otpExpires . 'M'));
 
         $this->authService->update(
             $this->keyFields[AuthKeys::USERNAME->value],
@@ -327,6 +327,12 @@ trait AuthTrait
     }
 
     /**
+     * Reads the adapter's settings once, so an invalid value fails when the adapter is built
+     * @throws ConfigException
+     */
+    abstract protected function readConfig(ConfigSection $config): void;
+
+    /**
      * Verify user schema
      * @param array<string, mixed> $schema
      * @throws AuthException
@@ -350,6 +356,6 @@ trait AuthTrait
 
     protected function isTwoFactorEnabled(): bool
     {
-        return filter_var($this->config['two_fa'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        return $this->twoFactorEnabled;
     }
 }

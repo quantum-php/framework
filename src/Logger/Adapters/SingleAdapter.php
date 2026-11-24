@@ -17,6 +17,7 @@ use Quantum\Config\Exceptions\ConfigException;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Logger\Traits\LoggerTrait;
 use Quantum\Di\Exceptions\DiException;
+use Quantum\Config\ConfigSection;
 use ReflectionException;
 
 /**
@@ -29,26 +30,24 @@ class SingleAdapter implements ReportableInterface
 
     /**
      * SingleAdapter constructor
-     * @param array<string, mixed> $params
      * @throws LoggerException|ConfigException|DiException|BaseException|ReflectionException
      */
-    public function __construct(array $params)
+    public function __construct(ConfigSection $config)
     {
         $this->fs = FileSystemFactory::get();
-        $this->initialize($params);
+        $this->initialize($config);
     }
 
     /**
      * Initialize the adapter for Single logs
-     * @param array<string, mixed> $params
      * @throws LoggerException
      */
-    protected function initialize(array $params): void
+    protected function initialize(ConfigSection $config): void
     {
-        if (!$this->fs->extension($params['path'])) {
-            throw LoggerException::logPathIsNotFile($params['path']);
+        if (!$this->fs->extension($config->get('path'))) {
+            throw LoggerException::logPathIsNotFile($config->get('path'));
         }
 
-        $this->logFile = $params['path'];
+        $this->logFile = $config->get('path');
     }
 }

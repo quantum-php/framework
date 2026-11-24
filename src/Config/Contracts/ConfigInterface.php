@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace Quantum\Config\Contracts;
 
+use Quantum\Config\ConfigSection;
 use Quantum\Config\Setup;
 
 /**
@@ -18,12 +19,6 @@ use Quantum\Config\Setup;
  */
 interface ConfigInterface
 {
-    /**
-     * Gets whole storage data
-     * @return mixed
-     */
-    public function all();
-
     /**
      * Checks if the storage contains a key
      */
@@ -35,6 +30,17 @@ interface ConfigInterface
      * @return mixed|null
      */
     public function get(string $key, $default = null);
+
+    /**
+     * Gets the values under the key as a new, read-only section; empty when the value is missing or not an array
+     */
+    public function section(string $key): ConfigSection;
+
+    /**
+     * Gets all values as an array
+     * @return array<string, mixed>
+     */
+    public function all(): array;
 
     /**
      * Sets storage value with the given key

@@ -5,6 +5,7 @@ namespace Quantum\Tests\Unit\Mailer\Adapters;
 use Quantum\Tests\Unit\Mailer\MailerTestCase;
 use Quantum\Mailer\Contracts\MailerInterface;
 use Quantum\Mailer\Adapters\MandrillAdapter;
+use Quantum\Config\ConfigSection;
 
 class MandrillAdapterTest extends MailerTestCase
 {
@@ -12,7 +13,7 @@ class MandrillAdapterTest extends MailerTestCase
     {
         parent::setUp();
 
-        $this->adapter = new MandrillAdapter(['api_key' => 'xxx111222333']);
+        $this->adapter = new MandrillAdapter(new ConfigSection(['api_key' => 'xxx111222333']));
     }
 
     public function testMandrillAdapterInstance(): void

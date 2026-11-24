@@ -2,12 +2,14 @@
 
 namespace Quantum\Tests\Unit\Auth\Adapters;
 
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Auth\Exceptions\AuthException;
 use Quantum\Auth\Adapters\JwtAuthAdapter;
 use Quantum\Auth\Enums\ExceptionMessages;
 use Quantum\Tests\Unit\Auth\AuthTestCase;
 use Quantum\Hasher\Hasher;
 use Quantum\Jwt\JwtToken;
+use ArgumentCountError;
 use Quantum\Auth\User;
 
 class JwtAuthAdapterTest extends AuthTestCase
@@ -43,7 +45,7 @@ class JwtAuthAdapterTest extends AuthTestCase
             $this->mailer,
             (new Hasher())->setCost(4),
             $jwt,
-            (array) config()->get('auth')
+            config()->section('auth')
         );
     }
 
@@ -54,6 +56,24 @@ class JwtAuthAdapterTest extends AuthTestCase
         $this->jwtAuth->signout();
 
         parent::tearDown();
+    }
+
+    public function testApiAdapterRequiresItsConfig(): void
+    {
+        $this->expectException(ArgumentCountError::class);
+
+        new JwtAuthAdapter($this->authService, $this->mailer, (new Hasher())->setCost(4), new JwtToken());
+    }
+
+    public function testApiAdapterRejectsAnOtpExpiryThatIsNotANumberEvenWithTwoFactorOff(): void
+    {
+        config()->set('auth.two_fa', false);
+        config()->set('auth.otp_expires', 'abc');
+
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('The config key `otp_expires` has the value `abc`, which is not a whole number.');
+
+        $this->createJwtAuth();
     }
 
     public function testApiAdapterConstructor(): void
