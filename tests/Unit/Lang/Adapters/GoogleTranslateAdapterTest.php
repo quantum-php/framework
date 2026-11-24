@@ -7,6 +7,7 @@ use Quantum\Lang\Adapters\GoogleTranslateAdapter;
 use Quantum\Lang\Exceptions\LangException;
 use Quantum\HttpClient\HttpClient;
 use Quantum\Tests\Unit\AppTestCase;
+use Quantum\Config\ConfigSection;
 use Mockery;
 
 class GoogleTranslateAdapterTest extends AppTestCase
@@ -40,7 +41,7 @@ class GoogleTranslateAdapterTest extends AppTestCase
             ],
         ];
 
-        $adapter = new GoogleTranslateAdapter('es', $this->getParams(), $this->mockHttpClient());
+        $adapter = new GoogleTranslateAdapter('es', new ConfigSection($this->getConfig()), $this->mockHttpClient());
 
         $this->assertEquals('Hola', $adapter->get('Hello'));
         $this->assertStringContainsString('?key=test-api-key', $this->url);
@@ -66,21 +67,21 @@ class GoogleTranslateAdapterTest extends AppTestCase
             ],
         ];
 
-        $firstAdapter = new GoogleTranslateAdapter('es', $this->getParams(), $this->mockHttpClient());
+        $firstAdapter = new GoogleTranslateAdapter('es', new ConfigSection($this->getConfig()), $this->mockHttpClient());
 
         $this->assertEquals('Hola', $firstAdapter->get('Hello'));
 
         $httpClientMock = Mockery::mock(HttpClient::class);
         $httpClientMock->shouldNotReceive('createRequest');
 
-        $secondAdapter = new GoogleTranslateAdapter('es', $this->getParams(), $httpClientMock);
+        $secondAdapter = new GoogleTranslateAdapter('es', new ConfigSection($this->getConfig()), $httpClientMock);
 
         $this->assertEquals('Hola', $secondAdapter->get('Hello'));
     }
 
     public function testGoogleTranslateAdapterThrowsIfApiKeyIsMissing(): void
     {
-        $adapter = new GoogleTranslateAdapter('es', $this->getParams(['api_key' => '']), $this->mockHttpClient());
+        $adapter = new GoogleTranslateAdapter('es', new ConfigSection($this->getConfig(['api_key' => ''])), $this->mockHttpClient());
 
         $this->expectException(LangException::class);
         $this->expectExceptionMessage('Could not load config `lang.google_translate.api_key` properly.');
@@ -92,7 +93,7 @@ class GoogleTranslateAdapterTest extends AppTestCase
     {
         $this->currentResponse = (object) [];
 
-        $adapter = new GoogleTranslateAdapter('es', $this->getParams(), $this->mockHttpClient());
+        $adapter = new GoogleTranslateAdapter('es', new ConfigSection($this->getConfig()), $this->mockHttpClient());
 
         $this->expectException(LangException::class);
         $this->expectExceptionMessage('The provider `Google Translate` returned an invalid translation response.');
@@ -102,7 +103,7 @@ class GoogleTranslateAdapterTest extends AppTestCase
 
     public function testGoogleTranslateAdapterThrowsIfPayloadCannotBeEncoded(): void
     {
-        $adapter = new GoogleTranslateAdapter('es', $this->getParams(), $this->mockHttpClient());
+        $adapter = new GoogleTranslateAdapter('es', new ConfigSection($this->getConfig()), $this->mockHttpClient());
 
         $this->expectException(LangException::class);
         $this->expectExceptionMessage('The translation payload could not be encoded for `Google Translate`.');
@@ -115,7 +116,7 @@ class GoogleTranslateAdapterTest extends AppTestCase
         $httpClientMock = Mockery::mock(HttpClient::class);
         $httpClientMock->shouldNotReceive('createRequest');
 
-        $adapter = new GoogleTranslateAdapter('es', $this->getParams(), $httpClientMock);
+        $adapter = new GoogleTranslateAdapter('es', new ConfigSection($this->getConfig()), $httpClientMock);
 
         $this->assertSame('', $adapter->get(''));
     }
@@ -130,10 +131,10 @@ class GoogleTranslateAdapterTest extends AppTestCase
             ],
         ];
 
-        $adapter = new GoogleTranslateAdapter('es', $this->getParams([
+        $adapter = new GoogleTranslateAdapter('es', new ConfigSection($this->getConfig([
             'use_source_catalog' => true,
             'source_locale' => 'en',
-        ]), $this->mockHttpClient());
+        ])), $this->mockHttpClient());
 
         $this->assertSame('Hola', $adapter->get('custom.test'));
         $this->assertJsonStringEqualsJsonString(
@@ -152,10 +153,10 @@ class GoogleTranslateAdapterTest extends AppTestCase
         $httpClientMock = Mockery::mock(HttpClient::class);
         $httpClientMock->shouldNotReceive('createRequest');
 
-        $adapter = new GoogleTranslateAdapter('en', $this->getParams([
+        $adapter = new GoogleTranslateAdapter('en', new ConfigSection($this->getConfig([
             'use_source_catalog' => true,
             'source_locale' => 'en',
-        ]), $httpClientMock);
+        ])), $httpClientMock);
 
         $this->assertSame('Testing', $adapter->get('custom.test'));
     }
@@ -165,20 +166,20 @@ class GoogleTranslateAdapterTest extends AppTestCase
         $httpClientMock = Mockery::mock(HttpClient::class);
         $httpClientMock->shouldNotReceive('createRequest');
 
-        $adapter = new GoogleTranslateAdapter('es', $this->getParams([
+        $adapter = new GoogleTranslateAdapter('es', new ConfigSection($this->getConfig([
             'use_source_catalog' => true,
             'source_locale' => 'en',
-        ]), $httpClientMock);
+        ])), $httpClientMock);
 
         $this->assertSame('custom.missing', $adapter->get('custom.missing'));
     }
 
     public function testGoogleTranslateAdapterThrowsIfSourceCatalogLocaleIsMissing(): void
     {
-        $adapter = new GoogleTranslateAdapter('es', $this->getParams([
+        $adapter = new GoogleTranslateAdapter('es', new ConfigSection($this->getConfig([
             'use_source_catalog' => true,
             'source_locale' => null,
-        ]), $this->mockHttpClient());
+        ])), $this->mockHttpClient());
 
         $this->expectException(LangException::class);
         $this->expectExceptionMessage('Could not load config `lang.google_translate.source_locale` properly.');
@@ -190,7 +191,7 @@ class GoogleTranslateAdapterTest extends AppTestCase
     {
         $this->currentErrors = ['timeout'];
 
-        $adapter = new GoogleTranslateAdapter('es', $this->getParams(), $this->mockHttpClient());
+        $adapter = new GoogleTranslateAdapter('es', new ConfigSection($this->getConfig()), $this->mockHttpClient());
 
         $this->expectException(LangException::class);
         $this->expectExceptionMessage('The translation request to `Quantum\\Lang\\Adapters\\GoogleTranslateAdapter` failed');
@@ -202,7 +203,7 @@ class GoogleTranslateAdapterTest extends AppTestCase
      * @param array<string, mixed> $overrides
      * @return array<string, mixed>
      */
-    private function getParams(array $overrides = []): array
+    private function getConfig(array $overrides = []): array
     {
         return array_replace_recursive([
             'api_key' => 'test-api-key',

@@ -15,6 +15,7 @@ use Quantum\Lang\Traits\RemoteAdapterTrait;
 use Quantum\Lang\Exceptions\LangException;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\HttpClient\HttpClient;
+use Quantum\Config\ConfigSection;
 use ReflectionException;
 use ErrorException;
 
@@ -26,13 +27,10 @@ class GoogleTranslateAdapter implements LangAdapterInterface
 
     protected string $lang;
 
-    /**
-     * @param array<string, mixed> $params
-     */
-    public function __construct(string $lang, array $params, ?HttpClient $httpClient = null)
+    public function __construct(string $lang, ConfigSection $config, ?HttpClient $httpClient = null)
     {
         $this->lang = $lang;
-        $this->params = $params;
+        $this->config = $config;
         $this->httpClient = $httpClient ?? new HttpClient();
     }
 
@@ -60,14 +58,14 @@ class GoogleTranslateAdapter implements LangAdapterInterface
             return $cached;
         }
 
-        $apiKey = (string) ($this->params['api_key'] ?? '');
+        $apiKey = (string) ($this->config->get('api_key') ?? '');
 
         if ($apiKey === '') {
             throw LangException::missingConfig('lang.google_translate.api_key');
         }
 
         $response = $this->sendRequest(
-            (string) ($this->params['api_url'] ?? self::API_URL) . '?key=' . urlencode($apiKey),
+            (string) ($this->config->get('api_url') ?? self::API_URL) . '?key=' . urlencode($apiKey),
             $this->buildPayload($text),
             [
                 'Content-Type' => 'application/json',
@@ -92,8 +90,8 @@ class GoogleTranslateAdapter implements LangAdapterInterface
             'format' => 'text',
         ];
 
-        if (!empty($this->params['source_locale'])) {
-            $payload['source'] = (string) $this->params['source_locale'];
+        if (!empty($this->config->get('source_locale'))) {
+            $payload['source'] = (string) $this->config->get('source_locale');
         }
 
         $payloadJson = json_encode($payload);

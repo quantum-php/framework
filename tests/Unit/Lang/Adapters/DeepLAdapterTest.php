@@ -3,10 +3,12 @@
 namespace Quantum\Tests\Unit\Lang\Adapters;
 
 use Quantum\Tests\Unit\Storage\HttpClientTestCase;
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Lang\Exceptions\LangException;
 use Quantum\Lang\Adapters\DeepLAdapter;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\HttpClient\HttpClient;
+use Quantum\Config\ConfigSection;
 use Mockery;
 
 class DeepLAdapterTest extends AppTestCase
@@ -38,7 +40,7 @@ class DeepLAdapterTest extends AppTestCase
             ],
         ];
 
-        $adapter = new DeepLAdapter('es', $this->getParams(), $this->mockHttpClient());
+        $adapter = new DeepLAdapter('es', new ConfigSection($this->getConfig()), $this->mockHttpClient());
 
         $this->assertEquals('Hola', $adapter->get('Hello'));
         $this->assertSame(DeepLAdapter::TIMEOUT, $this->options[$this->url][CURLOPT_TIMEOUT]);
@@ -52,21 +54,46 @@ class DeepLAdapterTest extends AppTestCase
             ],
         ];
 
-        $firstAdapter = new DeepLAdapter('es', $this->getParams(), $this->mockHttpClient());
+        $firstAdapter = new DeepLAdapter('es', new ConfigSection($this->getConfig()), $this->mockHttpClient());
 
         $this->assertEquals('Hola', $firstAdapter->get('Hello'));
 
         $httpClientMock = Mockery::mock(HttpClient::class);
         $httpClientMock->shouldNotReceive('createRequest');
 
-        $secondAdapter = new DeepLAdapter('es', $this->getParams(), $httpClientMock);
+        $secondAdapter = new DeepLAdapter('es', new ConfigSection($this->getConfig()), $httpClientMock);
 
         $this->assertEquals('Hola', $secondAdapter->get('Hello'));
     }
 
+    public function testDeepLAdapterReadsTheCacheSettingsGivenAsText(): void
+    {
+        $this->assertTranslationIsCached($this->getConfig(['cache' => ['enabled' => 'yes', 'ttl' => '3600']]));
+    }
+
+    public function testDeepLAdapterCachesWithTheDefaultTtlWhenTheTtlIsNotSet(): void
+    {
+        $config = $this->getConfig();
+        unset($config['cache']['ttl']);
+
+        $this->assertTranslationIsCached($config);
+    }
+
+    public function testDeepLAdapterRejectsACacheTtlThatIsNotANumber(): void
+    {
+        $this->currentResponse = (object) ['translations' => [(object) ['text' => 'Hola']]];
+
+        $adapter = new DeepLAdapter('es', new ConfigSection($this->getConfig(['cache' => ['ttl' => 'abc']])), $this->mockHttpClient());
+
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('The config key `cache.ttl` has the value `abc`, which is not a whole number.');
+
+        $adapter->get('Hello');
+    }
+
     public function testDeepLAdapterThrowsIfAuthKeyIsMissing(): void
     {
-        $adapter = new DeepLAdapter('es', $this->getParams(['auth_key' => '']), $this->mockHttpClient());
+        $adapter = new DeepLAdapter('es', new ConfigSection($this->getConfig(['auth_key' => ''])), $this->mockHttpClient());
 
         $this->expectException(LangException::class);
         $this->expectExceptionMessage('Could not load config `lang.deepl.auth_key` properly.');
@@ -78,7 +105,7 @@ class DeepLAdapterTest extends AppTestCase
     {
         $this->currentResponse = (object) [];
 
-        $adapter = new DeepLAdapter('es', $this->getParams(), $this->mockHttpClient());
+        $adapter = new DeepLAdapter('es', new ConfigSection($this->getConfig()), $this->mockHttpClient());
 
         $this->expectException(LangException::class);
         $this->expectExceptionMessage('The provider `DeepL` returned an invalid translation response.');
@@ -88,7 +115,7 @@ class DeepLAdapterTest extends AppTestCase
 
     public function testDeepLAdapterThrowsIfPayloadCannotBeEncoded(): void
     {
-        $adapter = new DeepLAdapter('es', $this->getParams(), $this->mockHttpClient());
+        $adapter = new DeepLAdapter('es', new ConfigSection($this->getConfig()), $this->mockHttpClient());
 
         $this->expectException(LangException::class);
         $this->expectExceptionMessage('The translation payload could not be encoded for `DeepL`.');
@@ -101,7 +128,7 @@ class DeepLAdapterTest extends AppTestCase
         $httpClientMock = Mockery::mock(HttpClient::class);
         $httpClientMock->shouldNotReceive('createRequest');
 
-        $adapter = new DeepLAdapter('es', $this->getParams(), $httpClientMock);
+        $adapter = new DeepLAdapter('es', new ConfigSection($this->getConfig()), $httpClientMock);
 
         $this->assertSame('', $adapter->get(''));
     }
@@ -114,10 +141,10 @@ class DeepLAdapterTest extends AppTestCase
             ],
         ];
 
-        $adapter = new DeepLAdapter('es', $this->getParams([
+        $adapter = new DeepLAdapter('es', new ConfigSection($this->getConfig([
             'use_source_catalog' => true,
             'source_locale' => 'en',
-        ]), $this->mockHttpClient());
+        ])), $this->mockHttpClient());
 
         $this->assertSame('Hola', $adapter->get('custom.test'));
         $this->assertJsonStringEqualsJsonString(
@@ -135,10 +162,10 @@ class DeepLAdapterTest extends AppTestCase
         $httpClientMock = Mockery::mock(HttpClient::class);
         $httpClientMock->shouldNotReceive('createRequest');
 
-        $adapter = new DeepLAdapter('en', $this->getParams([
+        $adapter = new DeepLAdapter('en', new ConfigSection($this->getConfig([
             'use_source_catalog' => true,
             'source_locale' => 'en',
-        ]), $httpClientMock);
+        ])), $httpClientMock);
 
         $this->assertSame('Testing', $adapter->get('custom.test'));
     }
@@ -148,20 +175,20 @@ class DeepLAdapterTest extends AppTestCase
         $httpClientMock = Mockery::mock(HttpClient::class);
         $httpClientMock->shouldNotReceive('createRequest');
 
-        $adapter = new DeepLAdapter('es', $this->getParams([
+        $adapter = new DeepLAdapter('es', new ConfigSection($this->getConfig([
             'use_source_catalog' => true,
             'source_locale' => 'en',
-        ]), $httpClientMock);
+        ])), $httpClientMock);
 
         $this->assertSame('custom.missing', $adapter->get('custom.missing'));
     }
 
     public function testDeepLAdapterThrowsIfSourceCatalogLocaleIsMissing(): void
     {
-        $adapter = new DeepLAdapter('es', $this->getParams([
+        $adapter = new DeepLAdapter('es', new ConfigSection($this->getConfig([
             'use_source_catalog' => true,
             'source_locale' => null,
-        ]), $this->mockHttpClient());
+        ])), $this->mockHttpClient());
 
         $this->expectException(LangException::class);
         $this->expectExceptionMessage('Could not load config `lang.deepl.source_locale` properly.');
@@ -173,7 +200,7 @@ class DeepLAdapterTest extends AppTestCase
     {
         $this->currentErrors = ['timeout'];
 
-        $adapter = new DeepLAdapter('es', $this->getParams(), $this->mockHttpClient());
+        $adapter = new DeepLAdapter('es', new ConfigSection($this->getConfig()), $this->mockHttpClient());
 
         $this->expectException(LangException::class);
         $this->expectExceptionMessage('The translation request to `Quantum\\Lang\\Adapters\\DeepLAdapter` failed');
@@ -182,10 +209,25 @@ class DeepLAdapterTest extends AppTestCase
     }
 
     /**
+     * @param array<string, mixed> $config
+     */
+    private function assertTranslationIsCached(array $config): void
+    {
+        $this->currentResponse = (object) ['translations' => [(object) ['text' => 'Hola']]];
+
+        $this->assertEquals('Hola', (new DeepLAdapter('es', new ConfigSection($config), $this->mockHttpClient()))->get('Hello'));
+
+        $httpClientMock = Mockery::mock(HttpClient::class);
+        $httpClientMock->shouldNotReceive('createRequest');
+
+        $this->assertEquals('Hola', (new DeepLAdapter('es', new ConfigSection($config), $httpClientMock))->get('Hello'));
+    }
+
+    /**
      * @param array<string, mixed> $overrides
      * @return array<string, mixed>
      */
-    private function getParams(array $overrides = []): array
+    private function getConfig(array $overrides = []): array
     {
         return array_replace_recursive([
             'auth_key' => 'test-auth-key',

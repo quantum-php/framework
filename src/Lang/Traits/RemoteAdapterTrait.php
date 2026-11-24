@@ -19,6 +19,7 @@ use Quantum\Lang\Adapters\DeepLAdapter;
 use Quantum\Lang\Adapters\FileAdapter;
 use Quantum\Di\Exceptions\DiException;
 use Quantum\HttpClient\HttpClient;
+use Quantum\Config\ConfigSection;
 use ReflectionException;
 use ErrorException;
 
@@ -26,10 +27,7 @@ trait RemoteAdapterTrait
 {
     protected HttpClient $httpClient;
 
-    /**
-     * @var array<string, mixed>
-     */
-    protected array $params = [];
+    protected ConfigSection $config;
 
     /**
      * @param array<int|string, mixed>|string|null $params
@@ -138,43 +136,45 @@ trait RemoteAdapterTrait
 
     private function isCacheEnabled(): bool
     {
-        return filter_var($this->params['cache']['enabled'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        return $this->config->getBool('cache.enabled');
     }
 
     private function getCacheAdapter(): string
     {
-        return (string) ($this->params['cache']['default'] ?? '');
+        return (string) ($this->config->get('cache.default') ?? '');
     }
 
     private function getCacheTtl(): ?int
     {
-        if (!isset($this->params['cache']['ttl'])) {
+        if ($this->config->get('cache.ttl') === null) {
             return null;
         }
 
-        return (int) $this->params['cache']['ttl'];
+        return $this->config->getInt('cache.ttl');
     }
 
     private function getCacheKey(string $adapter, string $text): string
     {
-        $prefix = (string) ($this->params['cache']['prefix'] ?? '');
-        $sourceLocale = (string) ($this->params['source_locale'] ?? 'auto');
+        $prefix = (string) ($this->config->get('cache.prefix') ?? '');
+        $sourceLocale = (string) ($this->config->get('source_locale') ?? 'auto');
 
         return $prefix . sha1($adapter . '|' . $this->lang . '|' . $sourceLocale . '|' . $text);
     }
 
     private function usesSourceCatalog(): bool
     {
-        return filter_var($this->params['use_source_catalog'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        return $this->config->getBool('use_source_catalog');
     }
 
     private function getSourceLocale(): ?string
     {
-        if (!isset($this->params['source_locale']) || $this->params['source_locale'] === '') {
+        $sourceLocale = $this->config->get('source_locale');
+
+        if ($sourceLocale === null || $sourceLocale === '') {
             return null;
         }
 
-        return (string) $this->params['source_locale'];
+        return (string) $sourceLocale;
     }
 
     private function getSourceLocaleConfigPath(): string

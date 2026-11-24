@@ -99,7 +99,7 @@ class LangFactory
      */
     private function createInstance(string $adapterClass, string $adapter, string $lang): Lang
     {
-        $langConfig = (array) config()->get('lang.' . $adapter);
+        $langConfig = config()->section('lang.' . $adapter);
 
         $langAdapter = $adapter === LangType::FILE
             ? new $adapterClass($lang, $langConfig)
