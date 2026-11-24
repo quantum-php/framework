@@ -89,7 +89,7 @@ class LoggerFactory
             return new Logger(new MessageAdapter(config()->getInt('logging.message.limit', 1000)));
         }
 
-        $adapterInstance = new $adapterClass(config()->get('logging.' . $adapter));
+        $adapterInstance = new $adapterClass(config()->section('logging.' . $adapter));
 
         if (!$adapterInstance instanceof ReportableInterface) {
             throw LoggerException::adapterNotSupported($adapter);
