@@ -37,15 +37,18 @@ class SessionAuthAdapter implements AuthenticatableInterface
 
     private const DEFAULT_REMEMBER_LIFETIME = 2592000;
 
+    private int $rememberLifetime;
+
     /**
-     * @throws AuthException
+     * @throws AuthException|ConfigException
      */
     public function __construct(AuthServiceInterface $authService, Mailer $mailer, Hasher $hasher, ConfigSection $config)
     {
         $this->authService = $authService;
         $this->mailer = $mailer;
         $this->hasher = $hasher;
-        $this->config = $config;
+        $this->readConfig($config);
+        $this->rememberLifetime = $config->getInt('session.remember_lifetime', self::DEFAULT_REMEMBER_LIFETIME);
 
         $this->verifySchema($this->authService->userSchema());
     }
@@ -200,12 +203,10 @@ class SessionAuthAdapter implements AuthenticatableInterface
             [$this->keyFields[AuthKeys::REMEMBER_TOKEN->value] => $rememberToken]
         );
 
-        $rememberLifetime = $this->config->getInt('session.remember_lifetime', self::DEFAULT_REMEMBER_LIFETIME);
-
         cookie()->set(
             $this->keyFields[AuthKeys::REMEMBER_TOKEN->value],
             $rememberToken,
-            $rememberLifetime,
+            $this->rememberLifetime,
             '/',
             '',
             true,

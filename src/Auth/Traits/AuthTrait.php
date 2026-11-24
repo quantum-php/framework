@@ -40,7 +40,9 @@ trait AuthTrait
 
     protected int $otpLength = 6;
 
-    protected ConfigSection $config;
+    protected bool $twoFactorEnabled = false;
+
+    protected int $otpExpires = 2;
 
     /**
      * @var array<string, string>
@@ -215,7 +217,7 @@ trait AuthTrait
 
         $time = new DateTime();
 
-        $time->add(new DateInterval('PT' . $this->config->getInt('otp_expires', 2) . 'M'));
+        $time->add(new DateInterval('PT' . $this->otpExpires . 'M'));
 
         $this->authService->update(
             $this->keyFields[AuthKeys::USERNAME->value],
@@ -325,6 +327,16 @@ trait AuthTrait
     }
 
     /**
+     * Reads the auth settings once, so an invalid value fails when the adapter is built
+     * @throws ConfigException
+     */
+    protected function readConfig(ConfigSection $config): void
+    {
+        $this->twoFactorEnabled = $config->getBool('two_fa', false);
+        $this->otpExpires = $config->getInt('otp_expires', 2);
+    }
+
+    /**
      * Verify user schema
      * @param array<string, mixed> $schema
      * @throws AuthException
@@ -348,6 +360,6 @@ trait AuthTrait
 
     protected function isTwoFactorEnabled(): bool
     {
-        return $this->config->getBool('two_fa', false);
+        return $this->twoFactorEnabled;
     }
 }

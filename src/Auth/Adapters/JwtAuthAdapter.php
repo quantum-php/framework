@@ -12,6 +12,7 @@ namespace Quantum\Auth\Adapters;
 
 use Quantum\Auth\Contracts\AuthenticatableInterface;
 use Quantum\Auth\Contracts\AuthServiceInterface;
+use Quantum\Config\Exceptions\ConfigException;
 use Quantum\Auth\Exceptions\AuthException;
 use Quantum\Jwt\Exceptions\JwtException;
 use Quantum\Di\Exceptions\DiException;
@@ -36,7 +37,7 @@ class JwtAuthAdapter implements AuthenticatableInterface
     protected JwtToken $jwt;
 
     /**
-     * @throws AuthException
+     * @throws AuthException|ConfigException
      */
     public function __construct(AuthServiceInterface $authService, Mailer $mailer, Hasher $hasher, JwtToken $jwt, ConfigSection $config)
     {
@@ -44,7 +45,7 @@ class JwtAuthAdapter implements AuthenticatableInterface
         $this->mailer = $mailer;
         $this->hasher = $hasher;
         $this->jwt = $jwt;
-        $this->config = $config;
+        $this->readConfig($config);
 
         $this->verifySchema($this->authService->userSchema());
     }

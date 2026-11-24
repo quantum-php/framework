@@ -277,15 +277,22 @@ class SessionAuthAdapterTest extends AuthTestCase
         $this->assertTrue(cookie()->has('remember_token'));
     }
 
-    public function testWebRememberTokenLifetimeRejectsTextThatIsNotANumber(): void
+    public function testWebAdapterRejectsARememberLifetimeThatIsNotANumberBeforeTouchingTheToken(): void
     {
-        config()->set('auth.session.remember_lifetime', 'abc');
-        $this->sessionAuth = $this->createSessionAuth();
-
-        $this->expectException(ConfigException::class);
-        $this->expectExceptionMessage('The config key `session.remember_lifetime` has the value `abc`, which is not a whole number.');
-
         $this->sessionAuth->signin('admin@qt.com', 'qwerty', true);
+        $token = $this->authService->get('email', 'admin@qt.com')->getFieldValue('remember_token');
+
+        config()->set('auth.session.remember_lifetime', 'abc');
+
+        try {
+            $this->createSessionAuth();
+            $this->fail('The adapter was built with an invalid remember_lifetime');
+        } catch (ConfigException $e) {
+            $this->assertSame('The config key `session.remember_lifetime` has the value `abc`, which is not a whole number.', $e->getMessage());
+        }
+
+        $this->assertNotEmpty($token);
+        $this->assertSame($token, $this->authService->get('email', 'admin@qt.com')->getFieldValue('remember_token'));
     }
 
     public function testWebSigninWithVerificationReadsTheSettingsGivenAsText(): void
@@ -306,15 +313,14 @@ class SessionAuthAdapterTest extends AuthTestCase
         $this->assertIsString($this->sessionAuth->signin('admin@qt.com', 'qwerty'));
     }
 
-    public function testWebSigninWithVerificationRejectsAnOtpExpiryThatIsNotANumber(): void
+    public function testWebAdapterRejectsAnOtpExpiryThatIsNotANumberEvenWithTwoFactorOff(): void
     {
-        config()->set('auth.two_fa', true);
+        config()->set('auth.two_fa', false);
         config()->set('auth.otp_expires', 'abc');
-        $this->sessionAuth = $this->createSessionAuth();
 
         $this->expectException(ConfigException::class);
         $this->expectExceptionMessage('The config key `otp_expires` has the value `abc`, which is not a whole number.');
 
-        $this->sessionAuth->signin('admin@qt.com', 'qwerty');
+        $this->createSessionAuth();
     }
 }
