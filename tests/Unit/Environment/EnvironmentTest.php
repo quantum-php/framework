@@ -43,7 +43,11 @@ class EnvironmentTest extends AppTestCase
             $this->assertSame(Environment::class, $class->getMethod($method)->getDeclaringClass()->getName(), $method);
         }
 
-        $this->assertTrue((new ReflectionClass(WriteTrait::class))->hasMethod('updateRow'));
+        $writeTrait = new ReflectionClass(WriteTrait::class);
+
+        $this->assertTrue($writeTrait->hasMethod('updateRow'));
+        $this->assertTrue($writeTrait->getMethod('getEnvFilePath')->isAbstract());
+        $this->assertTrue($writeTrait->getMethod('getEnvFileName')->isAbstract());
         $this->assertFalse((new ReflectionClass(ReadTrait::class))->hasMethod('updateRow'));
     }
 
@@ -178,6 +182,34 @@ class EnvironmentTest extends AppTestCase
 
         $this->assertSame(6379, $this->env->getInt('REDIS_PORT', 6379));
         $this->assertSame(0, $this->env->getInt('REDIS_PORT'));
+    }
+
+    public function testEnvironmentGetBoolAndGetIntUseDefaultForNullValue(): void
+    {
+        $this->setEnvValues(['REDIS_PORT' => null, 'TWO_FA' => null]);
+
+        $this->assertSame(6379, $this->env->getInt('REDIS_PORT', 6379));
+        $this->assertSame(0, $this->env->getInt('REDIS_PORT'));
+        $this->assertTrue($this->env->getBool('TWO_FA', true));
+        $this->assertFalse($this->env->getBool('TWO_FA'));
+    }
+
+    public function testEnvironmentGetIntUsesDefaultForKeyWithoutValueInEnvFile(): void
+    {
+        $envFilePath = App::getBaseDir() . DS . '.env.testing';
+        $originalContent = $this->fs->get($envFilePath);
+
+        try {
+            $this->fs->append($envFilePath, PHP_EOL . 'REDIS_PORT' . PHP_EOL);
+
+            $this->setPrivateProperty($this->env, 'loaded', false);
+            $this->env->load();
+
+            $this->assertNull($this->env->getValue('REDIS_PORT'));
+            $this->assertSame(6379, $this->env->getInt('REDIS_PORT', 6379));
+        } finally {
+            $this->fs->put($envFilePath, $originalContent);
+        }
     }
 
     public function testEnvironmentGetValueKeepsTheEmptyValue(): void
@@ -330,7 +362,7 @@ class EnvironmentTest extends AppTestCase
     }
 
     /**
-     * @param array<string, string> $values
+     * @param array<string, string|null> $values
      */
     private function setEnvValues(array $values): void
     {

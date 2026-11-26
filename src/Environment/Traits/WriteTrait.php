@@ -22,6 +22,10 @@ use ReflectionException;
  */
 trait WriteTrait
 {
+    abstract private function getEnvFilePath(): string;
+
+    abstract private function getEnvFileName(string $appEnv): string;
+
     /**
      * Creates or updates the row in .env
      * @throws EnvException|ConfigException|DiException|BaseException|ReflectionException

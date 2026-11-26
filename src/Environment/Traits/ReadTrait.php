@@ -36,14 +36,14 @@ trait ReadTrait
     }
 
     /**
-     * Gets the environment variable value as a boolean; an empty value gives the default
+     * Gets the environment variable value as a boolean; an empty or null value gives the default
      * @throws EnvException
      */
     public function getBool(string $key, bool $default = false): bool
     {
         $value = $this->getValue($key, $default);
 
-        if ($value === '') {
+        if ($value === null || $value === '') {
             return $default;
         }
 
@@ -55,14 +55,14 @@ trait ReadTrait
     }
 
     /**
-     * Gets the environment variable value as an integer; an empty value gives the default
+     * Gets the environment variable value as an integer; an empty or null value gives the default
      * @throws EnvException
      */
     public function getInt(string $key, int $default = 0): int
     {
         $value = $this->getValue($key, $default);
 
-        if ($value === '') {
+        if ($value === null || $value === '') {
             return $default;
         }
 
