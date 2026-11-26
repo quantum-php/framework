@@ -13,10 +13,10 @@ namespace Quantum\Environment\Traits;
 use Quantum\Environment\Exceptions\EnvException;
 
 /**
- * Trait ValueTrait
+ * Trait ReadTrait
  * @package Quantum\Environment
  */
-trait ValueTrait
+trait ReadTrait
 {
     /**
      * Gets the environment variable value
@@ -36,12 +36,16 @@ trait ValueTrait
     }
 
     /**
-     * Gets the environment variable value as a boolean
+     * Gets the environment variable value as a boolean; an empty or null value gives the default
      * @throws EnvException
      */
     public function getBool(string $key, bool $default = false): bool
     {
         $value = $this->getValue($key, $default);
+
+        if ($value === null || $value === '') {
+            return $default;
+        }
 
         if (is_bool($value)) {
             return $value;
@@ -51,12 +55,16 @@ trait ValueTrait
     }
 
     /**
-     * Gets the environment variable value as an integer
+     * Gets the environment variable value as an integer; an empty or null value gives the default
      * @throws EnvException
      */
     public function getInt(string $key, int $default = 0): int
     {
         $value = $this->getValue($key, $default);
+
+        if ($value === null || $value === '') {
+            return $default;
+        }
 
         if (is_int($value)) {
             return $value;
