@@ -10,10 +10,12 @@ use Quantum\Auth\Enums\ExceptionMessages;
 use Quantum\Tests\Unit\Auth\AuthTestCase;
 use Quantum\Auth\Adapters\JwtAuthAdapter;
 use Quantum\Auth\Traits\AuthTrait;
+use Quantum\Mailer\Mailer;
 use Quantum\Hasher\Hasher;
 use ArgumentCountError;
 use Quantum\Auth\User;
 use ReflectionMethod;
+use RuntimeException;
 use Mockery;
 
 class SessionAuthAdapterTest extends AuthTestCase
@@ -43,11 +45,71 @@ class SessionAuthAdapterTest extends AuthTestCase
         );
     }
 
+    private function enableTwoFactor(): void
+    {
+        config()->set('auth.two_fa', true);
+        config()->set('auth.otp_expires', 2);
+        $this->sessionAuth = $this->createSessionAuth();
+    }
+
+    private function createSessionAuthWith(AuthServiceInterface $authService, Mailer $mailer): SessionAuthAdapter
+    {
+        return new SessionAuthAdapter($authService, $mailer, (new Hasher())->setCost(4), config()->section('auth'));
+    }
+
+    /**
+     * An auth service that throws when an update sets the given field to a non-empty value
+     */
+    private function authServiceFailingOn(string $field): AuthServiceInterface
+    {
+        $authService = Mockery::mock(AuthServiceInterface::class);
+        $authService->shouldReceive('userSchema')->andReturn($this->userSchema);
+        $authService->shouldReceive('get')->andReturnUsing(fn (...$args) => $this->authService->get(...$args));
+        $authService->shouldReceive('update')->andReturnUsing(function (string $key, string $value, array $data) use ($field) {
+            if (!empty($data[$field])) {
+                throw new RuntimeException('The database is down');
+            }
+
+            return $this->authService->update($key, $value, $data);
+        });
+
+        return $authService;
+    }
+
+    /**
+     * A mailer whose send() throws while $fails is true
+     */
+    private function mailerFailingWhen(bool &$fails): Mailer
+    {
+        $mailer = Mockery::mock(Mailer::class);
+
+        foreach (['setFrom', 'setAddress', 'setSubject', 'setBody', 'setTemplate'] as $method) {
+            $mailer->shouldReceive($method)->andReturn($mailer);
+        }
+
+        $mailer->shouldReceive('send')->andReturnUsing(function () use (&$fails) {
+            if ($fails) {
+                throw new RuntimeException('The mail server is down');
+            }
+
+            return true;
+        });
+
+        return $mailer;
+    }
+
+    private function storedRememberToken(): string
+    {
+        return (string) $this->authService->get('email', 'admin@qt.com')->getFieldValue('remember_token');
+    }
+
     public function tearDown(): void
     {
         self::$users = [];
 
         $this->sessionAuth->signout();
+
+        session()->delete('cart');
 
         parent::tearDown();
     }
@@ -212,6 +274,195 @@ class SessionAuthAdapterTest extends AuthTestCase
         $otp_token = $this->sessionAuth->signin('admin@qt.com', 'qwerty');
 
         $this->assertTrue($this->sessionAuth->verifyOtp(123456789, $otp_token));
+    }
+
+    public function testWebSigninWithRememberAndVerificationSetsNoRememberCookieBeforeTheOtp(): void
+    {
+        $this->enableTwoFactor();
+
+        $this->sessionAuth->signin('admin@qt.com', 'qwerty', true);
+
+        $this->assertFalse(cookie()->has('remember_token'));
+        $this->assertSame('', $this->storedRememberToken());
+    }
+
+    public function testWebRememberCookieOfAnUnverifiedSigninDoesNotSignInAfterTheOwnerVerifiesElsewhere(): void
+    {
+        $this->enableTwoFactor();
+
+        $this->sessionAuth->signin('admin@qt.com', 'qwerty', true);
+        $firstBrowserCookie = cookie()->has('remember_token') ? cookie()->get('remember_token') : null;
+
+        cookie()->delete('remember_token');
+        session()->flush();
+
+        $otpToken = $this->sessionAuth->signin('admin@qt.com', 'qwerty');
+        $this->sessionAuth->verifyOtp(123456789, $otpToken);
+
+        session()->flush();
+        cookie()->delete('remember_token');
+
+        if ($firstBrowserCookie !== null) {
+            cookie()->set('remember_token', $firstBrowserCookie);
+        }
+
+        $this->assertNull($this->sessionAuth->user());
+        $this->assertSame('', $this->storedRememberToken());
+    }
+
+    public function testWebSigninWithRememberLeavesNoRememberTokenWhenTheOtpCannotBeStored(): void
+    {
+        $this->enableTwoFactor();
+
+        $sessionAuth = $this->createSessionAuthWith($this->authServiceFailingOn('otp'), $this->mailer);
+
+        try {
+            $sessionAuth->signin('admin@qt.com', 'qwerty', true);
+            $this->fail('The OTP setup did not fail');
+        } catch (RuntimeException $e) {
+            $this->assertSame('The database is down', $e->getMessage());
+        }
+
+        $this->assertFalse(cookie()->has('remember_token'));
+        $this->assertSame('', $this->storedRememberToken());
+    }
+
+    public function testWebVerifyOtpSetsTheRememberCookieWhenRememberWasAsked(): void
+    {
+        $this->enableTwoFactor();
+
+        $otpToken = $this->sessionAuth->signin('admin@qt.com', 'qwerty', true);
+        $this->sessionAuth->verifyOtp(123456789, $otpToken);
+
+        $this->assertTrue(cookie()->has('remember_token'));
+        $this->assertSame(cookie()->get('remember_token'), $this->storedRememberToken());
+
+        session()->delete('auth_user');
+
+        $this->assertTrue($this->sessionAuth->check());
+    }
+
+    public function testWebVerifyOtpAfterResendSetsTheRememberCookieWhenRememberWasAsked(): void
+    {
+        $this->enableTwoFactor();
+
+        $otpToken = $this->sessionAuth->signin('admin@qt.com', 'qwerty', true);
+        $otpToken = $this->sessionAuth->resendOtp($otpToken);
+        $this->sessionAuth->verifyOtp(123456789, $otpToken);
+
+        $this->assertTrue(cookie()->has('remember_token'));
+        $this->assertSame(cookie()->get('remember_token'), $this->storedRememberToken());
+    }
+
+    public function testWebSigninWithoutRememberForgetsAnEarlierRememberRequestWhenTheOtpMailFails(): void
+    {
+        $this->enableTwoFactor();
+
+        $this->sessionAuth->signin('admin@qt.com', 'qwerty', true);
+
+        $mailFails = true;
+        $sessionAuth = $this->createSessionAuthWith($this->authService, $this->mailerFailingWhen($mailFails));
+
+        try {
+            $sessionAuth->signin('admin@qt.com', 'qwerty');
+            $this->fail('The OTP mail did not fail');
+        } catch (RuntimeException $e) {
+            $this->assertSame('The mail server is down', $e->getMessage());
+        }
+
+        $mailFails = false;
+        $otpToken = $sessionAuth->resendOtp($this->authService->get('email', 'admin@qt.com')->getFieldValue('otp_token'));
+        $sessionAuth->verifyOtp(123456789, $otpToken);
+
+        $this->assertFalse(cookie()->has('remember_token'));
+        $this->assertSame('', $this->storedRememberToken());
+    }
+
+    public function testWebSignoutForgetsARememberRequestWaitingForTheOtp(): void
+    {
+        $this->enableTwoFactor();
+
+        $otpToken = $this->sessionAuth->signin('admin@qt.com', 'qwerty', true);
+        $this->sessionAuth->signout();
+        $this->sessionAuth->verifyOtp(123456789, $otpToken);
+
+        $this->assertFalse(cookie()->has('remember_token'));
+        $this->assertSame('', $this->storedRememberToken());
+    }
+
+    public function testWebVerifyOtpForgetsTheRememberRequestWhenTheRememberTokenCannotBeStored(): void
+    {
+        $this->enableTwoFactor();
+
+        $sessionAuth = $this->createSessionAuthWith($this->authServiceFailingOn('remember_token'), $this->mailer);
+        $otpToken = $sessionAuth->signin('admin@qt.com', 'qwerty', true);
+
+        try {
+            $sessionAuth->verifyOtp(123456789, $otpToken);
+            $this->fail('Storing the remember token did not fail');
+        } catch (RuntimeException $e) {
+            $this->assertSame('The database is down', $e->getMessage());
+        }
+
+        $this->assertFalse(session()->has('auth_remember'));
+        $this->assertNull($sessionAuth->user());
+    }
+
+    public function testWebVerifyOtpSetsNoRememberCookieWhenRememberWasNotAsked(): void
+    {
+        $this->enableTwoFactor();
+
+        $otpToken = $this->sessionAuth->signin('admin@qt.com', 'qwerty');
+        $this->sessionAuth->verifyOtp(123456789, $otpToken);
+
+        $this->assertFalse(cookie()->has('remember_token'));
+        $this->assertSame('', $this->storedRememberToken());
+    }
+
+    public function testWebSigninWithoutRememberForgetsAnEarlierRememberRequest(): void
+    {
+        $this->enableTwoFactor();
+
+        $this->sessionAuth->signin('admin@qt.com', 'qwerty', true);
+        $otpToken = $this->sessionAuth->signin('admin@qt.com', 'qwerty');
+        $this->sessionAuth->verifyOtp(123456789, $otpToken);
+
+        $this->assertFalse(cookie()->has('remember_token'));
+        $this->assertSame('', $this->storedRememberToken());
+    }
+
+    public function testWebVerifyOtpGivesTheSessionANewId(): void
+    {
+        $this->enableTwoFactor();
+
+        $otpToken = $this->sessionAuth->signin('admin@qt.com', 'qwerty');
+
+        session()->set('cart', 'kept');
+        $sessionIdBeforeOtp = session()->getId();
+
+        $this->sessionAuth->verifyOtp(123456789, $otpToken);
+
+        $this->assertNotSame($sessionIdBeforeOtp, session()->getId());
+        $this->assertTrue($this->sessionAuth->check());
+        $this->assertSame('kept', session()->get('cart'));
+    }
+
+    public function testWebSigninThroughTheRememberCookieGivesTheSessionANewId(): void
+    {
+        $this->sessionAuth->signin('admin@qt.com', 'qwerty', true);
+
+        session()->delete('auth_user');
+        session()->set('cart', 'kept');
+        $sessionIdBeforeCookie = session()->getId();
+
+        $this->assertNotNull($this->sessionAuth->user());
+        $this->assertNotSame($sessionIdBeforeCookie, session()->getId());
+        $this->assertSame('kept', session()->get('cart'));
+
+        $sessionIdAfterCookie = session()->getId();
+        $this->sessionAuth->user();
+
+        $this->assertSame($sessionIdAfterCookie, session()->getId());
     }
 
     public function testWebSigninWithoutVerification(): void
