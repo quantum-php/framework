@@ -445,6 +445,24 @@ class SessionAuthAdapterTest extends AuthTestCase
         $this->assertSame('kept', session()->get('cart'));
     }
 
+    public function testWebSigninThroughTheRememberCookieGivesTheSessionANewId(): void
+    {
+        $this->sessionAuth->signin('admin@qt.com', 'qwerty', true);
+
+        session()->delete('auth_user');
+        session()->set('cart', 'kept');
+        $sessionIdBeforeCookie = session()->getId();
+
+        $this->assertNotNull($this->sessionAuth->user());
+        $this->assertNotSame($sessionIdBeforeCookie, session()->getId());
+        $this->assertSame('kept', session()->get('cart'));
+
+        $sessionIdAfterCookie = session()->getId();
+        $this->sessionAuth->user();
+
+        $this->assertSame($sessionIdAfterCookie, session()->getId());
+    }
+
     public function testWebSigninWithoutVerification(): void
     {
         config()->set('auth.two_fa', false);
