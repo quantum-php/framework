@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Rector\TypeDeclaration\Rector\StmtsAwareInterface\DeclareStrictTypesRector;
+use Rector\TypeDeclaration\Rector\StmtsAwareInterface\SafeDeclareStrictTypesRector;
 use Rector\Php80\Rector\Class_\ClassPropertyAssignToConstructorPromotionRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
@@ -17,8 +17,11 @@ return RectorConfig::configure()
         SetList::TYPE_DECLARATION,
     ])
     ->withRules([
-        DeclareStrictTypesRector::class,
+        SafeDeclareStrictTypesRector::class,
     ])
     ->withSkip([
         ClassPropertyAssignToConstructorPromotionRector::class,
+        SafeDeclareStrictTypesRector::class => [
+            __DIR__ . '/src/*/Helpers/*',
+        ],
     ]);

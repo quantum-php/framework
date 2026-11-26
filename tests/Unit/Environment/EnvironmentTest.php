@@ -5,9 +5,13 @@ namespace Quantum\Tests\Unit\Environment;
 use Quantum\Environment\Contracts\EnvironmentInterface;
 use Quantum\Environment\Exceptions\EnvException;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Quantum\Environment\Traits\AppEnvTrait;
+use Quantum\Environment\Traits\WriteTrait;
+use Quantum\Environment\Traits\ReadTrait;
 use Quantum\Environment\Environment;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\App\AppContext;
+use ReflectionClass;
 use Quantum\App\App;
 
 class EnvironmentTest extends AppTestCase
@@ -24,6 +28,27 @@ class EnvironmentTest extends AppTestCase
     public function testEnvironmentImplementsEnvironmentInterface(): void
     {
         $this->assertInstanceOf(EnvironmentInterface::class, $this->env);
+    }
+
+    public function testEnvironmentKeepsLoadingReadingAndWritingApart(): void
+    {
+        $this->assertSame(
+            [AppEnvTrait::class, ReadTrait::class, WriteTrait::class],
+            array_values(class_uses(Environment::class))
+        );
+
+        $class = new ReflectionClass(Environment::class);
+
+        foreach (['load', 'resolveEnvironmentFile', 'loadDotenvFile', 'getEnvFilePath', 'getEnvFileName'] as $method) {
+            $this->assertSame(Environment::class, $class->getMethod($method)->getDeclaringClass()->getName(), $method);
+        }
+
+        $writeTrait = new ReflectionClass(WriteTrait::class);
+
+        $this->assertTrue($writeTrait->hasMethod('updateRow'));
+        $this->assertTrue($writeTrait->getMethod('getEnvFilePath')->isAbstract());
+        $this->assertTrue($writeTrait->getMethod('getEnvFileName')->isAbstract());
+        $this->assertFalse((new ReflectionClass(ReadTrait::class))->hasMethod('updateRow'));
     }
 
     public function testEnvironmentGetAppEnv(): void
@@ -103,7 +128,6 @@ class EnvironmentTest extends AppTestCase
             'FLAG_YES' => 'yes',
             'FLAG_FALSE' => 'false',
             'FLAG_ZERO' => '0',
-            'FLAG_EMPTY' => '',
             'FLAG_OFF' => 'off',
             'FLAG_NO' => 'no',
             'FLAG_UNKNOWN' => 'maybe',
@@ -113,9 +137,17 @@ class EnvironmentTest extends AppTestCase
             $this->assertTrue($this->env->getBool($key), $key);
         }
 
-        foreach (['FLAG_FALSE', 'FLAG_ZERO', 'FLAG_EMPTY', 'FLAG_OFF', 'FLAG_NO', 'FLAG_UNKNOWN'] as $key) {
+        foreach (['FLAG_FALSE', 'FLAG_ZERO', 'FLAG_OFF', 'FLAG_NO', 'FLAG_UNKNOWN'] as $key) {
             $this->assertFalse($this->env->getBool($key, true), $key);
         }
+    }
+
+    public function testEnvironmentGetBoolUsesDefaultForEmptyValue(): void
+    {
+        $this->setEnvValues(['FLAG_EMPTY' => '']);
+
+        $this->assertTrue($this->env->getBool('FLAG_EMPTY', true));
+        $this->assertFalse($this->env->getBool('FLAG_EMPTY'));
     }
 
     public function testEnvironmentGetBoolUsesDefaultForMissingKey(): void
@@ -144,6 +176,49 @@ class EnvironmentTest extends AppTestCase
         $this->assertSame(25, $this->env->getInt('NON_EXISTING_KEY', 25));
     }
 
+    public function testEnvironmentGetIntUsesDefaultForEmptyValue(): void
+    {
+        $this->setEnvValues(['REDIS_PORT' => '']);
+
+        $this->assertSame(6379, $this->env->getInt('REDIS_PORT', 6379));
+        $this->assertSame(0, $this->env->getInt('REDIS_PORT'));
+    }
+
+    public function testEnvironmentGetBoolAndGetIntUseDefaultForNullValue(): void
+    {
+        $this->setEnvValues(['REDIS_PORT' => null, 'TWO_FA' => null]);
+
+        $this->assertSame(6379, $this->env->getInt('REDIS_PORT', 6379));
+        $this->assertSame(0, $this->env->getInt('REDIS_PORT'));
+        $this->assertTrue($this->env->getBool('TWO_FA', true));
+        $this->assertFalse($this->env->getBool('TWO_FA'));
+    }
+
+    public function testEnvironmentGetIntUsesDefaultForKeyWithoutValueInEnvFile(): void
+    {
+        $envFilePath = App::getBaseDir() . DS . '.env.testing';
+        $originalContent = $this->fs->get($envFilePath);
+
+        try {
+            $this->fs->append($envFilePath, PHP_EOL . 'REDIS_PORT' . PHP_EOL);
+
+            $this->setPrivateProperty($this->env, 'loaded', false);
+            $this->env->load();
+
+            $this->assertNull($this->env->getValue('REDIS_PORT'));
+            $this->assertSame(6379, $this->env->getInt('REDIS_PORT', 6379));
+        } finally {
+            $this->fs->put($envFilePath, $originalContent);
+        }
+    }
+
+    public function testEnvironmentGetValueKeepsTheEmptyValue(): void
+    {
+        $this->setEnvValues(['REDIS_PORT' => '']);
+
+        $this->assertSame('', $this->env->getValue('REDIS_PORT', 'default'));
+    }
+
     #[DataProvider('invalidIntProvider')]
     public function testEnvironmentGetIntThrowsForInvalidNumber(string $value): void
     {
@@ -163,7 +238,6 @@ class EnvironmentTest extends AppTestCase
         return [
             'text' => ['abc'],
             'decimal' => ['1.5'],
-            'empty' => [''],
         ];
     }
 
@@ -270,6 +344,111 @@ class EnvironmentTest extends AppTestCase
         (new Environment())->setMutable(true)->updateRow('SOMETHING', 'Something');
     }
 
+    /**
+     * @param array<int, string> $expectedRows
+     */
+    #[DataProvider('updateRowProvider')]
+    public function testEnvironmentUpdateRowUpdatesTheRow(string $row, string $key, string $value, array $expectedRows, string $valueAfterReload): void
+    {
+        $envFilePath = App::getBaseDir() . DS . '.env.testing';
+        $originalContent = $this->fs->get($envFilePath);
+
+        try {
+            $this->fs->append($envFilePath, PHP_EOL . $row . PHP_EOL . 'OTHER_KEY=other' . PHP_EOL);
+
+            $this->setPrivateProperty($this->env, 'loaded', false);
+            $this->env->load();
+
+            $this->env->updateRow($key, $value);
+
+            $this->assertSame($value, $this->env->getValue($key));
+
+            $lines = preg_split('/\R/', (string) $this->fs->get($envFilePath));
+
+            foreach ($expectedRows as $expected) {
+                $this->assertContains($expected, $lines);
+            }
+
+            $this->assertContains('OTHER_KEY=other', $lines);
+            $this->assertCount(1, preg_grep('/^' . preg_quote($key, '/') . '\b/', $lines));
+
+            $this->setPrivateProperty($this->env, 'loaded', false);
+            $this->env->load();
+
+            $this->assertSame($valueAfterReload, $this->env->getValue($key));
+            $this->assertSame('other', $this->env->getValue('OTHER_KEY'));
+        } finally {
+            $this->fs->put($envFilePath, $originalContent);
+        }
+    }
+
+    /**
+     * @return array<string, array{string, string, string, array<int, string>, string}>
+     */
+    public static function updateRowProvider(): array
+    {
+        return [
+            'plain value' => ['MAIL_HOST=localhost', 'MAIL_HOST', 'smtp.test', ['MAIL_HOST=smtp.test'], 'smtp.test'],
+            'value with comment' => ['MAIL_HOST=localhost # local only', 'MAIL_HOST', 'smtp.test', ['MAIL_HOST=smtp.test # local only'], 'smtp.test'],
+            'value with hash' => ['MAIL_HOST=localhost#local', 'MAIL_HOST', 'smtp.test', ['MAIL_HOST=smtp.test#local'], 'smtp.test'],
+            'empty value' => ['APP_NAME=', 'APP_NAME', 'Quantum', ['APP_NAME=Quantum'], 'Quantum'],
+            'quoted value' => ['APP_NAME="My App"', 'APP_NAME', 'Quantum', ['APP_NAME=Quantum'], 'Quantum'],
+            'single quoted value' => ["APP_NAME='My App'", 'APP_NAME', 'Quantum', ['APP_NAME=Quantum'], 'Quantum'],
+            'empty quoted value' => ['APP_NAME=""', 'APP_NAME', 'Quantum', ['APP_NAME=Quantum'], 'Quantum'],
+            'key without value' => ['FEATURE_X', 'FEATURE_X', 'on', ['FEATURE_X=on'], 'on'],
+            'multi-line value' => ["PRIVATE_KEY=\"-----BEGIN\nabc\n-----END\"", 'PRIVATE_KEY', 'x', ['PRIVATE_KEY=x'], 'x'],            'value with dollar and backslash' => ['BASIC_AUTH_PWD=old', 'BASIC_AUTH_PWD', 'pa$1ss\0', ['BASIC_AUTH_PWD=pa$1ss\0'], 'pa$1ss\0'],
+            'escaped quote is left as it is' => ['APP_NAME="Say \"hi\""', 'APP_NAME', 'Quantum', ['APP_NAME="Say \"hi\""'], 'Say "hi"'],
+        ];
+    }
+
+    public function testEnvironmentUpdateRowUpdatesARowItWroteWithoutAValue(): void
+    {
+        $envFilePath = App::getBaseDir() . DS . '.env.testing';
+        $originalContent = $this->fs->get($envFilePath);
+
+        try {
+            $this->env->updateRow('FEATURE_X', null);
+            $this->env->updateRow('FEATURE_X', 'on');
+
+            $lines = preg_split('/\R/', (string) $this->fs->get($envFilePath));
+
+            $this->assertContains('FEATURE_X=on', $lines);
+            $this->assertCount(1, preg_grep('/^FEATURE_X\b/', $lines));
+
+            $this->setPrivateProperty($this->env, 'loaded', false);
+            $this->env->load();
+
+            $this->assertSame('on', $this->env->getValue('FEATURE_X'));
+        } finally {
+            $this->fs->put($envFilePath, $originalContent);
+        }
+    }
+
+    public function testEnvironmentUpdateRowKeepsTheFileWhenTheRowCannotBeReplaced(): void
+    {
+        $envFilePath = App::getBaseDir() . DS . '.env.testing';
+        $originalContent = $this->fs->get($envFilePath);
+        $jit = ini_get('pcre.jit');
+        $backtrackLimit = ini_get('pcre.backtrack_limit');
+
+        try {
+            ini_set('pcre.jit', '0');
+            ini_set('pcre.backtrack_limit', '1');
+
+            $this->expectException(EnvException::class);
+
+            $this->env->updateRow('APP_KEY', 'Something');
+        } finally {
+            ini_set('pcre.jit', (string) $jit);
+            ini_set('pcre.backtrack_limit', (string) $backtrackLimit);
+
+            $contentAfter = $this->fs->get($envFilePath);
+            $this->fs->put($envFilePath, $originalContent);
+
+            $this->assertSame($originalContent, $contentAfter);
+        }
+    }
+
     public function testEnvironmentUpdateRowThrowsWhenEnvFileCannotBeRead(): void
     {
         $this->setPrivateProperty($this->env, 'appEnv', 'missing');
@@ -288,7 +467,7 @@ class EnvironmentTest extends AppTestCase
     }
 
     /**
-     * @param array<string, string> $values
+     * @param array<string, string|null> $values
      */
     private function setEnvValues(array $values): void
     {

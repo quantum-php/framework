@@ -12,13 +12,15 @@ namespace Quantum\Environment;
 
 use Quantum\Environment\Contracts\EnvironmentInterface;
 use Quantum\Environment\Exceptions\EnvException;
-use Quantum\Environment\Traits\EnvFileTrait;
-use Dotenv\Exception\InvalidFileException;
 use Quantum\Environment\Traits\AppEnvTrait;
-use Quantum\Environment\Traits\ValueTrait;
+use Dotenv\Exception\InvalidFileException;
+use Quantum\Environment\Traits\WriteTrait;
+use Quantum\Environment\Traits\ReadTrait;
 use Quantum\App\Exceptions\BaseException;
 use Quantum\Di\Exceptions\DiException;
 use Quantum\Environment\Enums\Env;
+use Quantum\App\App;
+use Dotenv\Dotenv;
 
 /**
  * Class Environment
@@ -28,8 +30,8 @@ use Quantum\Environment\Enums\Env;
 class Environment implements EnvironmentInterface
 {
     use AppEnvTrait;
-    use ValueTrait;
-    use EnvFileTrait;
+    use ReadTrait;
+    use WriteTrait;
 
     private bool $isMutable = false;
 
@@ -65,5 +67,51 @@ class Environment implements EnvironmentInterface
         $this->appEnv = $appEnv;
         $this->envContent = $envContent;
         $this->loaded = true;
+    }
+
+    /**
+     * @return array{string, string}
+     * @throws BaseException
+     */
+    private function resolveEnvironmentFile(): array
+    {
+        $baseDir = App::getBaseDir();
+
+        $filePath = $baseDir . DS . 'shared' . DS . 'config' . DS . 'env.php';
+
+        if (!file_exists($filePath)) {
+            throw EnvException::fileNotFound($filePath);
+        }
+
+        $envConfig = require $filePath;
+        $appEnv = $envConfig['app_env'] ?? Env::PRODUCTION;
+        $envFile = $this->getEnvFileName($appEnv);
+
+        if (!file_exists($baseDir . DS . $envFile)) {
+            throw EnvException::fileNotFound($envFile);
+        }
+
+        return [$appEnv, $envFile];
+    }
+
+    /**
+     * @return array<string, mixed>
+     * @throws InvalidFileException
+     */
+    private function loadDotenvFile(string $envFile): array
+    {
+        $loadedVars = Dotenv::createArrayBacked(App::getBaseDir(), $envFile)->load();
+
+        return is_array($loadedVars) ? $loadedVars : [];
+    }
+
+    private function getEnvFilePath(): string
+    {
+        return App::getBaseDir() . DS . $this->getEnvFileName($this->appEnv);
+    }
+
+    private function getEnvFileName(string $appEnv): string
+    {
+        return '.env' . ($appEnv !== Env::PRODUCTION ? ".$appEnv" : '');
     }
 }
