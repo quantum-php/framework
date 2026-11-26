@@ -5,9 +5,13 @@ namespace Quantum\Tests\Unit\Environment;
 use Quantum\Environment\Contracts\EnvironmentInterface;
 use Quantum\Environment\Exceptions\EnvException;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Quantum\Environment\Traits\AppEnvTrait;
+use Quantum\Environment\Traits\WriteTrait;
+use Quantum\Environment\Traits\ReadTrait;
 use Quantum\Environment\Environment;
 use Quantum\Tests\Unit\AppTestCase;
 use Quantum\App\AppContext;
+use ReflectionClass;
 use Quantum\App\App;
 
 class EnvironmentTest extends AppTestCase
@@ -24,6 +28,23 @@ class EnvironmentTest extends AppTestCase
     public function testEnvironmentImplementsEnvironmentInterface(): void
     {
         $this->assertInstanceOf(EnvironmentInterface::class, $this->env);
+    }
+
+    public function testEnvironmentKeepsLoadingReadingAndWritingApart(): void
+    {
+        $this->assertSame(
+            [AppEnvTrait::class, ReadTrait::class, WriteTrait::class],
+            array_values(class_uses(Environment::class))
+        );
+
+        $class = new ReflectionClass(Environment::class);
+
+        foreach (['load', 'resolveEnvironmentFile', 'loadDotenvFile', 'getEnvFilePath', 'getEnvFileName'] as $method) {
+            $this->assertSame(Environment::class, $class->getMethod($method)->getDeclaringClass()->getName(), $method);
+        }
+
+        $this->assertTrue((new ReflectionClass(WriteTrait::class))->hasMethod('updateRow'));
+        $this->assertFalse((new ReflectionClass(ReadTrait::class))->hasMethod('updateRow'));
     }
 
     public function testEnvironmentGetAppEnv(): void

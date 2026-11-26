@@ -13,10 +13,10 @@ namespace Quantum\Environment\Traits;
 use Quantum\Environment\Exceptions\EnvException;
 
 /**
- * Trait ValueTrait
+ * Trait ReadTrait
  * @package Quantum\Environment
  */
-trait ValueTrait
+trait ReadTrait
 {
     /**
      * Gets the environment variable value
