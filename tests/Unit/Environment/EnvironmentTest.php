@@ -344,6 +344,88 @@ class EnvironmentTest extends AppTestCase
         (new Environment())->setMutable(true)->updateRow('SOMETHING', 'Something');
     }
 
+    /**
+     * @param array<int, string> $expectedRows
+     */
+    #[DataProvider('updateRowProvider')]
+    public function testEnvironmentUpdateRowUpdatesTheRow(string $row, string $key, string $value, array $expectedRows, string $valueAfterReload): void
+    {
+        $envFilePath = App::getBaseDir() . DS . '.env.testing';
+        $originalContent = $this->fs->get($envFilePath);
+
+        try {
+            $this->fs->append($envFilePath, PHP_EOL . $row . PHP_EOL . 'OTHER_KEY=other' . PHP_EOL);
+
+            $this->setPrivateProperty($this->env, 'loaded', false);
+            $this->env->load();
+
+            $this->env->updateRow($key, $value);
+
+            $this->assertSame($value, $this->env->getValue($key));
+
+            $lines = preg_split('/\R/', (string) $this->fs->get($envFilePath));
+
+            foreach ($expectedRows as $expected) {
+                $this->assertContains($expected, $lines);
+            }
+
+            $this->assertContains('OTHER_KEY=other', $lines);
+            $this->assertCount(1, preg_grep('/^' . preg_quote($key, '/') . '\b/', $lines));
+
+            $this->setPrivateProperty($this->env, 'loaded', false);
+            $this->env->load();
+
+            $this->assertSame($valueAfterReload, $this->env->getValue($key));
+            $this->assertSame('other', $this->env->getValue('OTHER_KEY'));
+        } finally {
+            $this->fs->put($envFilePath, $originalContent);
+        }
+    }
+
+    /**
+     * @return array<string, array{string, string, string, array<int, string>, string}>
+     */
+    public static function updateRowProvider(): array
+    {
+        return [
+            'plain value' => ['MAIL_HOST=localhost', 'MAIL_HOST', 'smtp.test', ['MAIL_HOST=smtp.test'], 'smtp.test'],
+            'value with comment' => ['MAIL_HOST=localhost # local only', 'MAIL_HOST', 'smtp.test', ['MAIL_HOST=smtp.test # local only'], 'smtp.test'],
+            'value with hash' => ['MAIL_HOST=localhost#local', 'MAIL_HOST', 'smtp.test', ['MAIL_HOST=smtp.test#local'], 'smtp.test'],
+            'empty value' => ['APP_NAME=', 'APP_NAME', 'Quantum', ['APP_NAME=Quantum'], 'Quantum'],
+            'quoted value' => ['APP_NAME="My App"', 'APP_NAME', 'Quantum', ['APP_NAME=Quantum'], 'Quantum'],
+            'single quoted value' => ["APP_NAME='My App'", 'APP_NAME', 'Quantum', ['APP_NAME=Quantum'], 'Quantum'],
+            'empty quoted value' => ['APP_NAME=""', 'APP_NAME', 'Quantum', ['APP_NAME=Quantum'], 'Quantum'],
+            'key without value' => ['FEATURE_X', 'FEATURE_X', 'on', ['FEATURE_X=on'], 'on'],
+            'multi-line value' => ["PRIVATE_KEY=\"-----BEGIN\nabc\n-----END\"", 'PRIVATE_KEY', 'x', ['PRIVATE_KEY=x'], 'x'],            'value with dollar and backslash' => ['BASIC_AUTH_PWD=old', 'BASIC_AUTH_PWD', 'pa$1ss\0', ['BASIC_AUTH_PWD=pa$1ss\0'], 'pa$1ss\0'],
+            'escaped quote is left as it is' => ['APP_NAME="Say \"hi\""', 'APP_NAME', 'Quantum', ['APP_NAME="Say \"hi\""'], 'Say "hi"'],
+        ];
+    }
+
+    public function testEnvironmentUpdateRowKeepsTheFileWhenTheRowCannotBeReplaced(): void
+    {
+        $envFilePath = App::getBaseDir() . DS . '.env.testing';
+        $originalContent = $this->fs->get($envFilePath);
+        $jit = ini_get('pcre.jit');
+        $backtrackLimit = ini_get('pcre.backtrack_limit');
+
+        try {
+            ini_set('pcre.jit', '0');
+            ini_set('pcre.backtrack_limit', '1');
+
+            $this->expectException(EnvException::class);
+
+            $this->env->updateRow('APP_KEY', 'Something');
+        } finally {
+            ini_set('pcre.jit', (string) $jit);
+            ini_set('pcre.backtrack_limit', (string) $backtrackLimit);
+
+            $contentAfter = $this->fs->get($envFilePath);
+            $this->fs->put($envFilePath, $originalContent);
+
+            $this->assertSame($originalContent, $contentAfter);
+        }
+    }
+
     public function testEnvironmentUpdateRowThrowsWhenEnvFileCannotBeRead(): void
     {
         $this->setPrivateProperty($this->env, 'appEnv', 'missing');

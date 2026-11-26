@@ -49,14 +49,39 @@ trait WriteTrait
                 throw EnvException::fileNotFound($this->getEnvFileName($this->appEnv));
             }
 
-            $pattern = '/^' . preg_quote($key . '=' . $this->envContent[$key], '/') . '/m';
-            $envFileContent = preg_replace($pattern, $key . '=' . $value, $envFileContent);
+            $envFileContent = preg_replace_callback(
+                $this->rowPattern($key, $this->envContent[$key]),
+                static fn (): string => $key . '=' . $value,
+                $envFileContent
+            );
 
-            fs()->put($envFilePath, (string) $envFileContent);
+            if ($envFileContent === null) {
+                throw EnvException::fileNotFound($this->getEnvFileName($this->appEnv));
+            }
+
+            fs()->put($envFilePath, $envFileContent);
         } else {
             fs()->append($envFilePath, PHP_EOL . $key . '=' . $value . PHP_EOL);
         }
 
         $this->envContent[$key] = $value;
+    }
+
+    /**
+     * Matches the key and its value as they are written in .env: quoted, unquoted or without a value.
+     * A comment after the value is not part of the match.
+     */
+    private function rowPattern(string $key, mixed $value): string
+    {
+        $key = preg_quote($key, '/');
+        $endOfValue = '(?=[ \t]*(?:#|\r?$))';
+
+        if (!is_string($value)) {
+            return '/^' . $key . $endOfValue . '/m';
+        }
+
+        $value = preg_quote($value, '/');
+
+        return '/^(?:' . $key . '="' . $value . '"|' . $key . "='" . $value . "'|" . $key . '=' . $value . $endOfValue . ')/m';
     }
 }
