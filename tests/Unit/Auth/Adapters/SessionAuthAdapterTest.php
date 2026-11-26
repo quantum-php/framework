@@ -429,6 +429,22 @@ class SessionAuthAdapterTest extends AuthTestCase
         $this->assertSame('', $this->storedRememberToken());
     }
 
+    public function testWebVerifyOtpGivesTheSessionANewId(): void
+    {
+        $this->enableTwoFactor();
+
+        $otpToken = $this->sessionAuth->signin('admin@qt.com', 'qwerty');
+
+        session()->set('cart', 'kept');
+        $sessionIdBeforeOtp = session()->getId();
+
+        $this->sessionAuth->verifyOtp(123456789, $otpToken);
+
+        $this->assertNotSame($sessionIdBeforeOtp, session()->getId());
+        $this->assertTrue($this->sessionAuth->check());
+        $this->assertSame('kept', session()->get('cart'));
+    }
+
     public function testWebSigninWithoutVerification(): void
     {
         config()->set('auth.two_fa', false);

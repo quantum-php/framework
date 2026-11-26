@@ -191,6 +191,7 @@ class SessionAuthAdapter implements AuthenticatableInterface
             $this->setRememberToken($user);
         }
 
+        session()->regenerateId();
         session()->set(self::AUTH_USER, $this->getVisibleFields($user));
 
         return true;
