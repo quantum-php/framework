@@ -37,6 +37,11 @@ class SessionAuthAdapter implements AuthenticatableInterface
 
     private const DEFAULT_REMEMBER_LIFETIME = 2592000;
 
+    /**
+     * Session key that remembers, until the OTP is verified, which user asked for "remember me"
+     */
+    private const AUTH_REMEMBER = 'auth_remember';
+
     private int $rememberLifetime;
 
     /**
@@ -77,12 +82,18 @@ class SessionAuthAdapter implements AuthenticatableInterface
     {
         $user = $this->getUser($username, $password);
 
-        if ($remember) {
-            $this->setRememberToken($user);
+        if ($this->isTwoFactorEnabled()) {
+            if ($remember) {
+                session()->set(self::AUTH_REMEMBER, $user->getFieldValue($this->keyFields[AuthKeys::USERNAME->value]));
+            } else {
+                session()->delete(self::AUTH_REMEMBER);
+            }
+
+            return $this->twoStepVerification($user);
         }
 
-        if ($this->isTwoFactorEnabled()) {
-            return $this->twoStepVerification($user);
+        if ($remember) {
+            $this->setRememberToken($user);
         }
 
         session()->regenerateId();
@@ -100,6 +111,8 @@ class SessionAuthAdapter implements AuthenticatableInterface
      */
     public function signout(): bool
     {
+        session()->delete(self::AUTH_REMEMBER);
+
         if (session()->has(self::AUTH_USER)) {
             session()->delete(self::AUTH_USER);
             session()->regenerateId();
@@ -170,6 +183,13 @@ class SessionAuthAdapter implements AuthenticatableInterface
     public function verifyOtp(int $otp, string $otpToken): bool
     {
         $user = $this->verifyAndUpdateOtp($otp, $otpToken);
+
+        $rememberFor = session()->get(self::AUTH_REMEMBER);
+        session()->delete(self::AUTH_REMEMBER);
+
+        if ($rememberFor !== null && $rememberFor === $user->getFieldValue($this->keyFields[AuthKeys::USERNAME->value])) {
+            $this->setRememberToken($user);
+        }
 
         session()->set(self::AUTH_USER, $this->getVisibleFields($user));
 
