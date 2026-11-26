@@ -68,7 +68,8 @@ trait WriteTrait
     }
 
     /**
-     * Matches the key and its value as they are written in .env: quoted, unquoted or without a value.
+     * Matches the key and its value as they are written in .env: quoted, unquoted or without a value
+     * (`KEY`, or `KEY=` as updateRow() writes a null value).
      * A comment after the value is not part of the match.
      */
     private function rowPattern(string $key, mixed $value): string
@@ -77,7 +78,7 @@ trait WriteTrait
         $endOfValue = '(?=[ \t]*(?:#|\r?$))';
 
         if (!is_string($value)) {
-            return '/^' . $key . $endOfValue . '/m';
+            return '/^' . $key . '=?' . $endOfValue . '/m';
         }
 
         $value = preg_quote($value, '/');

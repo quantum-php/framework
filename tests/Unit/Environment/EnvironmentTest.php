@@ -401,6 +401,29 @@ class EnvironmentTest extends AppTestCase
         ];
     }
 
+    public function testEnvironmentUpdateRowUpdatesARowItWroteWithoutAValue(): void
+    {
+        $envFilePath = App::getBaseDir() . DS . '.env.testing';
+        $originalContent = $this->fs->get($envFilePath);
+
+        try {
+            $this->env->updateRow('FEATURE_X', null);
+            $this->env->updateRow('FEATURE_X', 'on');
+
+            $lines = preg_split('/\R/', (string) $this->fs->get($envFilePath));
+
+            $this->assertContains('FEATURE_X=on', $lines);
+            $this->assertCount(1, preg_grep('/^FEATURE_X\b/', $lines));
+
+            $this->setPrivateProperty($this->env, 'loaded', false);
+            $this->env->load();
+
+            $this->assertSame('on', $this->env->getValue('FEATURE_X'));
+        } finally {
+            $this->fs->put($envFilePath, $originalContent);
+        }
+    }
+
     public function testEnvironmentUpdateRowKeepsTheFileWhenTheRowCannotBeReplaced(): void
     {
         $envFilePath = App::getBaseDir() . DS . '.env.testing';
