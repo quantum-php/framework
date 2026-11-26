@@ -36,12 +36,16 @@ trait ValueTrait
     }
 
     /**
-     * Gets the environment variable value as a boolean
+     * Gets the environment variable value as a boolean; an empty value gives the default
      * @throws EnvException
      */
     public function getBool(string $key, bool $default = false): bool
     {
         $value = $this->getValue($key, $default);
+
+        if ($value === '') {
+            return $default;
+        }
 
         if (is_bool($value)) {
             return $value;
@@ -51,12 +55,16 @@ trait ValueTrait
     }
 
     /**
-     * Gets the environment variable value as an integer
+     * Gets the environment variable value as an integer; an empty value gives the default
      * @throws EnvException
      */
     public function getInt(string $key, int $default = 0): int
     {
         $value = $this->getValue($key, $default);
+
+        if ($value === '') {
+            return $default;
+        }
 
         if (is_int($value)) {
             return $value;

@@ -36,6 +36,7 @@ The format is based on Keep a Changelog.
 - Dropbox refreshes the access token only for a 401 without a body or with an error tagged `invalid_access_token` or `expired_access_token`. It refreshed for every 401 with an error tag, such as `no_account` or a missing permission, and an error body that was plain text raised a `TypeError`. Any other 401 now throws the adapter's `Exception` (#694)
 - The `Exception` of a failed Dropbox or Google Drive request carries a plain text error body as it is, and the HTTP client's error when the response has no body; a text body was JSON encoded, and an error body that was plain text raised a `TypeError` in the check for an expired access token (#694)
 - `config()->set()` with a dotted key on an empty config, such as `set('cache.redis', [...])`, nests the value as it does on a config that has values; it stored the literal key `cache.redis`, so `get('cache.redis.port')` returned `null` (#672)
+- `env_bool()` and `env_int()` (`Environment::getBool()` and `getInt()`) treat an empty `.env` value as not set and return the default: with `TWO_FA=`, `env_bool('TWO_FA', true)` gives `true` (it gave `false`), and with `REDIS_PORT=`, `env_int('REDIS_PORT', 6379)` gives `6379` (it threw `EnvException`). Without a default they give `false` and `0`, as for a variable that is missing. A value that is not a whole number, such as `abc`, still makes `env_int()` throw, and `env()` still returns the empty string (#709)
 
 ## [3.1.2] - 2026-11-19
 

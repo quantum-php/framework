@@ -35,13 +35,20 @@ class EnvHelperTest extends AppTestCase
 
     public function testEnvBoolConvertsTextToBoolean(): void
     {
-        $this->setEnvValues(['FLAG_FALSE' => 'false', 'FLAG_ZERO' => '0', 'FLAG_EMPTY' => '', 'FLAG_TRUE' => 'true']);
+        $this->setEnvValues(['FLAG_FALSE' => 'false', 'FLAG_ZERO' => '0', 'FLAG_TRUE' => 'true']);
 
         $this->assertTrue(env_bool('DEBUG'));
         $this->assertTrue(env_bool('FLAG_TRUE'));
         $this->assertFalse(env_bool('FLAG_FALSE', true));
         $this->assertFalse(env_bool('FLAG_ZERO', true));
-        $this->assertFalse(env_bool('FLAG_EMPTY', true));
+    }
+
+    public function testEnvBoolAndEnvIntUseTheDefaultForAnEmptyValue(): void
+    {
+        $this->setEnvValues(['TWO_FA' => '', 'REDIS_PORT' => '']);
+
+        $this->assertTrue(env_bool('TWO_FA', true));
+        $this->assertSame(6379, env_int('REDIS_PORT', 6379));
     }
 
     public function testEnvBoolUsesDefaultForMissingKey(): void

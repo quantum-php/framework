@@ -103,7 +103,6 @@ class EnvironmentTest extends AppTestCase
             'FLAG_YES' => 'yes',
             'FLAG_FALSE' => 'false',
             'FLAG_ZERO' => '0',
-            'FLAG_EMPTY' => '',
             'FLAG_OFF' => 'off',
             'FLAG_NO' => 'no',
             'FLAG_UNKNOWN' => 'maybe',
@@ -113,9 +112,17 @@ class EnvironmentTest extends AppTestCase
             $this->assertTrue($this->env->getBool($key), $key);
         }
 
-        foreach (['FLAG_FALSE', 'FLAG_ZERO', 'FLAG_EMPTY', 'FLAG_OFF', 'FLAG_NO', 'FLAG_UNKNOWN'] as $key) {
+        foreach (['FLAG_FALSE', 'FLAG_ZERO', 'FLAG_OFF', 'FLAG_NO', 'FLAG_UNKNOWN'] as $key) {
             $this->assertFalse($this->env->getBool($key, true), $key);
         }
+    }
+
+    public function testEnvironmentGetBoolUsesDefaultForEmptyValue(): void
+    {
+        $this->setEnvValues(['FLAG_EMPTY' => '']);
+
+        $this->assertTrue($this->env->getBool('FLAG_EMPTY', true));
+        $this->assertFalse($this->env->getBool('FLAG_EMPTY'));
     }
 
     public function testEnvironmentGetBoolUsesDefaultForMissingKey(): void
@@ -144,6 +151,21 @@ class EnvironmentTest extends AppTestCase
         $this->assertSame(25, $this->env->getInt('NON_EXISTING_KEY', 25));
     }
 
+    public function testEnvironmentGetIntUsesDefaultForEmptyValue(): void
+    {
+        $this->setEnvValues(['REDIS_PORT' => '']);
+
+        $this->assertSame(6379, $this->env->getInt('REDIS_PORT', 6379));
+        $this->assertSame(0, $this->env->getInt('REDIS_PORT'));
+    }
+
+    public function testEnvironmentGetValueKeepsTheEmptyValue(): void
+    {
+        $this->setEnvValues(['REDIS_PORT' => '']);
+
+        $this->assertSame('', $this->env->getValue('REDIS_PORT', 'default'));
+    }
+
     #[DataProvider('invalidIntProvider')]
     public function testEnvironmentGetIntThrowsForInvalidNumber(string $value): void
     {
@@ -163,7 +185,6 @@ class EnvironmentTest extends AppTestCase
         return [
             'text' => ['abc'],
             'decimal' => ['1.5'],
-            'empty' => [''],
         ];
     }
 
