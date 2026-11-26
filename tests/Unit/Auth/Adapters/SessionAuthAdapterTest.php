@@ -109,6 +109,8 @@ class SessionAuthAdapterTest extends AuthTestCase
 
         $this->sessionAuth->signout();
 
+        session()->delete('cart');
+
         parent::tearDown();
     }
 
